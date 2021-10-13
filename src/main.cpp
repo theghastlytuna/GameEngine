@@ -103,6 +103,36 @@ bool initGLAD() {
 	return true;
 }
 
+GLfloat yScale = 0;
+GLfloat xScale = 0;
+
+glm::vec3 upDir;
+glm::vec3 rightDir;
+glm::vec3 totalDisp;
+
+void keyboard()
+{
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		yScale = 1.f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		yScale = -1.f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		xScale = -1.f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		xScale = 1.f;
+	}
+}
+
 int main() {
 	Logger::Init(); // We'll borrow the logger from the toolkit, but we need to initialize it
 
@@ -212,9 +242,19 @@ int main() {
 	///// Game loop /////
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
+		xScale = 0.f;
+		yScale = 0.f;
+		keyboard();
+
+		upDir = glm::normalize(camera->GetUp());
+		rightDir = glm::normalize(glm::cross(camera->GetForward(), glm::vec3(0.f, 1.f, 0.f)));
+
+		totalDisp = glm::normalize(xScale * rightDir + yScale * upDir);
+
+		camera->SetPosition(camera->GetPosition() + totalDisp);
 
 		// WEEK 5: Input handling
-		if (glfwGetKey(window, GLFW_KEY_W)) {
+		if (glfwGetKey(window, GLFW_KEY_R)) {
 			if (!isButtonPressed) {
 				// This is the action we want to perform on key press
 				isRotating = !isRotating;
@@ -232,6 +272,7 @@ int main() {
 		// TODO: Week 5 - toggle code
 
 		// Rotate our models around the z axis
+		
 		if (isRotating) {
 			transform  = glm::rotate(glm::mat4(1.0f), static_cast<float>(thisFrame), glm::vec3(0, 0, 1));
 		}
