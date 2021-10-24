@@ -2,8 +2,45 @@
 #include <GLM/glm.hpp>
 #include <GLM/gtc/matrix_transform.hpp>
 #include "MeshBuilder.h"
-#include "VertexTypes.h"
+#include "Graphics/VertexTypes.h"
+#include <json.hpp>
 
+#include <EnumToString.h>
+
+/// <summary>
+/// Represent the type of object added by a MeshBuilderParam
+/// </summary>
+ENUM(MeshBuilderType, int, 
+	 Unknown  = 0,
+	 Plane    = 1,
+	 Cube     = 2,
+	 IcoShere = 3,
+	 UvSphere = 4
+);
+
+/// <summary>
+/// Allows storing configuration parameters for mesh factory calls
+/// </summary>
+struct MeshBuilderParam {
+	MeshBuilderType Type;
+	std::unordered_map<std::string, glm::vec3> Params;
+	glm::vec4 Color = glm::vec4(1.0f);
+
+	static MeshBuilderParam CreateCube(const glm::vec3& pos, const glm::vec3& scale, const glm::vec3& eulerDeg = glm::vec3(0.0f), const glm::vec4& col = glm::vec4(1.0f));
+	static MeshBuilderParam CreateIcoSphere(const glm::vec3& center, float radius, int tessellation = 0, const glm::vec4& col = glm::vec4(1.0f));
+	static MeshBuilderParam CreateIcoSphere(const glm::vec3& center, const glm::vec3& radii, int tessellation = 0, const glm::vec4& col = glm::vec4(1.0f));
+	static MeshBuilderParam CreateUVSphere(const glm::vec3& center, float radius, int tessellation = 0, const glm::vec4& col = glm::vec4(1.0f));
+	static MeshBuilderParam CreateUVSphere(const glm::vec3& center, const glm::vec3& radii, int tessellation = 0, const glm::vec4& col = glm::vec4(1.0f));
+	static MeshBuilderParam CreatePlane(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& scale, const glm::vec4& col = glm::vec4(1.0f));
+
+	static MeshBuilderParam FromJson(const nlohmann::json& blob);
+	nlohmann::json   ToJson() const;
+};
+
+
+/// <summary>
+/// Provides tools for generating meshes at runtime
+/// </summary>
 class MeshFactory
 {
 public:
@@ -91,13 +128,22 @@ public:
 	/// <param name="col">The color of the plane</param>
 	template <typename Vertex>
 	static void AddPlane(MeshBuilder<Vertex>& mesh, const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& scale, const glm::vec4& col = glm::vec4(1.0f));
-
 	
+	/// <summary>
+	/// Adds a MeshBuilderParam instance to the given mesh
+	/// </summary>
+	/// <typeparam name="Vertex">The type of vertex the mesh consists of</typeparam>
+	/// <param name="mesh">The mesh to add the object to</param>
+	/// <param name="param">The mesh object parameters</param>
+	template <typename Vertex>
+	static void AddParameterized(MeshBuilder<Vertex>& mesh, const MeshBuilderParam& param);
+
 protected:	
 	MeshFactory() = default;
 	~MeshFactory() = default;
 
 	inline static const glm::mat4 MAT4_IDENTITY = glm::mat4(1.0f);
 };
+
 
 #include "MeshFactory.inl"

@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "VertexArrayObject.h"
+#include "Graphics/VertexArrayObject.h"
 
 /// <summary>
 /// A utility class that lets us add vertices and indices, then bake it into a final mesh, using interleaved
@@ -124,8 +124,11 @@ public:
 		VertexBuffer::Sptr vbo = VertexBuffer::Create();
 		vbo->LoadData(GetVertexDataPtr(), _vertices.size());
 
-		IndexBuffer::Sptr ebo = IndexBuffer::Create();
-		ebo->LoadData(GetIndexDataPtr(), _indices.size());
+		IndexBuffer::Sptr ebo = nullptr;
+		if (_indices.size() > 0) {
+			ebo = IndexBuffer::Create();
+			ebo->LoadData(GetIndexDataPtr(), _indices.size());
+		}
 
 		VertexArrayObject::Sptr result = VertexArrayObject::Create();
 		result->AddVertexBuffer(vbo, VertType::V_DECL);

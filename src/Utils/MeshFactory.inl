@@ -5,11 +5,24 @@
 #include <GLM/gtx/euler_angles.hpp>
 #include <unordered_map>
 #include <GLM/gtc/type_ptr.hpp> // for glm::value_ptr
-#include "VertexArrayObject.h"
+#include "Graphics/VertexArrayObject.h"
 #include "Logging.h"
 #include "MeshFactory.h"
+#include "Utils/JsonGlmHelpers.h"
 
 #define M_PI 3.14159265359f
+
+struct RGBA_Helper {
+	union {
+		struct {
+			uint8_t R;
+			uint8_t G;
+			uint8_t B;
+			uint8_t A;
+		};
+		uint32_t HexCode;
+	};
+};
 
 /// <summary>
 /// Structure for mapping and setting a Vertex's attribute based on a vertex declaration
@@ -490,7 +503,7 @@ void MeshFactory::AddPlane(MeshBuilder<Vertex>& mesh, const glm::vec3& pos, cons
 		glm::vec2(1.0f, 0.0f), // 3
 	};
 
-	Vertex verts[4]
+	Vertex verts[4];
 	for(int ix = 0; ix < 4; ix++) {
 		vMap.SetPosition(verts[ix], positions[ix]);
 		vMap.SetNormal(verts[ix], nNorm);
@@ -608,4 +621,25 @@ void MeshFactory::AddCube(MeshBuilder<Vertex>& mesh, const glm::mat4& transform,
 	}
 
 	#pragma endregion
+}
+
+template <typename Vertex>
+void MeshFactory::AddParameterized(MeshBuilder<Vertex>& mesh, const MeshBuilderParam& param) {
+	const std::unordered_map<std::string, glm::vec3>& Params = param.Params;
+	switch (param.Type) {
+		case MeshBuilderType::Plane:
+			MeshFactory::AddPlane(mesh, Params.at("position"), Params.at("normal"), Params.at("tangent"), Params.at("scale"), param.Color);
+			break;
+		case MeshBuilderType::Cube:
+			MeshFactory::AddCube(mesh, Params.at("position"), Params.at("scale"), Params.at("rotation"), param.Color);
+			break;
+		case MeshBuilderType::IcoShere:
+			MeshFactory::AddIcoSphere(mesh, Params.at("position"), Params.at("scale"), Params.at("tessellation").x, param.Color);
+			break;
+		case MeshBuilderType::UvSphere:
+			MeshFactory::AddUvSphere(mesh, Params.at("position"), Params.at("scale"), Params.at("tessellation").x, param.Color);
+			break;
+		default:
+			break;
+	}
 }
