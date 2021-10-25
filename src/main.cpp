@@ -116,10 +116,6 @@ bool initGLAD() {
 	return true;
 }
 
-//////////////////////////////////////////////////////
-////////////////// NEW IN WEEK 7 /////////////////////
-//////////////////////////////////////////////////////
-
 glm::mat4 MAT4_IDENTITY = glm::mat4(1.0f);
 glm::mat3 MAT3_IDENTITY = glm::mat3(1.0f);
 
@@ -544,6 +540,50 @@ bool DrawLightImGui(const char* title, Light& light) {
 	return result;
 }
 
+
+glm::vec3 cameraPos = glm::vec3(0, 4, 4);
+glm::vec3 cameraFront = glm::vec3(0.f);
+glm::vec3 cameraUp = glm::vec3(0, 1, 0);
+
+float lastX = 400, lastY = 300;
+bool firstMouse = true;
+
+float yaw = -90.0f;
+float pitch = 0.0f;
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos;
+	lastX = xpos;
+	lastY = ypos;
+
+	float sensitivity = 0.1f;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
+
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction.y = sin(glm::radians(pitch));
+	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraFront = glm::normalize(direction);
+}
+
 //////////////////////////////////////////////////////
 ////////////////// END OF NEW ////////////////////////
 //////////////////////////////////////////////////////
@@ -564,6 +604,8 @@ int main() {
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(GlDebugMessage, nullptr);
 
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 	// Initialize our ImGui helper
 	ImGuiHelper::Init(window);
 
@@ -580,6 +622,7 @@ int main() {
 	Scene::Sptr scene = nullptr;
 
 	bool loadScene = false;
+
 	// For now we can use a toggle to generate our scene vs load from file
 	if (loadScene) {
 		ResourceManager::LoadManifest("manifest.json");
@@ -645,8 +688,8 @@ int main() {
 
 		// Set up the scene's camera
 		scene->Camera = Camera::Create();
-		scene->Camera->SetPosition(glm::vec3(0, 4, 4));
-		scene->Camera->LookAt(glm::vec3(0.0f));
+		scene->Camera->SetPosition(cameraPos);
+		scene->Camera->LookAt(cameraFront);
 
 		// Set up all our sample objects
 		RenderObject plane = RenderObject();
@@ -721,9 +764,15 @@ int main() {
 	glm::vec3 upDir;
 	glm::vec3 rightDir;
 
+	glm::mat4 transform = glm::mat4(1.0f);
+
+	float cameraSpeed = 0.05f;
+
 	///// Game loop /////
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
+
+		double thisFrame = glfwGetTime();
 
 		xScale = 0.05f;
 		yScale = 0.05f;
@@ -738,24 +787,28 @@ int main() {
 		rightDir = glm::normalize(glm::cross(scene->Camera->GetForward(), glm::vec3(0.f, 1.f, 0.f)));
 		//upDir = glm::normalize(glm::cross(camera->GetForward(), rightDir));
 
+		transform = glm::rotate(glm::mat4(1.0f), 0.01f, glm::vec3(0, 1, 0));
+
+		glfwSetCursorPosCallback(window, mouse_callback);
+
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		{
-			scene->Camera->SetPosition(scene->Camera->GetPosition() - yScale * upDir);
+			cameraPos += cameraSpeed * cameraFront;
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 		{
-			scene->Camera->SetPosition(scene->Camera->GetPosition() + yScale * upDir);
+			cameraPos -= cameraSpeed * cameraFront;
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		{
-			scene->Camera->SetPosition(scene->Camera->GetPosition() + xScale * rightDir);
+			cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		{
-			scene->Camera->SetPosition(scene->Camera->GetPosition() - xScale * rightDir);
+			cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
@@ -768,11 +821,17 @@ int main() {
 			scene->Camera->SetPosition(scene->Camera->GetPosition() + xScale * scene->Camera->GetForward());
 		}
 
+		scene->Camera->SetPosition(cameraPos);
+		cameraFront = scene->Camera->GetForward();
+		cameraUp = scene->Camera->GetUp();
+
 		////////
 
+
+		/*
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			scene->Camera->SetForward(newForwardPosY);
+			scene->Camera->SetForward(glm::vec4(scene->Camera->GetForward(), 0) * transform);
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
@@ -789,11 +848,11 @@ int main() {
 		{
 			scene->Camera->SetForward(newForwardPosX);
 		}
+		*/
 
 		ImGuiHelper::StartFrame();
 
 		// Calculate the time since our last frame (dt)
-		double thisFrame = glfwGetTime();
 		float dt = static_cast<float>(thisFrame - lastFrame);
 
 		// Showcasing how to use the imGui library!

@@ -110,23 +110,41 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera.h" />
-    <ClInclude Include="src\IBuffer.h" />
-    <ClInclude Include="src\IndexBuffer.h" />
-    <ClInclude Include="src\Shader.h" />
+    <ClInclude Include="src\Graphics\IBuffer.h" />
+    <ClInclude Include="src\Graphics\IResource.h" />
+    <ClInclude Include="src\Graphics\ITexture.h" />
+    <ClInclude Include="src\Graphics\IndexBuffer.h" />
+    <ClInclude Include="src\Graphics\Shader.h" />
+    <ClInclude Include="src\Graphics\Texture2D.h" />
+    <ClInclude Include="src\Graphics\TextureEnums.h" />
+    <ClInclude Include="src\Graphics\VertexArrayObject.h" />
+    <ClInclude Include="src\Graphics\VertexBuffer.h" />
+    <ClInclude Include="src\Graphics\VertexTypes.h" />
+    <ClInclude Include="src\Utils\FileHelpers.h" />
+    <ClInclude Include="src\Utils\GUID.hpp" />
+    <ClInclude Include="src\Utils\ImGuiHelper.h" />
+    <ClInclude Include="src\Utils\JsonGlmHelpers.h" />
     <ClInclude Include="src\Utils\MeshBuilder.h" />
     <ClInclude Include="src\Utils\MeshFactory.h" />
     <ClInclude Include="src\Utils\ObjLoader.h" />
-    <ClInclude Include="src\VertexArrayObject.h" />
-    <ClInclude Include="src\VertexBuffer.h" />
-    <ClInclude Include="src\VertexTypes.h" />
+    <ClInclude Include="src\Utils\ResourceManager\ResourceManager.h" />
+    <ClInclude Include="src\Utils\StringUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp" />
-    <ClCompile Include="src\IBuffer.cpp" />
-    <ClCompile Include="src\Shader.cpp" />
+    <ClCompile Include="src\Graphics\IBuffer.cpp" />
+    <ClCompile Include="src\Graphics\ITexture.cpp" />
+    <ClCompile Include="src\Graphics\Shader.cpp" />
+    <ClCompile Include="src\Graphics\Texture2D.cpp" />
+    <ClCompile Include="src\Graphics\VertexArrayObject.cpp" />
+    <ClCompile Include="src\Graphics\VertexTypes.cpp" />
+    <ClCompile Include="src\Utils\FileHelpers.cpp" />
+    <ClCompile Include="src\Utils\GUID.cpp" />
+    <ClCompile Include="src\Utils\ImGuiHelper.cpp" />
+    <ClCompile Include="src\Utils\MeshFactory.cpp" />
     <ClCompile Include="src\Utils\ObjLoader.cpp" />
-    <ClCompile Include="src\VertexArrayObject.cpp" />
-    <ClCompile Include="src\VertexTypes.cpp" />
+    <ClCompile Include="src\Utils\ResourceManager\ResourceManager.cpp" />
+    <ClCompile Include="src\Utils\StringUtils.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
