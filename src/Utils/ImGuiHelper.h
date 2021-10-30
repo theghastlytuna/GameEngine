@@ -24,6 +24,7 @@ public:
 	/// Call at start of render loop
 	/// </summary>
 	static void StartFrame();
+
 	/// <summary>
 	/// Notifies ImGui that a frame has ended and should be rendered
 	/// Call at end of render loop before glfwSwapBuffers
@@ -35,3 +36,7 @@ protected:
 
 	static GLFWwindow* _window;
 };
+
+// Allows for an ImGui command to have a left aligned label instead of right aligned
+// EX: LABEL_LEFT(ImGui::DragFloat3, "Label", &value);
+#define LABEL_LEFT(func, label, ...) (ImGui::TextUnformatted(label), ImGui::SameLine(), func("##" label, __VA_ARGS__))

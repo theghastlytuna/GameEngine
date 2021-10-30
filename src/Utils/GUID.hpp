@@ -31,7 +31,10 @@
 #include <string_view>
 #include <utility>
 #include <iomanip>
+
+#ifdef GUID_CEREAL_ARCHIVES
 #include <cereal/cereal.hpp>
+#endif
 
 // Class to represent a GUID/UUID. Each instance acts as a wrapper around a
 // 16 byte value that can be passed around by value. It also supports
@@ -105,6 +108,7 @@ private:
 	friend bool operator<(const Guid& lhs, const Guid& rhs);
 	friend bool operator>(const Guid& lhs, const Guid& rhs);
 
+	#ifdef GUID_CEREAL_ARCHIVES
 	// Allows the cereal library to access our internal data
 	friend class cereal::access;
 
@@ -126,6 +130,7 @@ private:
 			ar(cereal::binary_data(&_bytes[0], 16));
 		}
 	}
+	#endif
 };
 
 // Handles the implementation details for our hashing algorithm

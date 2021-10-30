@@ -62,6 +62,7 @@ public:
 	virtual ~Texture2D() = default;
 
 public:
+	Texture2D(const std::string& filePath);
 	Texture2D(const Texture2DDescription& description);
 
 	/// <summary>
@@ -104,6 +105,9 @@ public:
 	/// texture's dimensions and creation parameters
 	/// </summary>
 	const Texture2DDescription& GetDescription() const { return _description; }
+
+	virtual nlohmann::json ToJson() const override;
+	static Texture2D::Sptr FromJson(const nlohmann::json& data);
 
 protected:
 	Texture2DDescription _description;

@@ -3,42 +3,39 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <EnumToString.h>
 
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
-#include "IResource.h"
-
-#include <memory>
 
 /// <summary>
 /// We'll use this just to make it more clear what the intended usage of an attribute is in our code!
 /// </summary>
-enum class AttribUsage
-{
-	Unknown = 0,
-	Position,
-	Color,
-	Color1,   //
-	Color2,   // Extras
-	Color3,   //
-	Texture,
-	Texture1, //
-	Texture2, // Extras
-	Texture3, //
-	Normal,
-	Tangent,
-	BiNormal,
-	User0,    //
-	User1,    //
-	User2,    // Extras
-	User3     //
-};
+ENUM(AttribUsage, uint8_t, 
+	Unknown  = 0,
+	Position = 1,
+	Color    = 2,
+	Color1   = 3,   //
+	Color2   = 4,   // Extras
+	Color3   = 5,   //
+	Texture  = 6,
+	Texture1 = 7, //
+	Texture2 = 8, // Extras
+	Texture3 = 9, //
+	Normal   = 10,
+	Tangent  = 11,
+	BiNormal = 12,
+	User0    = 13,    //
+	User1    = 14,    //
+	User2    = 15,    // Extras
+	User3    = 16     //
+);
 
 /// <summary>
 /// Represents the type that a VAO attribute can have
 /// </summary>
 /// <see>https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glVertexAttribPointer.xhtml</see>
-enum class AttributeType {
+ENUM(AttributeType, GLenum,
 	Byte    = GL_BYTE,
 	UByte   = GL_UNSIGNED_BYTE,
 	Short   = GL_SHORT,
@@ -48,27 +45,26 @@ enum class AttributeType {
 	Float   = GL_FLOAT,
 	Double  = GL_DOUBLE,
 	Unknown = GL_NONE
-};
+);
 
 /// <summary>
 /// Represents the mode in which a VAO will be drawn
 /// </summary>
 /// <see>https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDrawArrays.xhtml</see>
-enum class DrawMode {
-	Points = GL_POINTS,
-	LineStrip = GL_LINE_STRIP,
-	LineLoop = GL_LINE_LOOP,
-	LineList = GL_LINES,
+ENUM(DrawMode, GLenum,
+	Points        = GL_POINTS,
+	LineStrip     = GL_LINE_STRIP,
+	LineLoop      = GL_LINE_LOOP,
+	LineList      = GL_LINES,
 	TriangleStrip = GL_TRIANGLE_STRIP,
-	TriangleFan = GL_TRIANGLE_FAN,
-	TriangleList = GL_TRIANGLES
-};
+	TriangleFan   = GL_TRIANGLE_FAN,
+	TriangleList  = GL_TRIANGLES
+);
 
 /// <summary>
 /// This structure will represent the parameters passed to the glVertexAttribPointer commands
 /// </summary>
-struct BufferAttribute
-{
+struct BufferAttribute {
 	/// <summary>
 	/// The input slot to the vertex shader that will receive the data
 	/// </summary>
@@ -98,6 +94,9 @@ struct BufferAttribute
 	/// </summary>
 	AttribUsage Usage;
 
+	BufferAttribute() :
+		Slot(0), Size(0), Type(AttributeType::Unknown), Normalized(false), Stride(0), Offset(0), Usage(AttribUsage::Unknown){}
+
 	BufferAttribute(uint32_t slot, uint32_t size, AttributeType type, GLsizei stride, GLsizei offset, AttribUsage usage, bool normalized = false) :
 		Slot(slot), Size(size), Type(type), Stride(stride), Offset(offset), Usage(usage), Normalized(normalized) { }
 };
@@ -105,10 +104,11 @@ struct BufferAttribute
 /// <summary>
 /// The Vertex Array Object wraps around an OpenGL VAO and basically represents all of the data for a mesh
 /// </summary>
-class VertexArrayObject final : public IResource
+class VertexArrayObject final
 {
 public:
 	typedef std::shared_ptr<VertexArrayObject> Sptr;
+	typedef std::vector<BufferAttribute> VertexDeclaration;
 
 	static inline Sptr Create() {
 		return std::make_shared<VertexArrayObject>();
@@ -120,6 +120,12 @@ public:
 	VertexArrayObject(VertexArrayObject&& other) = delete;
 	VertexArrayObject& operator=(const VertexArrayObject& other) = delete;
 	VertexArrayObject& operator=(VertexArrayObject&& other) = delete;
+
+	// Helper structure to store a buffer and the attributes
+	struct VertexBufferBinding {
+		VertexBuffer::Sptr Buffer;
+		std::vector<BufferAttribute> Attributes;
+	};
 	
 public:
 	/// <summary>
@@ -129,11 +135,16 @@ public:
 	// Destructor does not need to be virtual due to the use of the final keyword
 	~VertexArrayObject();
 
+	uint32_t GetVertexCount() const { return _vertexCount; }
+	uint32_t GetIndexCount() const { return _indexBuffer != nullptr ? _indexBuffer->GetElementCount() : 0; }
+	uint32_t GetElementCount() const { return _elementCount; }
+
 	/// <summary>
 	/// Sets the index buffer for this VAO, note that for now, this will not delete the buffer when the VAO is deleted, more on that later
 	/// </summary>
 	/// <param name="ibo">The index buffer to bind to this VAO</param>
 	void SetIndexBuffer(const IndexBuffer::Sptr& ibo);
+	IndexBuffer::Sptr GetIndexBuffer() const { return _indexBuffer; }
 	/// <summary>
 	/// Adds a vertex buffer to this VAO, with the specified attributes
 	/// </summary>
@@ -141,13 +152,20 @@ public:
 	/// <param name="attributes">A list of vertex attributes that will be fed by this buffer</param>
 	void AddVertexBuffer(const VertexBuffer::Sptr& buffer, const std::vector<BufferAttribute>& attributes);
 
+	/// <summary>
+	/// Gets the buffer binding that has an attribute with the given usage
+	/// We can use this for extracting info from a VBO at a later time
+	/// </summary>
+	/// <param name="usage">The attribute usage hint to search for</param>
+	/// <returns>A const pointer to the binding, or nullptr if none is found</returns>
+	const VertexBufferBinding* GetBufferBinding(AttribUsage usage);
+
 	void Draw(DrawMode mode = DrawMode::TriangleList);
 
 	/// <summary>
 	/// Binds this VAO as the source of data for draw operations
 	/// </summary>
 	void Bind();
-
 	/// <summary>
 	/// Unbinds the currently bound VAO
 	/// </summary>
@@ -157,21 +175,23 @@ public:
 	/// Returns the underlying OpenGL handle that this class is wrapping around
 	/// </summary>
 	GLuint GetHandle() const { return _handle; }
-	
+
+	void SetVDecl(const VertexDeclaration& vDecl);
+	const VertexDeclaration& GetVDecl();
+
 protected:
-	// Helper structure to store a buffer and the attributes
-	struct VertexBufferBinding
-	{
-		VertexBuffer::Sptr Buffer;
-		std::vector<BufferAttribute> Attributes;
-	};
 	
 	// The index buffer bound to this VAO
 	IndexBuffer::Sptr _indexBuffer;
 	// The vertex buffers bound to this VAO
 	std::vector<VertexBufferBinding> _vertexBuffers;
 
+	// Stores a const pointer to one of the vertex declarations
+	// defined in VertexTypes.cpp
+	VertexDeclaration _vDecl;
+
 	uint32_t _vertexCount;
+	uint32_t _elementCount;
 
 	// The underlying OpenGL handle that this class is wrapping around
 	GLuint _handle;

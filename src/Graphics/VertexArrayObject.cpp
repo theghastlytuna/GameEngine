@@ -7,6 +7,7 @@ VertexArrayObject::VertexArrayObject() :
 	_indexBuffer(nullptr),
 	_handle(0),
 	_vertexCount(0),
+	_elementCount(0),
 	_vertexBuffers(std::vector<VertexBufferBinding>())
 {
 	glCreateVertexArrays(1, &_handle);
@@ -24,15 +25,23 @@ void VertexArrayObject::SetIndexBuffer(const IndexBuffer::Sptr& ibo) {
 	// TODO: What if we already have a buffer? should we delete it? who owns the buffer?
 	_indexBuffer = ibo;
 	Bind();
-	if (_indexBuffer != nullptr) _indexBuffer->Bind();
-	else IndexBuffer::Unbind();
+	if (_indexBuffer != nullptr) {
+		_indexBuffer->Bind();
+		_elementCount = _indexBuffer->GetElementCount();
+	}
+	else {
+		IndexBuffer::Unbind();
+		_elementCount = _vertexCount;
+	}
 	Unbind();
 }
 
-void VertexArrayObject::AddVertexBuffer(const VertexBuffer::Sptr& buffer, const std::vector<BufferAttribute>& attributes)
-{
+void VertexArrayObject::AddVertexBuffer(const VertexBuffer::Sptr& buffer, const std::vector<BufferAttribute>& attributes) {
 	if (_vertexBuffers.size() == 0) {
 		_vertexCount = buffer->GetElementCount();
+		if (_indexBuffer == nullptr) {
+			_elementCount = _vertexCount;
+		}
 	} else if (buffer->GetElementCount() != _vertexCount) {
 		LOG_WARN("Buffer element count does not match vertex count of this VAO!!!");
 	}
@@ -56,9 +65,9 @@ void VertexArrayObject::AddVertexBuffer(const VertexBuffer::Sptr& buffer, const 
 void VertexArrayObject::Draw(DrawMode mode) {
 	Bind();
 	if (_indexBuffer == nullptr) {
-		glDrawArrays((GLenum)mode, 0, _vertexCount);
+		glDrawArrays((GLenum)mode, 0, _elementCount);
 	} else {
-		glDrawElements((GLenum)mode, _indexBuffer->GetElementCount(), (GLenum)_indexBuffer->GetElementType(), nullptr);
+		glDrawElements((GLenum)mode, _elementCount, (GLenum)_indexBuffer->GetElementType(), nullptr);
 	}
 	Unbind();
 }
@@ -69,4 +78,24 @@ void VertexArrayObject::Bind() {
 
 void VertexArrayObject::Unbind() {
 	glBindVertexArray(0);
+}
+
+void VertexArrayObject::SetVDecl(const VertexDeclaration& vDecl) {
+	_vDecl = vDecl;
+}
+
+const VertexArrayObject::VertexDeclaration& VertexArrayObject::GetVDecl() {
+	return _vDecl;
+}
+
+const VertexArrayObject::VertexBufferBinding* VertexArrayObject::GetBufferBinding(AttribUsage usage) {
+	for (auto& binding : _vertexBuffers) {
+		auto& it = std::find_if(binding.Attributes.begin(), binding.Attributes.end(), [&](const BufferAttribute& attrib) {
+			return attrib.Usage == usage;
+		});
+		if (it != binding.Attributes.end()) {
+			return &binding;
+		}
+	}
+	return nullptr;
 }

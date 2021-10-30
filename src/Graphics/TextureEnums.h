@@ -9,17 +9,17 @@
 /// The types of texture we will support in our framework
 /// </summary>
 /// <see>https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glCreateTextures.xhtml</see>
-enum class TextureType : GLenum {
+ENUM(TextureType, GLenum,
 	_1D = GL_TEXTURE_1D,
 	_2D = GL_TEXTURE_2D,
 	_3D = GL_TEXTURE_3D,
 	Cubemap = GL_TEXTURE_CUBE_MAP,
 	_2DMultisample = GL_TEXTURE_2D_MULTISAMPLE
-};
+);
 
 // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glTexImage2D.xhtml
 // These are some of our more common available internal formats
-enum class InternalFormat : GLint {
+ENUM(InternalFormat, GLint,
 	Unknown      = GL_NONE,
 	Depth        = GL_DEPTH_COMPONENT,
 	DepthStencil = GL_DEPTH_STENCIL,
@@ -36,10 +36,10 @@ enum class InternalFormat : GLint {
 	RGBA16       = GL_RGBA16,
 	RGB32AF      = GL_RGBA32F
 	// Note: There are sized internal formats but there is a LOT of them
-};
+);
 
 // The layout of the input pixel data
-enum class PixelFormat : GLint {
+ENUM(PixelFormat, GLint,
 	Red          = GL_RED,
 	RG           = GL_RG,
 	RGB          = GL_RGB,
@@ -49,10 +49,10 @@ enum class PixelFormat : GLint {
 	BGRA         = GL_BGRA,
 	Depth        = GL_DEPTH_COMPONENT,
 	DepthStencil = GL_DEPTH_STENCIL
-};
+);
 
 // The type for each component of the pixel data
-enum class PixelType : GLint{
+ENUM(PixelType, GLint,
 	UByte  = GL_UNSIGNED_BYTE,
 	Byte   = GL_BYTE,
 	UShort = GL_UNSIGNED_SHORT,
@@ -60,38 +60,37 @@ enum class PixelType : GLint{
 	UInt   = GL_UNSIGNED_INT,
 	Int    = GL_INT,
 	Float  = GL_FLOAT
-};
+);
 
 // These are our options for GL_TEXTURE_WRAP_T, GL_TEXTURE_WRAP_S and GL_TEXTURE_WRAP_R
-enum class WrapMode : GLint {
+ENUM(WrapMode, GLint,
 	ClampToEdge       = GL_CLAMP_TO_EDGE,
 	ClampToBorder     = GL_CLAMP_TO_BORDER,
 	MirroredRepeat    = GL_MIRRORED_REPEAT,
 	Repeat            = GL_REPEAT, // Default
 	MirrorClampToEdge = GL_MIRROR_CLAMP_TO_EDGE
-};
+);
 
 // These are our available options for the GL_TEXTURE_MIN_FILTER setting
-enum class MinFilter : GLint {
+ENUM(MinFilter, GLint,
 	Nearest           = GL_NEAREST,
 	Linear            = GL_LINEAR,
 	NearestMipNearest = GL_NEAREST_MIPMAP_NEAREST,
 	LinearMipNearest  = GL_LINEAR_MIPMAP_NEAREST,
 	NearestMipLinear  = GL_NEAREST_MIPMAP_LINEAR, // This is the default setting
 	LinearMipLinear   = GL_LINEAR_MIPMAP_LINEAR
-};
+);
 
 // These are our available options for the GL_TEXTURE_MAG_FILTER setting
-enum class MagFilter : GLint {
+ENUM(MagFilter, GLint, 
 	Nearest = GL_NEAREST,
 	Linear  = GL_LINEAR  // This is the default setting
-};
+);
 
 /*
  * Gets the size of a single component in the given format, in bytes.
  */
-constexpr size_t GetTexelComponentSize(PixelType type)
-{
+constexpr size_t GetTexelComponentSize(PixelType type) {
 	switch (type) {
 	case PixelType::UByte:
 	case PixelType::Byte:
@@ -111,10 +110,8 @@ constexpr size_t GetTexelComponentSize(PixelType type)
 /*
  * Gets the number of components in a given pixel format
  */
-constexpr GLint GetTexelComponentCount(PixelFormat format)
-{
-	switch (format)
-	{
+constexpr GLint GetTexelComponentCount(PixelFormat format) {
+	switch (format) {
 		case PixelFormat::Depth:
 		case PixelFormat::DepthStencil:
 		case PixelFormat::Red:

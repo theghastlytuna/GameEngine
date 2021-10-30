@@ -3,16 +3,29 @@
 #include <cstdint>
 #include <stdexcept>
 #include <memory>
+#include <EnumToString.h>
 
 /// <summary>
 /// Represents the element type of an Index Buffer
 /// </summary>
-enum class IndexType {
-	UByte = GL_UNSIGNED_BYTE,
-	UShort = GL_UNSIGNED_SHORT,
-	UInt = GL_UNSIGNED_INT,
+ENUM(IndexType, GLenum,
+	UByte   = GL_UNSIGNED_BYTE,
+	UShort  = GL_UNSIGNED_SHORT,
+	UInt    = GL_UNSIGNED_INT,
 	Unknown = GL_NONE
-};
+);
+
+inline size_t GetIndexTypeSize(IndexType type) {
+	switch (type) {
+		case IndexType::UByte:  return sizeof(uint8_t);
+		case IndexType::UShort: return sizeof(uint16_t);
+		case IndexType::UInt:   return sizeof(uint32_t);
+		case IndexType::Unknown:
+		default:
+			return 0;
+
+	}
+}
 
 /// <summary>
 /// The index buffer will store indices for rendering (uint8_t, uint16_t and uint32_t)

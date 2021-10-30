@@ -8,15 +8,13 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include "imgui_internal.h"
 
 #include <Logging.h>
 
+#include <GLM/glm.hpp>
+
 GLFWwindow* ImGuiHelper::_window = nullptr;
-
-
-struct ImGuiHelperContext {
-
-};
 
 void ImGuiHelper::Init(GLFWwindow* window) {
 	LOG_ASSERT(_window == nullptr, "Init has already been called! Should only be called once per application");

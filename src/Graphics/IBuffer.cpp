@@ -25,10 +25,14 @@ void IBuffer::LoadData(const void* data, size_t elementSize, size_t elementCount
 	_elementSize = elementSize;
 }
 
-void IBuffer::Bind() {
+void IBuffer::Bind() const {
 	glBindBuffer((GLenum)_type, _handle);
 }
 
 void IBuffer::UnBind(BufferType type) {
 	glBindBuffer((GLenum)type, 0);
+}
+
+void IBuffer::UnBind(BufferType type, int slot) {
+	glBindBufferBase((GLenum)type, slot, 0);
 }

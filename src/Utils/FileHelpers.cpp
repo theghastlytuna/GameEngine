@@ -22,10 +22,10 @@ std::string FileHelpers::ReadFile(const std::string& filename) {
 			in.seekg(0, std::ios::beg);
 			in.read(&result[0], size);
 		} else {
-			LOG_ERROR("Could not read from file '{0}'", filename);
+			LOG_ERROR("Could not read from file '{}'", filename);
 		}
 	} else {
-		LOG_ERROR("Could not open file '{0}'", filename);
+		LOG_ERROR("Could not open file '{}'", filename);
 	}
 
 	return result;

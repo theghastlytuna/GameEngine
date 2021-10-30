@@ -130,9 +130,13 @@ public:
 			ebo->LoadData(GetIndexDataPtr(), _indices.size());
 		}
 
+		// Create VAO and attach the buffers
 		VertexArrayObject::Sptr result = VertexArrayObject::Create();
 		result->AddVertexBuffer(vbo, VertType::V_DECL);
 		result->SetIndexBuffer(ebo);
+
+		// Store our vertex type in the VAO's vertex declaration
+		result->SetVDecl(VertType::V_DECL);
 
 		return result;
 	}

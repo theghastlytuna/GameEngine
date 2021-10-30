@@ -2,9 +2,33 @@
 #include <stb_image.h>
 #include <Logging.h>
 #include "GLM/glm.hpp"
+#include "Utils/JsonGlmHelpers.h"
+
+nlohmann::json Texture2D::ToJson() const {
+	return {
+		{ "filename", _description.Filename },
+		{ "wrap_s",  ~_description.HorizontalWrap },
+		{ "wrap_t",  ~_description.VerticalWrap },
+	};
+}
+
+Texture2D::Sptr Texture2D::FromJson(const nlohmann::json& data)
+{
+	Texture2DDescription descr = Texture2DDescription();
+	descr.Filename = data["filename"];
+	descr.HorizontalWrap = JsonParseEnum(WrapMode, data, "wrap_s", WrapMode::ClampToEdge);
+	descr.VerticalWrap   = JsonParseEnum(WrapMode, data, "wrap_t", WrapMode::ClampToEdge);
+	return std::make_shared<Texture2D>(descr);
+}
 
 Texture2D::Texture2D(const Texture2DDescription& description) : ITexture(TextureType::_2D) {
 	_description = description;
+	_SetTextureParams();
+	_LoadDataFromFile();
+}
+
+Texture2D::Texture2D(const std::string& filePath) : ITexture(TextureType::_2D) {
+	_description.Filename = filePath;
 	_SetTextureParams();
 	_LoadDataFromFile();
 }

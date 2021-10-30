@@ -7,7 +7,8 @@
 /// <see>https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glBufferData.xhtml</see>
 enum class BufferType {
 	Vertex = GL_ARRAY_BUFFER,
-	Index = GL_ELEMENT_ARRAY_BUFFER
+	Index = GL_ELEMENT_ARRAY_BUFFER,
+	Uniform = GL_UNIFORM_BUFFER
 };
 
 /// <summary>
@@ -101,12 +102,19 @@ public:
 	/// <summary>
 	/// Binds this buffer for use to the slot returned by GetType()
 	/// </summary>
-	virtual void Bind();
+	virtual void Bind() const;
 	/// <summary>
 	/// Unbinds the buffer bound to the slot given by type
 	/// </summary>
 	/// <param name="type">The type or slot of buffer to unbind (ex: GL_ARRAY_BUFFER, GL_ARRAY_ELEMENT_BUFFER)</param>
+	/// <param name="slot">The buffer slot to unbind, for the vast majority of cases this should be 0</param>
 	static void UnBind(BufferType type);
+	/// <summary>
+	/// Unbinds the indexed buffers bound to the slot given by type and slot
+	/// </summary>
+	/// <param name="type">The type or slot of buffer to unbind (ex: GL_UNIFORM_BUFFER)</param>
+	/// <param name="slot">The buffer slot to unbind</param>
+	static void UnBind(BufferType type, int slot);
 
 protected:
 	/// <summary>

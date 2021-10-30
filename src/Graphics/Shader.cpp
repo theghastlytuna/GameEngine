@@ -12,6 +12,18 @@ Shader::Shader() :
 	_handle = glCreateProgram();
 }
 
+Shader::Shader(const std::unordered_map<ShaderPartType, std::string>& filePaths) :
+	IResource(),
+	_handle(0)
+{
+	_handle = glCreateProgram();
+	for (auto& [type, path] : filePaths) {
+		LoadShaderPartFromFile(path.c_str(), type);
+	}
+	Link();
+}
+
+
 Shader::~Shader() {
 	if (_handle != 0) {
 		glDeleteProgram(_handle);
@@ -62,6 +74,9 @@ bool Shader::LoadShaderPart(const char* source, ShaderPartType type)
 		default: LOG_WARN("Not implemented"); break;
 	}
 
+	_fileSourceMap[type].Source = source;
+	_fileSourceMap[type].IsFilePath = false;
+
 	return status != GL_FALSE;
 }
 
@@ -77,6 +92,9 @@ bool Shader::LoadShaderPartFromFile(const char* path, ShaderPartType type) {
 
 		// Compile the shader part from the loaded contents of the file
 		bool result = LoadShaderPart(stream.str().c_str(), type);
+
+		_fileSourceMap[type].Source = path;
+		_fileSourceMap[type].IsFilePath = true;
 
 		// Close the file
 		file.close();
@@ -203,5 +221,37 @@ int Shader::__GetUniformLocation(const std::string& name) {
 		result = it->second;
 	}
 
+	return result;
+}
+
+
+nlohmann::json Shader::ToJson() const {
+	nlohmann::json result;
+	for (auto& [key, value] : _fileSourceMap) {
+		result[~key][value.IsFilePath ? "path" : "source"] = value.Source;
+	}
+	return result;
+
+}
+
+Shader::Sptr Shader::FromJson(const nlohmann::json& data) {
+	Shader::Sptr result = std::make_shared<Shader>();
+	for (auto& [key, blob] : data.items()) {
+		// Get the shader part type from the key
+		ShaderPartType type = ParseShaderPartType(key, ShaderPartType::Unknown);
+		// As long as the type is valid
+		if (type != ShaderPartType::Unknown) {
+			// If it has a file, we load from file
+			if (blob.contains("path")) {
+				result->LoadShaderPartFromFile(blob["path"].get<std::string>().c_str(), type);
+			}
+			// Otherwise we see if there's a source and load that instead
+			else if (blob.contains("source")) {
+				result->LoadShaderPart(blob["source"].get<std::string>().c_str(), type);
+			}
+			// Otherwise do nothing
+		}
+	}
+	result->Link();
 	return result;
 }

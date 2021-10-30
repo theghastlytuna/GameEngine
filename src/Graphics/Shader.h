@@ -5,16 +5,18 @@
 #include <unordered_map>        // for std::unordered_map
 #include <GLM/glm.hpp>          // for our GLM types
 #include <GLM/gtc/type_ptr.hpp> // for glm::value_ptr
-#include "Logging.h"            // for the logging functions
-#include "IResource.h"
+#include <Logging.h>            // for the logging functions
+#include <EnumToString.h>
+
+#include "Utils/ResourceManager/IResource.h"
 
 // We can use an enum to make our code more readable and restrict
 // values to only ones we want to accept
-enum class ShaderPartType {
+ENUM(ShaderPartType, GLenum,
 	Vertex = GL_VERTEX_SHADER,
 	Fragment = GL_FRAGMENT_SHADER,
 	Unknown = GL_NONE // Usually good practice to have an "unknown" or "none" state for enums
-};
+);
 
 /// <summary>
 /// This class will wrap around an OpenGL shader program
@@ -34,12 +36,16 @@ public:
 	Shader(Shader&& other) = delete;
 	Shader& operator=(const Shader& other) = delete;
 	Shader& operator=(Shader&& other) = delete;
-	
+
+	virtual nlohmann::json ToJson() const override;
+	static Shader::Sptr FromJson(const nlohmann::json& data);
+
 public:
 	/// <summary>
 	/// Creates a new empty shader object
 	/// </summary>
 	Shader();
+	Shader(const std::unordered_map<ShaderPartType, std::string>& filePaths);
 
 	// Note, we don't need to make this virtual since this class is marked final (basically it can't be used as a base class)
 	~Shader();
@@ -113,14 +119,23 @@ public:
 			LOG_WARN("Ignoring uniform \"{}\"", name);
 		}
 	}
-	
+
 protected:
 	// Stores the vertex and fragment shader handles
 	GLuint _vs;
 	GLuint _fs;
-	
+
 	// Stores the shader program handle
 	GLuint _handle;
+
+	// Stores information about the source of our shader parts
+	// EX: if a VS shader is loaded from a file, will contain
+	// the file path, and IsFilePath=true
+	struct ShaderSource {
+		std::string Source;
+		bool        IsFilePath;
+	};
+	std::unordered_map<ShaderPartType, ShaderSource> _fileSourceMap;
 
 	// Map and access to look up uniform locations
 	std::unordered_map<std::string, int> _uniformLocs;

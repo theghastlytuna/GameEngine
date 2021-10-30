@@ -4,50 +4,18 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <GLFW/glfw3.h>
+#include <filesystem>
 
-// Borrowed from https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
-#pragma region String Trimming
-
-// trim from start (in place)
-static inline void ltrim(std::string& s) {
-	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
-		return !std::isspace(ch);
-		}));
-}
-
-// trim from end (in place)
-static inline void rtrim(std::string& s) {
-	s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
-		return !std::isspace(ch);
-		}).base(), s.end());
-}
-
-// trim from both ends (in place)
-static inline void trim(std::string& s) {
-	ltrim(s);
-	rtrim(s);
-}
-
-/// <summary>
-/// Splits an std::string based on a delimiter
-/// </summary>
-/// <param name="text">The text to split</param>
-/// <param name="delimiter">The delimiter to split the string on</param>
-/// <returns>A vector of tokens extracted from the string</returns>
-static inline std::vector<std::string> SplitString(const std::string& text, const std::string& delimiter) {
-	std::vector<std::string> result;
-	size_t pos = 0;
-	while ((pos = text.find(delimiter, pos)) != std::string::npos) {
-		result.push_back(text.substr(0, pos));
-		pos += delimiter.length();
-	}
-	return result;
-}
-
-#pragma endregion 
+#include "Utils/StringUtils.h"
 
 VertexArrayObject::Sptr ObjLoader::LoadFromFile(const std::string& filename)
 {
+	if (!std::filesystem::exists(filename)) {
+		LOG_WARN("Failed to find OBJ file: \"{}\"", filename);
+		return nullptr;
+	}
+
 	// Open our file in binary mode
 	std::ifstream file;
 	file.open(filename, std::ios::binary);
@@ -67,6 +35,8 @@ VertexArrayObject::Sptr ObjLoader::LoadFromFile(const std::string& filename)
 
 	glm::vec3 vecData;
 	glm::ivec3 vertexIndices;
+
+	float startTime = glfwGetTime();
 
 	// Read and process the entire file
 	while (file.peek() != EOF) {
@@ -104,7 +74,7 @@ VertexArrayObject::Sptr ObjLoader::LoadFromFile(const std::string& filename)
 			// Read the rest of the line from the file
 			std::getline(file, line);
 			// Trim whitespace from either end of the line
-			trim(line);
+			StringTools::Trim(line);
 			// Create a string stream so we can use streaming operators on it
 			std::stringstream stream = std::stringstream(line);
 
@@ -115,7 +85,9 @@ VertexArrayObject::Sptr ObjLoader::LoadFromFile(const std::string& filename)
 				stream >> vertexIndices.x >> separator >> vertexIndices.y >> separator >> vertexIndices.z;
 
 				// The OBJ format can have negative values, which are a reference from the last added attributes
-				if (vertexIndices.x < 0) { vertexIndices.x = positions.size() - 1 + vertexIndices.x; }
+				if (vertexIndices.x < 0) { vertexIndices.x = positions.size() + 1 + vertexIndices.x; }
+				if (vertexIndices.y < 0) { vertexIndices.y = uvs.size()       + 1 + vertexIndices.y; }
+				if (vertexIndices.z < 0) { vertexIndices.z = normals.size()   + 1 + vertexIndices.z; }
 
 				// OBJ format uses 1-based indices
 				vertexIndices -= glm::ivec3(1);
@@ -152,6 +124,12 @@ VertexArrayObject::Sptr ObjLoader::LoadFromFile(const std::string& filename)
 	// Create the VAO, and add the vertices
 	VertexArrayObject::Sptr result = VertexArrayObject::Create();
 	result->AddVertexBuffer(vertexBuffer, VertexPosNormTexCol::V_DECL);
+
+	result->SetVDecl(VertexPosNormTexCol::V_DECL);
+	
+	// Calculate and trace out how long it took us to load
+	float endTime = glfwGetTime();
+	LOG_TRACE("Loaded OBJ file \"{}\" in {} seconds ({} vertices, {} indices)", filename, endTime - startTime, vertexData.size(), 0);
 
 	return result;
 	//return VertexArrayObject::Create();

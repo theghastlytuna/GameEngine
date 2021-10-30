@@ -2,12 +2,15 @@
 
 #include <json.hpp>
 #include <unordered_map>
+#include <typeindex>
 
 #include "Graphics/Texture2D.h";
 #include "Graphics/VertexArrayObject.h";
 #include "Graphics/Shader.h";
+#include "Gameplay/Material.h";
 
 #include "Utils/GUID.hpp"
+#include "Utils/ResourceManager/IResource.h"
 
 /// <summary>
 /// Utility class for managing and loading resources from JSON
@@ -22,59 +25,66 @@ public:
 	static void Init();
 
 	/// <summary>
-	/// Loads a new 2D texture from the given JSON manifest data and returns it's GUID
+	/// Creates a new asset, and forwards the arguments to it's constructor
 	/// </summary>
-	/// <param name="jsonData">The JSON object containing the texture's information</param>
-	/// <returns>The texture's GUID</returns>
-	static Guid LoadTexture2D(const nlohmann::json& jsonData);
-	/// <summary>
-	/// Loads a new mesh from the given JSON manifest data and returns it's GUID
-	/// </summary>
-	/// <param name="jsonData">The JSON object containing the mesh's information</param>
-	/// <returns>The mesh's GUID</returns>
-	static Guid LoadMesh(const nlohmann::json& jsonData);
-	/// <summary>
-	/// Loads a new shader from the given JSON manifest data and returns it's GUID
-	/// </summary>
-	/// <param name="jsonData">The JSON object containing the shader's information</param>
-	/// <returns>The shader's GUID</returns>
-	static Guid LoadShader(const nlohmann::json& jsonData);
+	/// <typeparam name="T">The type of asset to create</typeparam>
+	/// <typeparam name="...TArgs">The types for the arguments to forward to the constructor</typeparam>
+	/// <param name="...args">The arguments to forward to the constructor</param>
+	/// <returns>The GUID of the newly created asset</returns>
+	template <typename T, typename ... TArgs, typename = std::enable_if<is_valid_resource<T>()>::type>
+	static std::shared_ptr<T> CreateAsset(TArgs&&... args) {
+		// Create and store the asset
+		std::shared_ptr<T> asset = std::make_shared<T>(std::forward<TArgs>(args)...);
+		_resources[std::type_index(typeid(T))][asset->IResource::GetGUID()] = asset;
+
+		// Get the JSON representation of the asset so we can store it in the manifest
+		nlohmann::json data = asset->ToJson();
+
+		// Make sure the data has the GUID
+		std::string guid = asset->IResource::GetGUID().str();
+		data["guid"] = guid;
+
+		// Store the JSON data in the resource manifest (based on the type's name)
+		_manifest[StringTools::SanitizeClassName(typeid(T).name())][guid] = data;
+		return asset;
+	}
 
 	/// <summary>
-	/// Creates a manifest entry for a texture with the given parameters
+	/// Gets a shared pointer to the resource with the given type and GUID
 	/// </summary>
-	/// <param name="path">The relative path of the image to load</param>
-	/// <param name="desc">An optional texture desctiption to use for the image</param>
-	/// <returns>A JSON blob that can be appended to a manifest</returns>
-	static Guid CreateTexture(const std::string& path, const Texture2DDescription& desc = Texture2DDescription());
+	/// <typeparam name="T">The type of resource to retreive</typeparam>
+	/// <param name="id">The ID of the resource to retrieve</param>
+	/// <returns>The resource with the given GUID, or nullptr if none exists</returns>
+	template<typename T, typename = std::enable_if<is_valid_resource<T>()>::type>
+	static std::shared_ptr<T> Get(Guid id) {
+		return std::dynamic_pointer_cast<T>(_resources[std::type_index(typeid(T))][id]);
+	}
+
 	/// <summary>
-	/// Creates a manifest entry for a mesh with the given parameters
+	/// Registers a resource type with the resource manager, only types that have been registered
+	/// can be loaded from JSON manifest files!
 	/// </summary>
-	/// <param name="path">The relative path of the mesh file to load (.obj file)</param>
-	/// <returns>A JSON blob that can be appended to a manifest</returns>
-	static Guid CreateMesh(const std::string& path);
-	/// <summary>
-	/// Creates a manifest entry for a shader with the given parameters
-	/// </summary>
-	/// <param name="paths">The paths and corresponding ShaderPartTypes for the program (note: only VS and FS are currently supported)</param>
-	/// <returns>A JSON blob that can be appended to a manifest</returns>
-	static Guid CreateShader(const std::unordered_map<ShaderPartType, std::string>& paths);
-	
-	/// <summary>
-	/// Gets the texture with the given GUID, or nullptr if it has not been loaded
-	/// </summary>
-	/// <param name="id">The GUID of the texture to fetch</param>
-	static Texture2D::Sptr GetTexture(Guid id);
-	/// <summary>
-	/// Gets the mesh with the given GUID, or nullptr if it has not been loaded
-	/// </summary>
-	/// <param name="id">The GUID of the mesh to fetch</param>
-	static VertexArrayObject::Sptr GetMesh(Guid id);
-	/// <summary>
-	/// Gets the shader with the given GUID, or nullptr if it has not been loaded
-	/// </summary>
-	/// <param name="id">The GUID of the shader to fetch</param>
-	static Shader::Sptr GetShader(Guid id);
+	/// <typeparam name="T">The type to register, must satisfy the is_valid_resource constraint</typeparam>
+	/// <typeparam name=""></typeparam>
+	template <typename T, typename = std::enable_if<is_valid_resource<T>()>::type>
+	static void RegisterType() {
+		// Extract the type name from a sanitized version of they typeid name
+		std::string typeName = StringTools::SanitizeClassName(typeid(T).name());
+
+		// Create the type loader for the type
+		_typeLoaders[typeName] = [](const nlohmann::json& data) {
+			IResource::Sptr res = T::FromJson(data);
+			res->OverrideGUID(Guid(data["guid"]));
+			_resources[std::type_index(typeid(T))][res->GetGUID()] = res;
+			return res->GetGUID();
+		};
+
+		// Make sure we haven't registered the type yet, then add an empty object
+		// to the manifest to ensure it can be saved
+		if (!_manifest.contains(typeName)) {
+			_manifest[typeName] = nlohmann::json();
+		}
+	}
 
 	/// <summary>
 	/// Gets the current JSON manifest
@@ -97,9 +107,16 @@ public:
 	static void Cleanup();
 
 protected:
-	static std::map<Guid, Texture2D::Sptr> _textures;
-	static std::map<Guid, VertexArrayObject::Sptr> _meshes;
-	static std::map<Guid, Shader::Sptr> _shaders;
+	/// <summary>
+	/// This is a map of maps
+	/// The top level map uses type_index, so there's a map per resource type
+	/// The inner map handles mapping GUIDs to the corresponding resource
+	/// </summary>
+	static std::map<std::type_index, std::map<Guid, IResource::Sptr>> _resources;
+	/// <summary>
+	/// This map stores registered types, so we can load them from JSON files
+	/// </summary>
+	static std::map<std::string, std::function<Guid(const nlohmann::json&)>> _typeLoaders;
 
-	static nlohmann::json _manifest;
+	static nlohmann::ordered_json _manifest;
 };

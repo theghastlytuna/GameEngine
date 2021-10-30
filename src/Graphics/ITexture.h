@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <Graphics/TextureEnums.h>
 #include <GLM/glm.hpp>
-#include "IResource.h"
+#include "Utils/ResourceManager/IResource.h"
 
 /// <summary>
 /// The abstract base class for all our textures that we'll be implementing
