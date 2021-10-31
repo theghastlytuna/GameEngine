@@ -58,7 +58,7 @@
 #include "Gameplay/Physics/Colliders/SphereCollider.h"
 #include "Gameplay/Physics/Colliders/ConvexMeshCollider.h"
 #include "Gameplay/Physics/TriggerVolume.h"
-#include "../../Week8-Completed/src/Graphics/DebugDraw.h"
+#include "../../GameEngine/src/Graphics/DebugDraw.h"
 
 //#define LOG_GL_NOTIFICATIONS
 
@@ -265,8 +265,10 @@ int main() {
 		}); 
 
 		MeshResource::Sptr monkeyMesh = ResourceManager::CreateAsset<MeshResource>("Monkey.obj");
+		MeshResource::Sptr mapMesh = ResourceManager::CreateAsset<MeshResource>("MapLayout.obj");
 		Texture2D::Sptr    boxTexture = ResourceManager::CreateAsset<Texture2D>("textures/box-diffuse.png");
 		Texture2D::Sptr    monkeyTex  = ResourceManager::CreateAsset<Texture2D>("textures/monkey-uvMap.png");  
+		Texture2D::Sptr    mapTex = ResourceManager::CreateAsset<Texture2D>("textures/mapLayout.png");
 		
 		// Create an empty scene
 		scene = std::make_shared<Scene>();
@@ -289,6 +291,15 @@ int main() {
 			monkeyMaterial->MatShader = scene->BaseShader;
 			monkeyMaterial->Texture = monkeyTex;
 			monkeyMaterial->Shininess = 256.0f;
+
+		}
+
+		Material::Sptr mapMaterial = ResourceManager::CreateAsset<Material>();
+		{
+			mapMaterial->Name = "map";
+			mapMaterial->MatShader = scene->BaseShader;
+			mapMaterial->Texture = mapTex;
+			mapMaterial->Shininess = 256.0f;
 
 		}
 
@@ -376,7 +387,30 @@ int main() {
 			triggerInteraction->EnterMaterial = boxMaterial;
 			triggerInteraction->ExitMaterial = monkeyMaterial;
 		}
+		
+		GameObject::Sptr map = scene->CreateGameObject("map");
+		{
+			// Set position in the scene
+			map->SetPostion(glm::vec3(1.5f, 0.0f, -1.0f));
+			map->SetRotation(glm::vec3(90.0f, 0.0f, 1.0f));
 
+			// Create and attach a renderer for the monkey
+			RenderComponent::Sptr renderer = map->Add<RenderComponent>();
+			renderer->SetMesh(mapMesh);
+			renderer->SetMaterial(mapMaterial);
+
+
+			// Add a dynamic rigid body to this monkey
+			//RigidBody::Sptr physics = map->Add<RigidBody>(RigidBodyType::Dynamic);
+			//physics->AddCollider(ConvexMeshCollider::Create());
+
+
+			// We'll add a behaviour that will interact with our trigger volumes
+			//MaterialSwapBehaviour::Sptr triggerInteraction = monkey1->Add<MaterialSwapBehaviour>();
+			//triggerInteraction->EnterMaterial = boxMaterial;
+			//triggerInteraction->ExitMaterial = monkeyMaterial;
+		}
+		
 		GameObject::Sptr monkey2 = scene->CreateGameObject("Complex Object");
 		{
 			// Set and rotation position in the scene
@@ -437,6 +471,10 @@ int main() {
 	float panSpeed = 0.05f;
 
 	nlohmann::json editorSceneState;
+
+	bool isJumping = false;
+	glm::vec3 jumpForce = glm::vec3(0.0f, 0.0f, 5.0f);
+	float jumpScale = 0.1f;
 
 	///// Game loop /////
 	while (!glfwWindowShouldClose(window)) {
@@ -524,17 +562,36 @@ int main() {
 			// Split lights from the objects in ImGui
 			ImGui::Separator();
 		}
+		/*
+		if (scene->IsPlaying)
+		{
+			if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+			{
+				isJumping = true;
+				jumpScale = 0.1f;
+			}
 
+			if (isJumping)
+			{
+				monkey->SetPostion(monkey->GetPosition() + jumpScale * jumpForce);
+				jumpScale -= 0.1f;
+
+				if (jumpScale <= 0.0f)
+				{
+					isJumping = false;
+				}
+			}
+		}
+		*/
 		dt *= playbackSpeed;
 
 		// Perform updates for all components
 		scene->Update(dt);
 
-		
-
 		// Grab shorthands to the camera and shader from the scene
 		Camera::Sptr camera = scene->MainCamera;
 		GameObject* cameraObj = camera->GetGameObject();
+
 		glm::vec3 forward = glm::normalize(cameraObj->GetTransform()[2]);
 		glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(cameraObj->GetTransform()[1])));
 
