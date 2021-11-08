@@ -477,7 +477,7 @@ void MeshFactory::AddUvSphere(MeshBuilder<Vertex>& data, const glm::vec3& center
 
 template <typename Vertex>
 void MeshFactory::AddPlane(MeshBuilder<Vertex>& mesh, const glm::vec3& pos, const glm::vec3& normal,
-	const glm::vec3& tangent, const glm::vec2& scale, const glm::vec4& col)
+	const glm::vec3& tangent, const glm::vec2& scale, const glm::vec2& uvScale, const glm::vec4& col)
 {
 	VertexParamMap vMap = VertexParamMap(Vertex::V_DECL);
 	if (vMap.PositionOffset == -1) {
@@ -497,10 +497,10 @@ void MeshFactory::AddPlane(MeshBuilder<Vertex>& mesh, const glm::vec3& pos, cons
 	};
 
 	glm::vec2 uvs[] = {
-		glm::vec2(0.0f, 0.0f), // 0
-		glm::vec2(0.0f, 1.0f), // 1
-		glm::vec2(1.0f, 1.0f), // 2
-		glm::vec2(1.0f, 0.0f), // 3
+		glm::vec2(0.0f, 0.0f) * uvScale, // 0
+		glm::vec2(0.0f, 1.0f) * uvScale, // 1
+		glm::vec2(1.0f, 1.0f) * uvScale, // 2
+		glm::vec2(1.0f, 0.0f) * uvScale, // 3
 	};
 
 	Vertex verts[4];
@@ -628,7 +628,7 @@ void MeshFactory::AddParameterized(MeshBuilder<Vertex>& mesh, const MeshBuilderP
 	const std::unordered_map<std::string, glm::vec3>& Params = param.Params;
 	switch (param.Type) {
 		case MeshBuilderType::Plane:
-			MeshFactory::AddPlane(mesh, Params.at("position"), Params.at("normal"), Params.at("tangent"), Params.at("scale"), param.Color);
+			MeshFactory::AddPlane(mesh, Params.at("position"), Params.at("normal"), Params.at("tangent"), Params.at("scale"), Params.at("uv_scale"), param.Color);
 			break;
 		case MeshBuilderType::Cube:
 			MeshFactory::AddCube(mesh, Params.at("position"), Params.at("scale"), Params.at("rotation"), param.Color);
@@ -639,7 +639,31 @@ void MeshFactory::AddParameterized(MeshBuilder<Vertex>& mesh, const MeshBuilderP
 		case MeshBuilderType::UvSphere:
 			MeshFactory::AddUvSphere(mesh, Params.at("position"), Params.at("scale"), Params.at("tessellation").x, param.Color);
 			break;
+		case MeshBuilderType::FaceInvert:
+			MeshFactory::InvertFaces(mesh);
 		default:
 			break;
+	}
+}
+
+
+template <typename Vertex>
+void MeshFactory::InvertFaces(MeshBuilder<Vertex>& mesh)
+{
+	if (mesh.GetIndexCount() > 0) {
+		uint32_t* data = (uint32_t*)mesh.GetIndexDataPtr();
+		for (size_t ix = 0; ix < mesh.GetIndexCount(); ix+=3) {
+			//https://www.geeksforgeeks.org/swap-two-numbers-without-using-temporary-variable/
+			data[ix]     = data[ix] + data[ix + 1];
+			data[ix + 1] = data[ix] - data[ix + 1];
+			data[ix]     = data[ix] - data[ix + 1];
+		}
+	} else if (mesh.GetVertexCount() > 0) {
+		Vertex* data = (Vertex*)mesh.GetVertexDataPtr();
+		for (size_t ix = 0; ix < mesh.GetVertexCount(); ix+=3) {
+			Vertex temp = data[ix];
+			data[ix] = data[ix + 1];
+			data[ix + 1] = temp;
+		}
 	}
 }

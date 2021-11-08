@@ -3,6 +3,7 @@
 #include "Gameplay/GameObject.h"
 #include "Gameplay/Scene.h"
 #include "Utils/ImGuiHelper.h"
+#include "Gameplay/Components/MaterialSwapBehaviour.h"
 
 void JumpBehaviour::Awake()
 {
@@ -37,9 +38,16 @@ JumpBehaviour::Sptr JumpBehaviour::FromJson(const nlohmann::json& blob) {
 
 void JumpBehaviour::Update(float deltaTime) {
 	bool pressed = glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_SPACE);
+
+	//Find whether the attached object is on the ground
+	_onGround = this->GetGameObject()->Get<MaterialSwapBehaviour>()->GetOnGround();
+
 	if (pressed) {
 		if (_isPressed == false) {
-			_body->ApplyImpulse(glm::vec3(0.0f, 0.0f, _impulse));
+			if (_onGround)
+			{
+				_body->ApplyImpulse(glm::vec3(0.0f, 0.0f, _impulse));
+			}
 		}
 		_isPressed = pressed;
 	} else {

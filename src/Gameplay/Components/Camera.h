@@ -71,7 +71,7 @@ namespace Gameplay {
 		/// <summary>
 		/// Gets the view matrix for this camera
 		/// </summary>
-		const glm::mat4& GetView() const { return _view; }
+		const glm::mat4& GetView() const;
 		/// <summary>
 		/// Gets the projection matrix for this camera
 		/// </summary>

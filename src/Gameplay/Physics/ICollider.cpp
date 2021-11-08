@@ -56,7 +56,7 @@ namespace Gameplay::Physics {
 	}
 
 	ICollider* ICollider::SetRotation(const glm::vec3& value) {
-		_rotation = glm::fmod(_rotation, DEGREE_MAX);
+		_rotation = glm::fmod(value, DEGREE_MAX);
 		_isDirty = true;
 		return this;
 	}

@@ -92,7 +92,7 @@ namespace Gameplay {
 		/// <summary>
 		/// Gets the euler angles from this object in degrees
 		/// </summary>
-		const glm::vec3& GetRotationEuler() const;
+		glm::vec3 GetRotationEuler() const;
 
 		/// <summary>
 		/// Sets the scaling factor for the game object, should be non-zero
@@ -106,8 +106,14 @@ namespace Gameplay {
 
 		/// <summary>
 		/// Gets or recalculates and gets the object's world transform
+		/// This matrix transforms points from local space to world space
 		/// </summary>
 		const glm::mat4& GetTransform() const;
+		/// <summary>
+		/// Gets or recalculates the inverse of this object's world transform
+		/// This matrix transforms points from world space to local space
+		/// </summary>
+		const glm::mat4& GetInverseTransform() const;
 
 		/// <summary>
 		/// Returns a pointer to the scene that this GameObject belongs to
@@ -141,6 +147,8 @@ namespace Gameplay {
 			return false;
 		}
 
+		bool Has(const std::type_index& type);
+
 		/// <summary>
 		/// Gets the component of the given type from this gameobject, or nullptr if it does not exist
 		/// </summary>
@@ -156,6 +164,8 @@ namespace Gameplay {
 			}
 			return nullptr;
 		}
+
+		std::shared_ptr<IComponent> Get(const std::type_index& type);
 
 		/// <summary>
 		/// Adds a component of the given type to this gameobject. Note that only one component
@@ -184,15 +194,19 @@ namespace Gameplay {
 			return component;
 		}
 
+		std::shared_ptr<IComponent> Add(const std::type_index& type);
+
 		/// <summary>
 		/// Draws the ImGui window for this game object and all nested components
 		/// </summary>
-		void DrawImGui(float indent = 0.0f);
+		void DrawImGui();
+
+		std::shared_ptr<GameObject> SelfRef();
 
 		/// <summary>
 		/// Loads a render object from a JSON blob
 		/// </summary>
-		static GameObject::Sptr FromJson(const nlohmann::json& data, Scene* scene);
+		static GameObject::Sptr FromJson(const nlohmann::json& data);
 		/// <summary>
 		/// Converts this object into it's JSON representation for storage
 		/// </summary>
@@ -210,10 +224,12 @@ namespace Gameplay {
 
 		// The object's world transform
 		mutable glm::mat4 _transform;
+		mutable glm::mat4 _inverseTransform;
 		mutable bool _isTransformDirty;
 
 		// The components that this game object has attached to it
 		std::vector<IComponent::Sptr> _components;
+		std::weak_ptr<GameObject> _selfRef;
 
 		// Pointer to the scene, we use raw pointers since 
 		// this will always be set by the scene on creation
@@ -224,5 +240,8 @@ namespace Gameplay {
 		/// Only scenes will be allowed to create gameobjects
 		/// </summary>
 		GameObject();
+
+		// Recalculates the transform matrix for the object when required
+		void _RecalcTransform() const;
 	};
 }

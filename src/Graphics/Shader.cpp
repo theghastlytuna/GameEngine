@@ -2,11 +2,13 @@
 #include "Logging.h"
 #include <fstream>
 #include <sstream>
+#include <filesystem>
 
-Shader::Shader() :
+#include "Utils/FileHelpers.h"
+
+Shader::Shader() : 
+	IResource(),
 	// We zero out all of our members so we don't have garbage data in our class
-	_vs(0),
-	_fs(0),
 	_handle(0)
 {
 	_handle = glCreateProgram();
@@ -23,7 +25,6 @@ Shader::Shader(const std::unordered_map<ShaderPartType, std::string>& filePaths)
 	Link();
 }
 
-
 Shader::~Shader() {
 	if (_handle != 0) {
 		glDeleteProgram(_handle);
@@ -31,8 +32,7 @@ Shader::~Shader() {
 	}
 }
 
-bool Shader::LoadShaderPart(const char* source, ShaderPartType type)
-{
+bool Shader::LoadShaderPart(const char* source, ShaderPartType type) {
 	// Creates a new shader part (VS, FS, GS, etc...)
 	GLuint handle = glCreateShader((GLenum)type);
 
@@ -68,65 +68,66 @@ bool Shader::LoadShaderPart(const char* source, ShaderPartType type)
 		return false;
 	}
 
-	switch (type) {
-		case ShaderPartType::Vertex: _vs = handle; break;
-		case ShaderPartType::Fragment: _fs = handle; break;
-		default: LOG_WARN("Not implemented"); break;
+	// If we're overwriting, warn and clean up the old program before we store
+	if (_handles[type] != 0) {
+		LOG_WARN("Another shader has been attached to this slot, overwriting");
+		glDeleteShader(_handles[type]);
 	}
+	_handles[type] = handle;
 
-	_fileSourceMap[type].Source = source;
+	// Store info about where we got this data from
 	_fileSourceMap[type].IsFilePath = false;
+	_fileSourceMap[type].Source = source;
 
 	return status != GL_FALSE;
 }
 
 bool Shader::LoadShaderPartFromFile(const char* path, ShaderPartType type) {
-	// Open the file at path
-	std::ifstream file(path);
-
-	// Check to see if the file is open
-	if (file.is_open()) {
-		// Create a string stream to load the entire contents of the file
-		std::stringstream stream;
-		stream << file.rdbuf();
-
-		// Compile the shader part from the loaded contents of the file
-		bool result = LoadShaderPart(stream.str().c_str(), type);
-
-		_fileSourceMap[type].Source = path;
+	// Make sure that the file exists before we try reading
+	if (std::filesystem::exists(path)) {
+		// Load the source from the file, using our helper that will
+		// resolve #include directives
+		std::string source = FileHelpers::ReadResolveIncludes(path);
+		// Pass off to LoadShaderPart
+		bool result =  LoadShaderPart(source.c_str(), type);
 		_fileSourceMap[type].IsFilePath = true;
-
-		// Close the file
-		file.close();
+		_fileSourceMap[type].Source = path;
 		return result;
-	}
-	// Failed to open file, log it and return false
-	else {
+	} else {
 		LOG_WARN("Could not open file at \"{}\"", path);
 		return false;
 	}
 }
 
-bool Shader::Link()
-{
-	LOG_ASSERT(_vs != 0 && _fs != 0, "Must attach both a vertex and fragment shader!");
+bool Shader::Link() {
+	LOG_ASSERT(_handles[ShaderPartType::Vertex] != 0 && _handles[ShaderPartType::Fragment] != 0, "Must attach both a vertex and fragment shader!");
 
-	// Attach our two shaders
-	glAttachShader(_handle, _vs);
-	glAttachShader(_handle, _fs);
+	LOG_TRACE("Starting shader link:");
+	// Attach all our shaders
+	for (auto& [type, id] : _handles) {
+		if (id != 0) {
+			glAttachShader(_handle, id);
+			LOG_TRACE("\t{} - {}", ~type, _fileSourceMap[type].IsFilePath ? _fileSourceMap[type].Source : "<from source>");
+		}
+	}
 
 	// Perform linking
 	glLinkProgram(_handle);
 
 	// Remove shader parts to save space (we can do this since we only needed the shader parts to compile an actual shader program)
-	glDetachShader(_handle, _vs);
-	glDeleteShader(_vs);
-	glDetachShader(_handle, _fs);
-	glDeleteShader(_fs);
+	for (auto& [type, id] : _handles) { 
+		if (id != 0) {
+			glDetachShader(_handle, id);
+			glDeleteShader(id);
+		}
+	}
+	// Remove all the handles so we don't accidentally use them
+	_handles.clear();
 
 	GLint status = 0;
 	glGetProgramiv(_handle, GL_LINK_STATUS, &status);
 
+	// If linking failed, figure out why
 	if (status == GL_FALSE)
 	{
 		// Get the length of the log
@@ -142,7 +143,13 @@ bool Shader::Link()
 		} else {
 			LOG_ERROR("Shader failed to link for an unknown reason!");
 		}
+	} else {
+		LOG_TRACE("Linking complete, starting introspection");
 	}
+
+	// Perform our uniform introspection to see what uniforms are in the shader
+	_Introspect();
+
 	return status != GL_FALSE;
 }
 
@@ -207,23 +214,11 @@ void Shader::SetUniform(int location, const glm::bvec4* value, int count) {
 }
 
 int Shader::__GetUniformLocation(const std::string& name) {
-	// Search the map for the given name
-	std::unordered_map<std::string, int>::const_iterator it = _uniformLocs.find(name);
-	int result = -1;
-
-	// If our entry was not found, we call glGetUniform and store it for next time
-	if (it == _uniformLocs.end()) {
-		result = glGetUniformLocation(_handle, name.c_str());
-		_uniformLocs[name] = result;
-	}
-	// Otherwise, we had a value in the map, return it
-	else {
-		result = it->second;
-	}
-
-	return result;
+	// Since the default constructor for UniformInfo sets location to -1,
+	// we can simply index the map and if it doesn't exist, the default
+	// will be used
+	return _uniforms[name].Location;
 }
-
 
 nlohmann::json Shader::ToJson() const {
 	nlohmann::json result;
@@ -242,8 +237,8 @@ Shader::Sptr Shader::FromJson(const nlohmann::json& data) {
 		// As long as the type is valid
 		if (type != ShaderPartType::Unknown) {
 			// If it has a file, we load from file
-			if (blob.contains("path")) {
-				result->LoadShaderPartFromFile(blob["path"].get<std::string>().c_str(), type);
+			if (blob.contains("file")) {
+				result->LoadShaderPartFromFile(blob["file"].get<std::string>().c_str(), type);
 			}
 			// Otherwise we see if there's a source and load that instead
 			else if (blob.contains("source")) {
@@ -252,6 +247,155 @@ Shader::Sptr Shader::FromJson(const nlohmann::json& data) {
 			// Otherwise do nothing
 		}
 	}
-	result->Link();
 	return result;
+}
+
+void Shader::_Introspect() {
+	_IntrospectUniforms();
+	_IntrospectUnifromBlocks();
+}
+
+void Shader::_IntrospectUniforms() {
+	// Query the program for how many active uniforms we have
+	int numInputs = 0;
+	glGetProgramInterfaceiv(_handle, GL_UNIFORM, GL_ACTIVE_RESOURCES, &numInputs);
+
+	// Iterate over all uniforms and extract some information
+	for (int ix = 0; ix < numInputs; ix++) {
+		// These are the parameters we want to collect
+		static GLenum pNames[] ={
+			GL_NAME_LENGTH,
+			GL_TYPE,
+			GL_ARRAY_SIZE,
+			GL_LOCATION
+		};
+		// Allocate space for results
+		int numProps = 0;
+		int props[4];
+		// Query the program about our uniform, passing data out to props
+		glGetProgramResourceiv(_handle, GL_UNIFORM, ix, 4, pNames, 4, &numProps, props);
+
+		// If location is -1, this is probably a uniform block element, ignore it
+		if (props[3] == -1)
+			continue;
+
+		// Create a new Uniform Info
+		UniformInfo e = UniformInfo();
+		e.Name.resize(props[0] - 1);
+
+		// Query uniform name from the program
+		int length = 0;
+		glGetProgramResourceName(_handle, GL_UNIFORM, ix, props[0], &length, &e.Name[0]);
+
+		// Store the other properties we got into the uniform info
+		e.Type = FromGLShaderDataType(props[1]);
+		e.Location = props[3];
+		e.ArraySize = props[2];
+
+		// If this is an array, we need to trim the [] off the name
+		if (e.ArraySize > 1) {
+			e.Name = e.Name.substr(0, e.Name.find('['));
+		}
+		// Trace is very low priority logs, we'll output our uniform info this way
+		LOG_TRACE("\tDetected a new uniform: {} - {} -> {}[{}]", e.Location, e.Name, e.Type, e.ArraySize);
+
+		// Store the uniform info
+		_uniforms[e.Name] = e;
+	}
+}
+
+void Shader::_IntrospectUnifromBlocks() {
+	// Query program for the number of uniform blocks
+	int numBlocks = 0;
+	glGetProgramInterfaceiv(_handle, GL_UNIFORM_BLOCK, GL_ACTIVE_RESOURCES, &numBlocks);
+
+	// Iterate over all blocks
+	for (int ix = 0; ix < numBlocks; ix++) {
+		// These are the properties that we want to extract
+		static GLenum pNamesBlockProperties[] ={
+			GL_NUM_ACTIVE_VARIABLES,
+			GL_BUFFER_BINDING,
+			GL_BUFFER_DATA_SIZE,
+			GL_NAME_LENGTH
+		};
+		// Query the program for our information
+		int results[4];
+		glGetProgramResourceiv(_handle, GL_UNIFORM_BLOCK, ix, 4, pNamesBlockProperties, 4, NULL, results);
+
+		// If this block has no active uniforms, skip it
+		if (!results[0])
+			continue;
+
+		// We want to get all the handles to active uniforms in the block
+		static GLenum pNamesActiveVars[] ={
+			GL_ACTIVE_VARIABLES
+		};
+		// We can use a vector to store results, initializing it's size to the number of
+		// active uniforms
+		std::vector<int> activeVars(results[0]);
+		glGetProgramResourceiv(_handle, GL_UNIFORM_BLOCK, ix, 1, pNamesActiveVars, results[0], NULL, activeVars.data());
+
+		// Create the block and copy in the info from the shader
+		UniformBlockInfo block = UniformBlockInfo();
+		block.DefaultBinding = results[1];
+		block.CurrentBinding = results[1];
+		block.SizeInBytes = results[2];
+		block.NumVariables = results[0];
+		block.SubUniforms.reserve(results[0]);
+
+		// Query block name from the program
+		block.Name.resize(results[3] - 1);
+		glGetProgramResourceName(_handle, GL_UNIFORM_BLOCK, ix, results[3], NULL, &block.Name[0]);
+
+		// This is our block index for use when we bind uniform buffers to the block
+		block.BlockIndex = glGetUniformBlockIndex(_handle, block.Name.c_str());
+
+		LOG_TRACE("\tDetected a new uniform block \"{}\" with {} variables bound at {} ", block.Name, block.NumVariables, block.DefaultBinding);
+
+		// Iterate over all the uniforms within the uniform block
+		for (int v = 0; v < results[0]; v++) {
+			// Parameters we wish to query from the uniform
+			static GLenum pNames[] ={
+				GL_NAME_LENGTH,
+				GL_TYPE,
+				GL_ARRAY_SIZE,
+				GL_OFFSET
+			};
+			// Query data from the program
+			int props[4];
+			glGetProgramResourceiv(_handle, GL_UNIFORM, activeVars[v], 4, pNames, 4, NULL, props);
+
+			// Store properties into the UniformInfo
+			UniformInfo var = UniformInfo();
+			var.Type = FromGLShaderDataType(props[1]);
+			var.Location = props[3];
+			var.ArraySize = props[2];
+
+			// Get the uniform name
+			var.Name.resize(props[0] - 1);
+			glGetProgramResourceName(_handle, GL_UNIFORM, activeVars[v], props[0], NULL, &var.Name[0]);
+
+			// If uuniform is array, remove the [0]
+			if (var.ArraySize > 1) {
+				var.Name = var.Name.substr(0, var.Name.find('['));
+			}
+
+			LOG_TRACE("\t\tDetected a new uniform: {}[{}] -> {} @ {}", var.Name, var.ArraySize, var.Type, var.Location);
+			
+			// Add uniform to the block
+			block.SubUniforms.push_back(var);
+		}
+
+		_uniformBlocks[block.Name] = block;
+	}
+}
+
+void Shader::BindUniformBlockToSlot(const std::string& name, int uboSlot)
+{
+	auto& it = _uniformBlocks.find(name);
+	if (it != _uniformBlocks.end()) {
+		UniformBlockInfo& block = it->second;
+		glUniformBlockBinding(_handle, block.BlockIndex, uboSlot);
+		block.CurrentBinding = uboSlot;
+	}
 }

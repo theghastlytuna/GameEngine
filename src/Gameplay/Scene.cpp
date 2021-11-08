@@ -7,26 +7,39 @@
 
 #include "Gameplay/Physics/RigidBody.h"
 #include "Gameplay/Physics/TriggerVolume.h"
+#include "Gameplay/MeshResource.h"
 
 #include "Graphics/DebugDraw.h"
+#include "Graphics/TextureCube.h"
+#include "Graphics/VertexArrayObject.h"
 
 namespace Gameplay {
 	Scene::Scene() :
-		Objects(std::vector<GameObject::Sptr>()),
+		_objects(std::vector<GameObject::Sptr>()),
+		_deletionQueue(std::vector<std::weak_ptr<GameObject>>()),
 		Lights(std::vector<Light>()),
 		IsPlaying(false),
 		MainCamera(nullptr),
-		BaseShader(nullptr),
+		DefaultMaterial(nullptr),
 		_isAwake(false),
 		_filePath(""),
-		_ambientLight(glm::vec3(0.1f)),
+		_skyboxShader(nullptr),
+		_skyboxMesh(nullptr),
+		_skyboxTexture(nullptr),
+		_skyboxRotation(glm::mat3(1.0f)),
 		_gravity(glm::vec3(0.0f, 0.0f, -9.81f))
 	{
+		_lightingUbo = std::make_shared<UniformBuffer<LightingUboStruct>>();
+		_lightingUbo->GetData().AmbientCol = glm::vec3(0.1f);
+		_lightingUbo->Update();
+		_lightingUbo->Bind(LIGHT_UBO_BINDING_SLOT);
+
 		_InitPhysics();
+
 	}
 
 	Scene::~Scene() {
-		Objects.clear();
+		_objects.clear();
 		_CleanupPhysics();
 	}
 
@@ -34,36 +47,67 @@ namespace Gameplay {
 		_bulletDebugDraw->setDebugMode((btIDebugDraw::DebugDrawModes)mode);
 	}
 
+	void Scene::SetSkyboxShader(const std::shared_ptr<Shader>& shader) {
+		_skyboxShader = shader;
+	}
+
+	std::shared_ptr<Shader> Scene::GetSkyboxShader() const {
+		return _skyboxShader;
+	}
+
+	void Scene::SetSkyboxTexture(const std::shared_ptr<TextureCube>& texture) {
+		_skyboxTexture = texture;
+	}
+
+	std::shared_ptr<TextureCube> Scene::GetSkyboxTexture() const {
+		return _skyboxTexture;
+	}
+
+	void Scene::SetSkyboxRotation(const glm::mat3& value) {
+		_skyboxRotation = value;
+		_lightingUbo->GetData().EnvironmentRotation = value;
+		_lightingUbo->Update();
+	}
+
+	const glm::mat3& Scene::GetSkyboxRotation() const {
+		return _skyboxRotation;
+	}
+
 	GameObject::Sptr Scene::CreateGameObject(const std::string& name)
 	{
 		GameObject::Sptr result(new GameObject());
 		result->Name = name;
 		result->_scene = this;
-		Objects.push_back(result);
+		result->_selfRef = result;
+		_objects.push_back(result);
 		return result;
 	}
 
+	void Scene::RemoveGameObject(const GameObject::Sptr& object) {
+		_deletionQueue.push_back(object);
+	}
+
 	GameObject::Sptr Scene::FindObjectByName(const std::string name) {
-		auto it = std::find_if(Objects.begin(), Objects.end(), [&](const GameObject::Sptr& obj) {
+		auto it = std::find_if(_objects.begin(), _objects.end(), [&](const GameObject::Sptr& obj) {
 			return obj->Name == name;
 		});
-		return it == Objects.end() ? nullptr : *it;
+		return it == _objects.end() ? nullptr : *it;
 	}
 
 	GameObject::Sptr Scene::FindObjectByGUID(Guid id) {
-		auto it = std::find_if(Objects.begin(), Objects.end(), [&](const GameObject::Sptr& obj) {
+		auto it = std::find_if(_objects.begin(), _objects.end(), [&](const GameObject::Sptr& obj) {
 			return obj->GUID == id;
 		});
-		return it == Objects.end() ? nullptr : *it;
+		return it == _objects.end() ? nullptr : *it;
 	}
 
 	void Scene::SetAmbientLight(const glm::vec3& value) {
-		_ambientLight = value;
-		BaseShader->SetUniform("u_AmbientCol", glm::vec3(0.1f));
+		_lightingUbo->GetData().AmbientCol = glm::vec3(0.1f);
+		_lightingUbo->Update();
 	}
 
 	const glm::vec3& Scene::GetAmbientLight() const { 
-		return _ambientLight;
+		return _lightingUbo->GetData().AmbientCol;
 	}
 
 	void Scene::Awake() {
@@ -73,8 +117,15 @@ namespace Gameplay {
 		glfwGetWindowSize(Window, &width, &height);
 		MainCamera->ResizeWindow(width, height);
 
+		if (_skyboxMesh == nullptr) {
+			_skyboxMesh = ResourceManager::CreateAsset<MeshResource>();
+			_skyboxMesh->AddParam(MeshBuilderParam::CreateCube(glm::vec3(0.0f), glm::vec3(1.0f)));
+			_skyboxMesh->AddParam(MeshBuilderParam::CreateInvert());
+			_skyboxMesh->GenerateMesh();
+		}
+
 		// Call awake on all gameobjects
-		for (auto& obj : Objects) {
+		for (auto& obj : _objects) {
 			obj->Awake();
 		}
 		// Set up our lighting 
@@ -84,13 +135,14 @@ namespace Gameplay {
 	}
 
 	void Scene::DoPhysics(float dt) {
+		ComponentManager::Each<Gameplay::Physics::RigidBody>([=](const std::shared_ptr<Gameplay::Physics::RigidBody>& body) {
+			body->PhysicsPreStep(dt);
+		});
+		ComponentManager::Each<Gameplay::Physics::TriggerVolume>([=](const std::shared_ptr<Gameplay::Physics::TriggerVolume>& body) {
+			body->PhysicsPreStep(dt);
+		});
+
 		if (IsPlaying) {
-			ComponentManager::Each<Gameplay::Physics::RigidBody>([=](const std::shared_ptr<Gameplay::Physics::RigidBody>& body) {
-				body->PhysicsPreStep(dt);
-			});
-			ComponentManager::Each<Gameplay::Physics::TriggerVolume>([=](const std::shared_ptr<Gameplay::Physics::TriggerVolume>& body) {
-				body->PhysicsPreStep(dt);
-			}); 
 
 			_physicsWorld->stepSimulation(dt, 15);
 
@@ -108,31 +160,45 @@ namespace Gameplay {
 	}
 
 	void Scene::Update(float dt) {
+		_FlushDeleteQueue();
 		if (IsPlaying) {
-			for (auto& obj : Objects) {
+			for (auto& obj : _objects) {
 				obj->Update(dt);
 			}
 		}
+		_FlushDeleteQueue();
 	}
 
 	void Scene::SetShaderLight(int index, bool update /*= true*/) {
-		std::stringstream stream;
-		stream << "u_Lights[" << index << "]";
-		std::string name = stream.str();
+		if (index >= 0 && index < Lights.size() && index < MAX_LIGHTS) {
+			// Get a reference to the light UBO data so we can update it
+			LightingUboStruct& data = _lightingUbo->GetData();
+			Light& light = Lights[index];
 
-		Light& light = Lights[index];
-	
-		// Set the shader uniforms for the light
-		BaseShader->SetUniform(name + ".Position", light.Position);
-		BaseShader->SetUniform(name + ".Color", light.Color);
-		BaseShader->SetUniform(name + ".Attenuation", 1.0f / (1.0f + light.Range));
+			// Copy to the ubo data
+			data.Lights[index].Position = light.Position;
+			data.Lights[index].Color = light.Color;
+			data.Lights[index].Attenuation = 1.0f / (1.0f + light.Range);
+
+			// If requested, send the new data to the UBO
+			if (update)	_lightingUbo->Update();
+		}
 	}
 
 	void Scene::SetupShaderAndLights() {
-		BaseShader->SetUniform("u_NumLights", (int)Lights.size());
+		// Get a reference to the light UBO data so we can update it
+		LightingUboStruct& data = _lightingUbo->GetData();
+		// Send in how many active lights we have and the global lighting settings
+		data.AmbientCol = glm::vec3(0.1f);
+		data.NumLights = Lights.size();
+
+		// Iterate over all lights that are enabled and configure them
 		for (int ix = 0; ix < Lights.size(); ix++) {
-			SetShaderLight(ix, true);
+			SetShaderLight(ix, false);
 		}
+
+		// Send updated data to OpenGL
+		_lightingUbo->Update();
 	}
 
 	btDynamicsWorld* Scene::GetPhysicsWorld() const {
@@ -142,12 +208,27 @@ namespace Gameplay {
 	Scene::Sptr Scene::FromJson(const nlohmann::json& data)
 	{
 		Scene::Sptr result = std::make_shared<Scene>();
-		result->BaseShader = ResourceManager::Get<Shader>(Guid(data["default_shader"]));
+		result->DefaultMaterial = ResourceManager::Get<Material>(Guid(data["default_material"]));
+
+		if (data.contains("ambient")) {
+			result->SetAmbientLight(ParseJsonVec3(data["ambient"]));
+		}
+
+		if (data.contains("skybox") && data["skybox"].is_object()) {
+			nlohmann::json& blob = data["skybox"].get<nlohmann::json>();
+			result->_skyboxMesh = ResourceManager::Get<MeshResource>(Guid(blob["mesh"]));
+			result->_skyboxShader = ResourceManager::Get<Shader>(Guid(blob["shader"]));
+			result->_skyboxTexture = ResourceManager::Get<TextureCube>(Guid(blob["texture"]));
+			result->_skyboxRotation = glm::mat3_cast(ParseJsonQuat(blob["orientation"]));
+		}
 
 		// Make sure the scene has objects, then load them all in!
 		LOG_ASSERT(data["objects"].is_array(), "Objects not present in scene!");
 		for (auto& object : data["objects"]) {
-			result->Objects.push_back(GameObject::FromJson(object, result.get()));
+			GameObject::Sptr obj = GameObject::FromJson(object);
+			obj->_scene = result.get();
+			obj->_selfRef = obj;
+			result->_objects.push_back(obj);
 		}
 
 		// Make sure the scene has lights, then load all
@@ -166,13 +247,21 @@ namespace Gameplay {
 	{
 		nlohmann::json blob;
 		// Save the default shader (really need a material class)
-		blob["default_shader"] = BaseShader->GetGUID().str();
+		blob["default_material"] = DefaultMaterial ? DefaultMaterial->GetGUID().str() : "null";
+
+		blob["ambient"] = GlmToJson(GetAmbientLight());
+
+		blob["skybox"] = nlohmann::json();
+		blob["skybox"]["mesh"] = _skyboxMesh ? _skyboxMesh->GetGUID().str() : "null";
+		blob["skybox"]["shader"] = _skyboxShader ? _skyboxShader->GetGUID().str() : "null";
+		blob["skybox"]["texture"] = _skyboxTexture ? _skyboxTexture->GetGUID().str() : "null";
+		blob["skybox"]["orientation"] = GlmToJson(_skyboxRotation);
 
 		// Save renderables
 		std::vector<nlohmann::json> objects;
-		objects.resize(Objects.size());
-		for (int ix = 0; ix < Objects.size(); ix++) {
-			objects[ix] = Objects[ix]->ToJson();
+		objects.resize(_objects.size());
+		for (int ix = 0; ix < _objects.size(); ix++) {
+			objects[ix] = _objects[ix]->ToJson();
 		}
 		blob["objects"] = objects;
 
@@ -208,11 +297,11 @@ namespace Gameplay {
 	}
 
 	int Scene::NumObjects() const {
-		return Objects.size();
+		return _objects.size();
 	}
 
 	GameObject::Sptr Scene::GetObjectByIndex(int index) const {
-		return Objects[index];
+		return _objects[index];
 	}
 
 	void Scene::_InitPhysics() {
@@ -244,10 +333,56 @@ namespace Gameplay {
 		delete _collisionConfig;
 	}
 
+
+	void Scene::_FlushDeleteQueue() {
+		for (auto& weakPtr : _deletionQueue) {
+			if (weakPtr.expired()) continue;
+			auto& it = std::find(_objects.begin(), _objects.end(), weakPtr.lock());
+			if (it != _objects.end()) {
+				_objects.erase(it);
+			}
+		}
+		_deletionQueue.clear();
+	}
+
 	void Scene::DrawAllGameObjectGUIs()
 	{
-		for (auto& object : Objects) {
+		for (auto& object : _objects) {
 			object->DrawImGui();
 		}
+
+		static char buffer[256];
+		ImGui::InputText("", buffer, 256);
+		ImGui::SameLine();
+		if (ImGui::Button("Add Object")) {
+			CreateGameObject(buffer);
+			memset(buffer, 0, 256);
+		}
 	}
+
+	void Scene::DrawSkybox()
+	{
+		if (_skyboxShader != nullptr &&
+			_skyboxMesh != nullptr &&
+			_skyboxMesh->Mesh != nullptr &&
+			_skyboxTexture != nullptr &&
+			MainCamera != nullptr) {
+			
+			glDepthMask(false);
+			glDisable(GL_CULL_FACE);
+			glDepthFunc(GL_LEQUAL);
+
+			_skyboxShader->Bind();
+			_skyboxShader->SetUniformMatrix("u_View", MainCamera->GetProjection() * glm::mat4(glm::mat3(MainCamera->GetView())));
+			_skyboxShader->SetUniformMatrix("u_EnvironmentRotation", _skyboxRotation);
+			_skyboxTexture->Bind(0);
+			_skyboxMesh->Mesh->Draw();
+
+			glDepthFunc(GL_LESS);
+			glEnable(GL_CULL_FACE);
+			glDepthMask(true);
+
+		}
+	}
+
 }

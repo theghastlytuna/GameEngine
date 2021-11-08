@@ -72,6 +72,41 @@ namespace Gameplay::Physics {
 		float GetAngularDamping() const;
 
 		/// <summary>
+		/// Sets the linear velocity for this body. If called before Awake,
+		/// will set the body's initial velocity
+		/// </summary>
+		/// <param name="value">The velocity per axis in m/s</param>
+		void SetLinearVelocity(const glm::vec3& value);
+		/// <summary>
+		/// Gets the bodies linear velocity, in m/s
+		/// </summary>
+		const glm::vec3& GetLinearVelocity() const;
+
+		/// <summary>
+		/// Sets the angular velocity for this body. If called before Awake,
+		/// will set the body's angular velocity
+		/// </summary>
+		/// <param name="value">The velocity per axis in degrees/s</param>
+		void SetAngularVelocity(const glm::vec3& value);
+		/// <summary>
+		/// Gets the bodies angular velocity, in degrees/s
+		/// </summary>
+		const glm::vec3& GetAngularVelocity() const;
+
+		/// <summary>
+		/// Sets the angular factor for this body. The velocity along each
+		/// axis will be scaled by this amount. For instance, to prevent a
+		/// body from rotating along the Z axis, you could set the angular
+		/// factor to (1, 1, 0)
+		/// </summary>
+		/// <param name="value">The angular factor per axis</param>
+		void SetAngularFactor(const glm::vec3& value);
+		/// <summary>
+		/// Gets the bodies angular factor
+		/// </summary>
+		const glm::vec3& GetAngularFactor() const;
+
+		/// <summary>
 		/// Applies a force in world space to this object, this would be used
 		/// if you want to apply a force every frame on an object
 		/// </summary>
@@ -156,6 +191,12 @@ namespace Gameplay::Physics {
 		btRigidBody*     _body;
 		btMotionState*   _motionState;
 		btVector3        _inertia;
+		btVector3        _linearVelocity;
+		bool             _linearVelocityDirty;
+		btVector3        _angularVelocity;
+		bool             _angularVelocityDirty;
+		btVector3        _angularFactor;
+		bool             _angularFactorDirty;
 
 		// Handles resolving any dirty state stuff for our object
 		void _HandleStateDirty();

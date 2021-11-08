@@ -6,6 +6,7 @@
 // GLM
 #define GLM_ENABLE_EXPERIMENTAL
 #include "GLM/gtc/matrix_transform.hpp"
+#include "GLM/gtc/quaternion.hpp"
 #include "GLM/glm.hpp"
 #include "Utils/GlmDefines.h"
 #include "Utils/ImGuiHelper.h"
@@ -22,12 +23,23 @@ namespace Gameplay {
 		_rotation(glm::quat(glm::vec3(0.0f))),
 		_scale(ONE),
 		_transform(MAT4_IDENTITY),
+		_inverseTransform(MAT4_IDENTITY),
 		_isTransformDirty(true)
 	{ }
 
+	void GameObject::_RecalcTransform() const
+	{
+		if (_isTransformDirty) {
+			_transform = glm::translate(MAT4_IDENTITY, _position) * glm::mat4_cast(_rotation) * glm::scale(MAT4_IDENTITY, _scale);
+			_inverseTransform = glm::inverse(_transform);
+			_isTransformDirty = false;
+		}
+	}
+
 	void GameObject::LookAt(const glm::vec3& point) {
-		glm::mat3 rot = glm::lookAt(_position, point, glm::vec3(0.0f, 0.0f, 1.0f));
-		SetRotation(glm::quat(rot));
+		glm::mat4 rot = glm::lookAt(_position, point, glm::vec3(0.0f, 0.0f, 1.0f));
+		// Take the conjugate of the quaternion, as lookAt returns the *inverse* rotation
+		SetRotation(glm::conjugate(glm::quat_cast(rot)));
 	}
 
 
@@ -78,7 +90,7 @@ namespace Gameplay {
 		_isTransformDirty = true;
 	}
 
-	const glm::vec3& GameObject::GetRotationEuler() const {
+	glm::vec3 GameObject::GetRotationEuler() const {
 		return glm::degrees(glm::eulerAngles(_rotation));
 	}
 
@@ -91,15 +103,16 @@ namespace Gameplay {
 		return _scale;
 	}
 
-	const glm::mat4& GameObject::GetTransform() const
-	{
-		if (_isTransformDirty) {
-			_transform = glm::translate(MAT4_IDENTITY, _position) * glm::mat4_cast(_rotation) * glm::scale(MAT4_IDENTITY, _scale);
-			_isTransformDirty = false;
-		}
+	const glm::mat4& GameObject::GetTransform() const {
+		_RecalcTransform();
 		return _transform;
 	}
 
+
+	const glm::mat4& GameObject::GetInverseTransform() const {
+		_RecalcTransform();
+		return _inverseTransform;
+	}
 
 	Scene* GameObject::GetScene() const {
 		return _scene;
@@ -119,10 +132,91 @@ namespace Gameplay {
 		}
 	}
 
-	void GameObject::DrawImGui(float indent) {
+	bool GameObject::Has(const std::type_index& type) {
+		// Iterate over all the pointers in the components list
+		for (const auto& ptr : _components) {
+			// If the pointer type matches T, we return true
+			if (std::type_index(typeid(*ptr.get())) == type) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	std::shared_ptr<IComponent> GameObject::Get(const std::type_index& type)
+	{
+		// Iterate over all the pointers in the binding list
+		for (const auto& ptr : _components) {
+			// If the pointer type matches T, we return that behaviour, making sure to cast it back to the requested type
+			if (std::type_index(typeid(*ptr.get())) == type) {
+				return ptr;
+			}
+		}
+		return nullptr;
+	}
+
+	std::shared_ptr<IComponent> GameObject::Add(const std::type_index& type)
+	{
+		LOG_ASSERT(!Has(type), "Cannot add 2 instances of a component type to a game object");
+
+		// Make a new component, forwarding the arguments
+		std::shared_ptr<IComponent> component = ComponentManager::Create(type);
+		// Let the component know we are the parent
+		component->_context = this;
+
+		// Append it to the binding component's storage, and invoke the OnLoad
+		_components.push_back(component);
+		component->OnLoad();
+
+		if (_scene->GetIsAwake()) {
+			component->Awake();
+		}
+
+		return component;
+	}
+
+	void GameObject::DrawImGui() {
+
 		ImGui::PushID(this); // Push a new ImGui ID scope for this object
-		if (ImGui::CollapsingHeader(Name.c_str())) {
+		// Since we're allowing names to change, we need to use the ### to have a static ID for the header
+		static char buffer[256];
+		sprintf_s(buffer, 256, "%s###GO_HEADER", Name.c_str());
+		if (ImGui::CollapsingHeader(buffer)) {
 			ImGui::Indent();
+
+			// Draw a textbox for our name
+			static char nameBuff[256];
+			memcpy(nameBuff, Name.c_str(), Name.size());
+			nameBuff[Name.size()] = '\0';
+			if (ImGui::InputText("", nameBuff, 256)) {
+				Name = nameBuff;
+			}
+			ImGui::SameLine();
+			if (ImGuiHelper::WarningButton("Delete")) {
+				ImGui::OpenPopup("Delete GameObject");
+			}
+
+			// Draw our delete modal
+			if (ImGui::BeginPopupModal("Delete GameObject")) {
+				ImGui::Text("Are you sure you want to delete this game object?");
+				if (ImGuiHelper::WarningButton("Yes")) {
+					// Remove ourselves from the scene
+					_scene->RemoveGameObject(SelfRef());
+
+					// Restore imgui state so we can early bail
+					ImGui::CloseCurrentPopup();
+					ImGui::EndPopup();
+					ImGui::Unindent();
+					ImGui::PopID();
+					return;
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("No")) {
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::EndPopup();
+			}
 
 			// Render position label
 			_isTransformDirty |= LABEL_LEFT(ImGui::DragFloat3, "Position", &_position.x, 0.01f);
@@ -158,24 +252,61 @@ namespace Gameplay {
 			ImGui::Separator();
 
 			// Render each component under it's own header
-			for (auto& component : _components) {
+			for (int ix = 0; ix < _components.size(); ix++) {
+				std::shared_ptr<IComponent> component = _components[ix];
 				if (ImGui::CollapsingHeader(component->ComponentTypeName().c_str())) {
 					ImGui::PushID(component.get()); 
 					component->RenderImGui();
+					// Render a delete button for the component
+					if (ImGuiHelper::WarningButton("Delete")) {
+						_components.erase(_components.begin() + ix);
+						ix--;
+					}
 					ImGui::PopID();
 				}
 			}
+			ImGui::Separator();
+
+			// Render a combo box for selecting a component to add
+			static std::string preview = "";
+			static std::optional<std::type_index> selectedType;
+			if (ImGui::BeginCombo("##AddComponents", preview.c_str())) {
+				ComponentManager::EachType([&](const std::string& typeName, const std::type_index type) {
+					// Hide component types already added
+					if (!Has(type)) {
+						bool isSelected = typeName == preview;
+						if (ImGui::Selectable(typeName.c_str(), &isSelected)) {
+							preview = typeName;
+							selectedType = type;
+						}
+					}
+				});
+				ImGui::EndCombo();
+			}
+			ImGui::SameLine();
+			// Button to add component and reset the selected type
+			if (ImGui::Button("Add Component") && selectedType.has_value() && !Has(selectedType.value())) {
+				Add(selectedType.value());
+				selectedType.reset();
+				preview = "";
+			}
+
+			ImGui::Separator();
+
 			ImGui::Unindent();
 		}
 		ImGui::PopID(); // Pop the ImGui ID scope for the object
 	}
 
-	GameObject::Sptr GameObject::FromJson(const nlohmann::json& data, Scene* scene)
+	std::shared_ptr<GameObject> GameObject::SelfRef() {
+		return _selfRef.lock();
+	}
+
+	GameObject::Sptr GameObject::FromJson(const nlohmann::json& data)
 	{
 		// We need to manually construct since the GameObject constructor is
 		// protected. We can call it here since Scene is a friend class of GameObjects
 		GameObject::Sptr result(new GameObject());
-		result->_scene = scene;
 
 		// Load in basic info
 		result->Name = data["name"];

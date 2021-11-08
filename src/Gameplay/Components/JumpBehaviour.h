@@ -26,5 +26,8 @@ protected:
 	float _impulse;
 
 	bool _isPressed = false;
+	//Boolean to represent whether the attached object is on a ground object
+	bool _onGround = false;
+
 	Gameplay::Physics::RigidBody::Sptr _body;
 };

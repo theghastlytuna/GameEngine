@@ -89,8 +89,12 @@ namespace Gameplay {
 		_isProjectionDirty = true;
 	}
 
+	const glm::mat4& Camera::GetView() const {
+		return GetGameObject()->GetInverseTransform();
+	}
+
 	const glm::mat4& Camera::GetViewProjection() const {
-		_viewProjection = __CalculateProjection() * glm::inverse(GetGameObject()->GetTransform());
+		_viewProjection = __CalculateProjection() * GetGameObject()->GetInverseTransform();
 		return _viewProjection;
 	}
 

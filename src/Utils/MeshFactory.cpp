@@ -38,7 +38,7 @@ MeshBuilderParam MeshBuilderParam::CreateUVSphere(const glm::vec3& center, const
 	return result;
 }
 
-MeshBuilderParam MeshBuilderParam::CreatePlane(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& scale, const glm::vec4& col /*= glm::vec4(1.0f)*/) {
+MeshBuilderParam MeshBuilderParam::CreatePlane(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& scale, const glm::vec2& uvScale, const glm::vec4& col /*= glm::vec4(1.0f)*/) {
 	MeshBuilderParam result;
 	result.Type = MeshBuilderType::Plane;
 	result.Color = col;
@@ -46,17 +46,25 @@ MeshBuilderParam MeshBuilderParam::CreatePlane(const glm::vec3& pos, const glm::
 	result.Params["normal"] = normal;
 	result.Params["tangent"] = tangent;
 	result.Params["scale"] = glm::vec3(scale, 0.0f);
+	result.Params["uv_scale"] = glm::vec3(uvScale, 1.0f);
+	return result;
+}
+
+MeshBuilderParam MeshBuilderParam::CreateInvert() {
+	MeshBuilderParam result;
+	result.Type = MeshBuilderType::FaceInvert;
 	return result;
 }
 
 MeshBuilderParam MeshBuilderParam::FromJson(const nlohmann::json& blob) {
 	MeshBuilderParam result;
-	result.Type = ParseMeshBuilderType(blob["type"].get<std::string>(), MeshBuilderType::Unknown);
+	result.Type = JsonParseEnum(MeshBuilderType, blob, "type", MeshBuilderType::Unknown);
 	LOG_ASSERT(result.Type != MeshBuilderType::Unknown, "Failed to get type!");
 	result.Color = ParseJsonVec4(blob["color"]);
-	LOG_ASSERT(blob["params"].is_object(), "Parameters not found!");
-	for (auto& [key, value] : blob["params"].items()) {
-		result.Params[key] = ParseJsonVec3(value);
+	if (blob.contains("params") && blob["params"].is_object()) {
+		for (auto& [key, value] : blob["params"].items()) {
+			result.Params[key] = ParseJsonVec3(value);
+		}
 	}
 	return result;
 }

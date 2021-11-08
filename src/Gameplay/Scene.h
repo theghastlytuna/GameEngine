@@ -5,14 +5,25 @@
 #include "Gameplay/Components/Camera.h"
 #include "Gameplay/GameObject.h"
 #include "Gameplay/Light.h"
+
 #include "Physics/BulletDebugDraw.h"
 
+#include "Graphics/UniformBuffer.h"
+
 struct GLFWwindow;
+
+class TextureCube;
+class Shader;
+
+const int LIGHT_UBO_BINDING_SLOT = 0;
 
 namespace Gameplay {
 	namespace Physics {
 		class RigidBody;
 	}
+
+	class MeshResource;
+	class Material;
 
 	/// <summary>
 	/// Main class for our game structure
@@ -30,7 +41,8 @@ namespace Gameplay {
 		// The camera for our scene
 		Camera::Sptr               MainCamera;
 
-		Shader::Sptr               BaseShader; // Should think of more elegant ways of handling this
+		// Instead of a "base shader", we can specify a default material
+		std::shared_ptr<Material>  DefaultMaterial;
 
 		GLFWwindow*                Window; // another place that can use improvement
 
@@ -42,6 +54,15 @@ namespace Gameplay {
 		~Scene();
 
 		void SetPhysicsDebugDrawMode(BulletDebugMode mode);
+
+		void SetSkyboxShader(const std::shared_ptr<Shader>& shader);
+		std::shared_ptr<Shader> GetSkyboxShader() const;
+
+		void SetSkyboxTexture(const std::shared_ptr<TextureCube>& texture);
+		std::shared_ptr<TextureCube> GetSkyboxTexture() const;
+
+		void SetSkyboxRotation(const glm::mat3& value);
+		const glm::mat3& GetSkyboxRotation() const;
 
 		/**
 		 * Gets whether the scene has already called Awake()
@@ -55,6 +76,12 @@ namespace Gameplay {
 		/// <param name="name">The name of the gameobject to create</param>
 		/// <returns>A new gameobject with the given name</returns>
 		GameObject::Sptr CreateGameObject(const std::string& name);
+
+		/// <summary>
+		/// Queues a game object for deletion at the call of the next Update function
+		/// </summary>
+		/// <param name="object">The gameobject to delete</param>
+		void RemoveGameObject(const GameObject::Sptr& object);
 
 		/// <summary>
 		/// Searches all objects in the scene and returns the first
@@ -128,6 +155,8 @@ namespace Gameplay {
 		/// </summary>
 		void DrawAllGameObjectGUIs();
 
+		void DrawSkybox();
+
 		/// <summary>
 		/// Gets the scene's Bullet physics world
 		/// </summary>
@@ -181,8 +210,45 @@ namespace Gameplay {
 		glm::vec3 _gravity;
 
 		// Stores all the objects in our scene
-		std::vector<GameObject::Sptr>  Objects;
-		glm::vec3 _ambientLight;
+		std::vector<GameObject::Sptr>  _objects;
+		std::vector<std::weak_ptr<GameObject>>  _deletionQueue;
+
+		// Info for rendering our skybox will be stored in the scene itself
+		std::shared_ptr<Shader>       _skyboxShader;
+		std::shared_ptr<MeshResource> _skyboxMesh;
+		std::shared_ptr<TextureCube>  _skyboxTexture;
+		glm::mat3                     _skyboxRotation;
+
+		/// <summary>
+		/// Represents a c++ struct layout that matches that of
+		/// our multiple light uniform buffer
+		/// 
+		/// Note that we have to do some weirdness since OpenGl has a
+		/// thing for packing structures to sizeof(vec4)
+		/// </summary>
+		struct LightingUboStruct {
+			struct Light {
+				// This lets us continue to access Position as a vec3, but also allocates space for the
+				// pack at the end (since objects are vec4 aligned)
+				union {
+					glm::vec3 Position;
+					glm::vec4 Position4;
+				};
+				// Since these are tightly packed, will match the vec4 in light
+				glm::vec3 Color;
+				float     Attenuation;
+			};
+
+			// Since these are tightly packed, will match the vec4 in the UBO
+			glm::vec3 AmbientCol;
+			float     NumLights;
+
+			Light     Lights[MAX_LIGHTS];
+			// NOTE: our shaders expect a mat3, but due to the STD140 layout, each column of the
+			// vec3 needs to be padded to the size of a vec4, hence the use of a mat4 here
+			glm::mat4 EnvironmentRotation;
+		};
+		UniformBuffer<LightingUboStruct>::Sptr _lightingUbo;
 
 		bool                       _isAwake;
 
@@ -194,5 +260,7 @@ namespace Gameplay {
 		/// Handles cleaning up bullet physics for this scene
 		/// </summary>
 		void _CleanupPhysics();
+
+		void _FlushDeleteQueue();
 	};
 }

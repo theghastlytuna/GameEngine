@@ -1,4 +1,5 @@
-#version 430
+#version 440
+
 
 layout(location = 0) in vec3 inWorldPos;
 layout(location = 1) in vec3 inColor;
@@ -9,6 +10,13 @@ layout(location = 3) in vec2 inUV;
 layout(location = 0) out vec4 frag_color;
 
 ////////////////////////////////////////////////////////////////
+/////////////// Frame Level Uniforms ///////////////////////////
+////////////////////////////////////////////////////////////////
+
+// The position of the camera in world space
+uniform vec3  u_CamPos;
+
+////////////////////////////////////////////////////////////////
 /////////////// Instance Level Uniforms ////////////////////////
 ////////////////////////////////////////////////////////////////
 
@@ -17,7 +25,6 @@ layout(location = 0) out vec4 frag_color;
 // Unity
 struct Material {
 	sampler2D Diffuse;
-	sampler2D Specular;
 	float     Shininess;
 };
 // Create a uniform for the material
@@ -29,19 +36,19 @@ uniform Material u_Material;
 
 #include "fragments/multiple_point_lights.glsl"
 
-////////////////////////////////////////////////////////////////
-/////////////// Frame Level Uniforms ///////////////////////////
-////////////////////////////////////////////////////////////////
-
-// The position of the camera in world space
-uniform vec3  u_CamPos;
+const float LOG_MAX = 2.40823996531;
 
 // https://learnopengl.com/Advanced-Lighting/Advanced-Lighting
 void main() {
 	// Normalize our input normal
 	vec3 normal = normalize(inNormal);
 
-	// Use the lighting calculation that we included from our partial file
+	vec3 toEye = normalize(u_CamPos - inWorldPos);
+	vec3 environmentDir = reflect(-toEye, normal);
+	vec3 reflected = SampleEnvironmentMap(environmentDir);
+
+	// Will accumulate the contributions of all lights on this fragment
+	// This is defined in the fragment file "multiple_point_lights.glsl"
 	vec3 lightAccumulation = CalcAllLightContribution(inWorldPos, normal, u_CamPos, u_Material.Shininess);
 
 	// Get the albedo from the diffuse / albedo map
@@ -50,5 +57,5 @@ void main() {
 	// combine for the final result
 	vec3 result = lightAccumulation  * inColor * textureColor.rgb;
 
-	frag_color = vec4(result, textureColor.a);
+	frag_color = vec4(mix(result, reflected, u_Material.Shininess), textureColor.a);
 }
