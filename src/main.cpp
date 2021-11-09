@@ -51,6 +51,7 @@
 #include "Gameplay/Components/JumpBehaviour.h"
 #include "Gameplay/Components/RenderComponent.h"
 #include "Gameplay/Components/MaterialSwapBehaviour.h"
+#include "Gameplay/Components/FirstPersonCamera.h"
 
 // Physics
 #include "Gameplay/Physics/RigidBody.h"
@@ -252,6 +253,7 @@ int main() {
 	ComponentManager::RegisterType<MaterialSwapBehaviour>();
 	ComponentManager::RegisterType<TriggerVolumeEnterBehaviour>();
 	ComponentManager::RegisterType<SimpleCameraControl>();
+	ComponentManager::RegisterType<FirstPersonCamera>();
 
 	// GL states, we'll enable depth testing and backface fulling
 	glEnable(GL_DEPTH_TEST);
@@ -359,25 +361,41 @@ int main() {
 		planeMesh->AddParam(MeshBuilderParam::CreatePlane(ZERO, UNIT_Z, UNIT_X, glm::vec2(1.0f)));
 		planeMesh->GenerateMesh();
 
-		// Set up the scene's camera
+		/*
+		//Set up the scene's camera
 		GameObject::Sptr camera = scene->CreateGameObject("Main Camera");
 		{
 			camera->SetPostion(glm::vec3(5.0f));
 			camera->LookAt(glm::vec3(0.0f));
 
 			camera->Add<SimpleCameraControl>();
-			/*
-			RenderComponent::Sptr renderer = camera->Add<RenderComponent>();
-			renderer->SetMesh(cubeMesh);
-			renderer->SetMaterial(cubeMaterial);
 
-			camera->Add<JumpBehaviour>();
+			
+			//RenderComponent::Sptr renderer = camera->Add<RenderComponent>();
+			//renderer->SetMesh(cubeMesh);
+			//renderer->SetMaterial(cubeMaterial);
 
-			RigidBody::Sptr physics = camera->Add<RigidBody>(RigidBodyType::Dynamic);
-			physics->AddCollider(ConvexMeshCollider::Create());
-			*/
+			//camera->Add<JumpBehaviour>();
+
+			//RigidBody::Sptr physics = camera->Add<RigidBody>(RigidBodyType::Dynamic);
+			//physics->AddCollider(ConvexMeshCollider::Create());
+			
 			Camera::Sptr cam = camera->Add<Camera>();
 			// Make sure that the camera is set as the scene's main camera!
+			scene->MainCamera = cam;
+		}
+		*/
+
+		GameObject::Sptr mobileCamera = scene->CreateGameObject("Mobile Camera");
+		{
+			mobileCamera->SetPostion(glm::vec3(0.f, 1.f, 4.f));
+			mobileCamera->LookAt(glm::vec3(0.f));
+			RigidBody::Sptr physics = mobileCamera->Add<RigidBody>(RigidBodyType::Kinematic);
+			physics->AddCollider(BoxCollider::Create());
+
+			FirstPersonCamera::Sptr cameraControl = mobileCamera->Add<FirstPersonCamera>();
+
+			Camera::Sptr cam = mobileCamera->Add<Camera>();
 			scene->MainCamera = cam;
 		}
 		/*
