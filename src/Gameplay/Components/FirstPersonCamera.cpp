@@ -48,6 +48,8 @@ void FirstPersonCamera::Update(float deltaTime)
 		glm::quat rotY = glm::angleAxis(glm::radians(_currentRot.y), glm::vec3(1, 0, 0));
 		glm::quat currentRot = rotX * rotY;
 
+		_prevMousePos = currentMousePos;
+
 		GetGameObject()->SetRotation(currentRot);
 
 	}
