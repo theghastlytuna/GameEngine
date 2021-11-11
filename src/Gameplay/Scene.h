@@ -40,6 +40,8 @@ namespace Gameplay {
 		std::vector<Light>         Lights;
 		// The camera for our scene
 		Camera::Sptr               MainCamera;
+		Camera::Sptr			   PlayerCamera;
+		Camera::Sptr			   WorldCamera;
 
 		// Instead of a "base shader", we can specify a default material
 		std::shared_ptr<Material>  DefaultMaterial;

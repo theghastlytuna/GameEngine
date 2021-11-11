@@ -361,7 +361,6 @@ int main() {
 		planeMesh->AddParam(MeshBuilderParam::CreatePlane(ZERO, UNIT_Z, UNIT_X, glm::vec2(1.0f)));
 		planeMesh->GenerateMesh();
 
-		/*
 		//Set up the scene's camera
 		GameObject::Sptr camera = scene->CreateGameObject("Main Camera");
 		{
@@ -383,8 +382,8 @@ int main() {
 			Camera::Sptr cam = camera->Add<Camera>();
 			// Make sure that the camera is set as the scene's main camera!
 			scene->MainCamera = cam;
+			scene->WorldCamera = cam;
 		}
-		*/
 
 		GameObject::Sptr mobileCamera = scene->CreateGameObject("Mobile Camera");
 		{
@@ -396,7 +395,7 @@ int main() {
 			FirstPersonCamera::Sptr cameraControl = mobileCamera->Add<FirstPersonCamera>();
 
 			Camera::Sptr cam = mobileCamera->Add<Camera>();
-			scene->MainCamera = cam;
+			scene->PlayerCamera = cam;
 		}
 		/*
 		// Create a trigger volume for testing how we can detect collisions with objects!
@@ -600,6 +599,13 @@ int main() {
 					scene->Window = window;
 					scene->Awake();
 				}
+			}
+			ImGui::Separator();
+			if (ImGui::Button("Toggle Camera")) {
+				if (scene->MainCamera == scene->WorldCamera)
+					scene->MainCamera = scene->PlayerCamera;
+				else
+					scene->MainCamera = scene->WorldCamera;
 			}
 
 			// Make a new area for the scene saving/loading
