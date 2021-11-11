@@ -37,7 +37,8 @@ void FirstPersonCamera::Update(float deltaTime)
 		_isMousePressed = false;
 	}
 
-	if (_isMousePressed)
+	if (_isMousePressed && 
+		GetGameObject()->SelfRef()->GetScene()->MainCamera == GetGameObject()->SelfRef()->GetScene()->PlayerCamera)
 	{
 		glm::dvec2 currentMousePos;
 		glfwGetCursorPos(_window, &currentMousePos.x, &currentMousePos.y);
@@ -51,7 +52,6 @@ void FirstPersonCamera::Update(float deltaTime)
 		_prevMousePos = currentMousePos;
 
 		GetGameObject()->SetRotation(currentRot);
-
 	}
 }
 

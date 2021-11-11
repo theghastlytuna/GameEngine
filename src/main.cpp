@@ -392,6 +392,10 @@ int main() {
 			RigidBody::Sptr physics = mobileCamera->Add<RigidBody>(RigidBodyType::Kinematic);
 			physics->AddCollider(BoxCollider::Create());
 
+			RenderComponent::Sptr renderer = mobileCamera->Add<RenderComponent>();
+			renderer->SetMesh(cubeMesh);
+			renderer->SetMaterial(cubeMaterial);
+
 			FirstPersonCamera::Sptr cameraControl = mobileCamera->Add<FirstPersonCamera>();
 
 			Camera::Sptr cam = mobileCamera->Add<Camera>();
