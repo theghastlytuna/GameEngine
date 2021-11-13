@@ -367,7 +367,7 @@ int main() {
 			camera->SetPostion(glm::vec3(5.0f));
 			camera->LookAt(glm::vec3(0.0f));
 
-			camera->Add<SimpleCameraControl>();
+			//camera->Add<SimpleCameraControl>();
 
 			
 			//RenderComponent::Sptr renderer = camera->Add<RenderComponent>();
@@ -387,16 +387,19 @@ int main() {
 
 		GameObject::Sptr mobileCamera = scene->CreateGameObject("Mobile Camera");
 		{
-			mobileCamera->SetPostion(glm::vec3(0.f, 1.f, 4.f));
-			mobileCamera->LookAt(glm::vec3(0.f));
-			RigidBody::Sptr physics = mobileCamera->Add<RigidBody>(RigidBodyType::Kinematic);
-			physics->AddCollider(BoxCollider::Create());
+			mobileCamera->SetPostion(glm::vec3(0.f, 0.f, 4.f));
 
 			RenderComponent::Sptr renderer = mobileCamera->Add<RenderComponent>();
-			renderer->SetMesh(cubeMesh);
+			renderer->SetMesh(monkeyMesh);
 			renderer->SetMaterial(cubeMaterial);
 
+			RigidBody::Sptr physics = mobileCamera->Add<RigidBody>(RigidBodyType::Dynamic);
+			physics->AddCollider(SphereCollider::Create());
+			physics->SetAngularFactor(glm::vec3(0.f));
+
 			FirstPersonCamera::Sptr cameraControl = mobileCamera->Add<FirstPersonCamera>();
+
+			JumpBehaviour::Sptr jumping = mobileCamera->Add<JumpBehaviour>();
 
 			Camera::Sptr cam = mobileCamera->Add<Camera>();
 			scene->PlayerCamera = cam;

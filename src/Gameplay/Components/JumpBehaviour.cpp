@@ -17,6 +17,18 @@ void JumpBehaviour::RenderImGui() {
 	LABEL_LEFT(ImGui::DragFloat, "Impulse", &_impulse, 1.0f);
 }
 
+void JumpBehaviour::OnEnteredTrigger(const std::shared_ptr<Gameplay::Physics::TriggerVolume>& trigger)
+{
+	LOG_INFO("Entered trigger: {}", trigger->GetGameObject()->Name);
+	if (trigger->GetGameObject()->Name.find("Ground") != std::string::npos) _onGround = true;
+}
+
+void JumpBehaviour::OnLeavingTrigger(const std::shared_ptr<Gameplay::Physics::TriggerVolume>& trigger)
+{
+	LOG_INFO("Exited trigger: {}", trigger->GetGameObject()->Name);
+	if (trigger->GetGameObject()->Name.find("Ground") != std::string::npos) _onGround = false;
+}
+
 nlohmann::json JumpBehaviour::ToJson() const {
 	return {
 		{ "impulse", _impulse }
@@ -37,21 +49,27 @@ JumpBehaviour::Sptr JumpBehaviour::FromJson(const nlohmann::json& blob) {
 }
 
 void JumpBehaviour::Update(float deltaTime) {
-	bool pressed = glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_SPACE);
-
 	//Find whether the attached object is on the ground
-	_onGround = this->GetGameObject()->Get<MaterialSwapBehaviour>()->GetOnGround();
-
-	if (pressed) {
-		if (_isPressed == false) {
-			if (_onGround)
-			{
-				_body->ApplyImpulse(glm::vec3(0.0f, 0.0f, _impulse));
-			}
-		}
-		_isPressed = pressed;
-	} else {
-		_isPressed = false;
+	if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_SPACE) && _onGround) 
+	{
+		_body->ApplyForce(glm::vec3(0.0f, 0.0f, _impulse));
 	}
+	if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_W) && _onGround)
+	{
+		_body->ApplyForce(this->GetGameObject()->GetRotation() * glm::vec3(0.f, 10.f, 0.f));
+	}
+	if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_A) && _onGround)
+	{
+		_body->ApplyForce(this->GetGameObject()->GetRotation() * glm::vec3(-10.f, 0.f, 0.f));
+	}
+	if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_S) && _onGround)
+	{
+		_body->ApplyForce(this->GetGameObject()->GetRotation() * glm::vec3(0.f, -10.f, 0.f));
+	}
+	if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_D) && _onGround)
+	{
+		_body->ApplyForce(this->GetGameObject()->GetRotation() * glm::vec3(10.f, 0.f, 0.f));
+	}
+
 }
 
