@@ -473,6 +473,11 @@ int main() {
 			Camera::Sptr cam = mobileCamera->Add<Camera>();
 			scene->PlayerCamera = cam;
 		}
+
+		GameObject::Sptr platform = scene->CreateGameObject("Moving Platform");
+		{
+
+		}
 		/*
 		// Create a trigger volume for testing how we can detect collisions with objects!
 		GameObject::Sptr trigger = scene->CreateGameObject("Trigger");
