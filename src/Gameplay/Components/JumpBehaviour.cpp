@@ -52,24 +52,7 @@ void JumpBehaviour::Update(float deltaTime) {
 	//Find whether the attached object is on the ground
 	if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_SPACE) && _onGround) 
 	{
-		_body->ApplyForce(glm::vec3(0.0f, 0.0f, _impulse));
+		_body->ApplyImpulse(glm::vec3(0.0f, 0.0f, _impulse));
 	}
-	if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_W) && _onGround)
-	{
-		_body->ApplyForce(this->GetGameObject()->GetRotation() * glm::vec3(0.f, 10.f, 0.f));
-	}
-	if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_A) && _onGround)
-	{
-		_body->ApplyForce(this->GetGameObject()->GetRotation() * glm::vec3(-10.f, 0.f, 0.f));
-	}
-	if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_S) && _onGround)
-	{
-		_body->ApplyForce(this->GetGameObject()->GetRotation() * glm::vec3(0.f, -10.f, 0.f));
-	}
-	if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_D) && _onGround)
-	{
-		_body->ApplyForce(this->GetGameObject()->GetRotation() * glm::vec3(10.f, 0.f, 0.f));
-	}
-
 }
 

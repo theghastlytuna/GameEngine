@@ -7,6 +7,9 @@
 #include "Gameplay/Scene.h"
 #include "Utils/JsonGlmHelpers.h"
 #include "Utils/ImGuiHelper.h"
+#include "Gameplay/GameObject.h"
+
+#include "Gameplay/Physics/RigidBody.h"
 
 FirstPersonCamera::FirstPersonCamera()
 	: IComponent(),
@@ -37,9 +40,7 @@ void FirstPersonCamera::Update(float deltaTime)
 		_isMousePressed = false;
 	}
 
-	if (_isMousePressed && 
-		GetGameObject()->SelfRef()->GetScene()->MainCamera == GetGameObject()->SelfRef()->GetScene()->PlayerCamera)
-	{
+	if (_isMousePressed) {
 		glm::dvec2 currentMousePos;
 		glfwGetCursorPos(_window, &currentMousePos.x, &currentMousePos.y);
 
@@ -48,12 +49,42 @@ void FirstPersonCamera::Update(float deltaTime)
 		glm::quat rotX = glm::angleAxis(glm::radians(_currentRot.x), glm::vec3(0, 0, 1));
 		glm::quat rotY = glm::angleAxis(glm::radians(_currentRot.y), glm::vec3(1, 0, 0));
 		glm::quat currentRot = rotX * rotY;
+		GetGameObject()->SetRotation(currentRot);
 
 		_prevMousePos = currentMousePos;
 
-		GetGameObject()->SetRotation(currentRot);
+		glm::vec3 input = glm::vec3(0.0f);
+		if (glfwGetKey(_window, GLFW_KEY_W)) {
+			input.z -= _moveSpeeds.x;
+		}
+		if (glfwGetKey(_window, GLFW_KEY_S)) {
+			input.z += _moveSpeeds.x;
+		}
+		if (glfwGetKey(_window, GLFW_KEY_A)) {
+			input.x -= _moveSpeeds.y;
+		}
+		if (glfwGetKey(_window, GLFW_KEY_D)) {
+			input.x += _moveSpeeds.y;
+		}
+		if (glfwGetKey(_window, GLFW_KEY_LEFT_CONTROL)) {
+			input.y -= _moveSpeeds.z;
+		}
+		if (glfwGetKey(_window, GLFW_KEY_LEFT_SHIFT)) {
+			input *= _shiftMultipler;
+		}
+
+		input *= deltaTime;
+
+		glm::vec3 worldMovement = glm::vec3((currentRot * glm::vec4(input, 1.0f)).x, (currentRot * glm::vec4(input, 1.0f)).y, 0.0f);
+
+		if (worldMovement != glm::vec3(0.0f))
+		{
+			worldMovement = 10.0f * glm::normalize(worldMovement);
+		}
+		GetGameObject()->Get<Gameplay::Physics::RigidBody>()->ApplyForce(worldMovement);
 	}
 }
+
 
 void FirstPersonCamera::RenderImGui()
 {

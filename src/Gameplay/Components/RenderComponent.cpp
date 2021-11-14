@@ -5,18 +5,25 @@
 
 RenderComponent::RenderComponent(const Gameplay::MeshResource::Sptr& mesh, const Gameplay::Material::Sptr& material) :
 	_mesh(mesh), 
+	_targetMesh(nullptr),
 	_material(material), 
 	_meshBuilderParams(std::vector<MeshBuilderParam>()) 
 { }
 
 RenderComponent::RenderComponent() : 
 	_mesh(nullptr), 
+	_targetMesh(nullptr),
 	_material(nullptr), 
 	_meshBuilderParams(std::vector<MeshBuilderParam>())
 { }
 
 void RenderComponent::SetMesh(const Gameplay::MeshResource::Sptr& mesh) {
 	_mesh = mesh;
+}
+
+void RenderComponent::SetTargetMesh(const Gameplay::MeshResource::Sptr& mesh)
+{
+	_targetMesh = mesh;
 }
 
 const Gameplay::MeshResource::Sptr& RenderComponent::GetMeshResource() const {

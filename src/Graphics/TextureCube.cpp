@@ -1,7 +1,7 @@
 #include "Graphics/TextureCube.h"
 #include <filesystem>
 #include "stb_image.h"
-#include "../../Week8-Completed/src/Utils/JsonGlmHelpers.h"
+#include "../../GameEngine/src/Utils/JsonGlmHelpers.h"
 
 TextureCube::TextureCube(const std::string& baseFilename) :
 	ITexture(TextureType::Cubemap),

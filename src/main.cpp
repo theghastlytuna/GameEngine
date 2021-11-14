@@ -464,6 +464,7 @@ int main() {
 			RigidBody::Sptr physics = mobileCamera->Add<RigidBody>(RigidBodyType::Dynamic);
 			physics->AddCollider(SphereCollider::Create());
 			physics->SetAngularFactor(glm::vec3(0.f));
+			physics->SetLinearDamping(0.8f);
 
 			FirstPersonCamera::Sptr cameraControl = mobileCamera->Add<FirstPersonCamera>();
 
@@ -750,11 +751,11 @@ int main() {
 
 		if (glfwGetKey(window, GLFW_KEY_Q))
 		{
-			boomerang->SetPostion(playerObject->GetPosition());
+			boomerang->SetPostion(glm::vec3(playerObject->GetPosition().x, playerObject->GetPosition().y, playerObject->GetPosition().z + 1.3f));
 			boomerang->Get<RigidBody>()->SetLinearVelocity(glm::vec3(
-				playerObject->Get<Camera>()->GetView()[0][2],
-				playerObject->Get<Camera>()->GetView()[1][2],
-				playerObject->Get<Camera>()->GetView()[2][2]) * -5.0f);
+				glm::inverse(playerObject->Get<Camera>()->GetView())[2].x,
+				glm::inverse(playerObject->Get<Camera>()->GetView())[2].y, 
+				glm::inverse(playerObject->Get<Camera>()->GetView())[2].z) * -5.0f);
 		}
 
 		//boomerang->SetPostion(camera->G);
