@@ -303,6 +303,9 @@ int main() {
 		Texture2D::Sptr	cubeSpec = ResourceManager::CreateAsset<Texture2D>("textures/box-specular.png");
 		Texture2D::Sptr cubeTex = ResourceManager::CreateAsset<Texture2D>("textures/cubeUV.png");
 
+		MeshResource::Sptr charMesh = ResourceManager::CreateAsset<MeshResource>("mainChar.obj");
+		Texture2D::Sptr charTex = ResourceManager::CreateAsset<Texture2D>("textures/Char.png");
+
 		MeshResource::Sptr boiMesh[7];
 
 		for (int i = 0; i < 7; i++)
@@ -369,6 +372,14 @@ int main() {
 			boiMat->Shininess = 0.8f;
 		}
 
+		Material::Sptr charMat = ResourceManager::CreateAsset<Material>();
+		{
+			charMat->Name = "MainChar";
+			charMat->MatShader = basicShader;
+			charMat->Texture = charTex;
+			charMat->Shininess = 0.1f;
+		}
+
 		// Create some lights for our scene
 		scene->Lights.resize(3);
 		scene->Lights[0].Position = glm::vec3(0.0f, 1.0f, 3.0f);
@@ -416,8 +427,12 @@ int main() {
 
 		GameObject::Sptr boomerang = scene->CreateGameObject("Boomerang");
 		{
+
+			RigidBody::Sptr physics = boomerang->Add<RigidBody>(RigidBodyType::Dynamic);
+			physics->AddCollider(BoxCollider::Create(glm::vec3(0.25f, 0.4f, 0.25f)))->SetPosition(glm::vec3(0.0f, 0.35f, 0.0f));
+
 			// Set position in the scene
-			boomerang->SetPostion(glm::vec3(2.0f, 0.0f, 0.0f));
+			//boomerang->SetPostion(glm::vec3(2.0f, 0.0f, 0.0f));
 			boomerang->SetScale(glm::vec3(0.5f, 0.25f, 0.5f));
 
 			// Create and attach a renderer for the monkey
@@ -425,8 +440,6 @@ int main() {
 			renderer->SetMesh(cubeMesh);
 			renderer->SetMaterial(boxMaterial);
 
-			RigidBody::Sptr physics = boomerang->Add<RigidBody>(RigidBodyType::Dynamic);
-			physics->AddCollider(ConvexMeshCollider::Create());
 		}
 
 		//Set up the scene's camera
@@ -459,7 +472,9 @@ int main() {
 
 			RenderComponent::Sptr renderer = mobileCamera->Add<RenderComponent>();
 			renderer->SetMesh(monkeyMesh);
-			renderer->SetMaterial(cubeMaterial);
+			renderer->SetMaterial(monkeyMaterial);
+
+			mobileCamera->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
 			RigidBody::Sptr physics = mobileCamera->Add<RigidBody>(RigidBodyType::Dynamic);
 			physics->AddCollider(SphereCollider::Create());
@@ -479,7 +494,7 @@ int main() {
 
 		}
 		/*
-		// Create a trigger volume for testing how we can detect collisions with objects!
+		// Create a trigger volume for testing how we can detect collisions with objects;
 		GameObject::Sptr trigger = scene->CreateGameObject("Trigger");
 		{
 			TriggerVolume::Sptr volume = trigger->Add<TriggerVolume>();
@@ -505,8 +520,8 @@ int main() {
 			renderer->SetMaterial(boxMaterial);
 
 			//Create a collider
-			BoxCollider::Sptr collider = BoxCollider::Create(glm::vec3(50.0f, 50.0f, 1.0f));
-			collider->SetPosition({ 0,0,-1 });
+			PlaneCollider::Sptr collider = PlaneCollider::Create();
+			collider->SetPosition({ 0,0,0.2 });
 
 			//Attach a trigger
 			TriggerVolume::Sptr volume = plane->Add<TriggerVolume>();
@@ -537,6 +552,32 @@ int main() {
 			// physics bodies attached!
 		}
 
+		GameObject::Sptr movingPlat = scene->CreateGameObject("GroundMoving");
+		{
+			// Set position in the scene
+			movingPlat->SetPostion(glm::vec3(10.0f, 0.0f, 5.0f));
+			// Scale down the plane
+			movingPlat->SetScale(glm::vec3(2.0f, 2.0f, 1.0f));
+
+			// Create and attach a render component
+			RenderComponent::Sptr renderer = movingPlat->Add<RenderComponent>();
+			renderer->SetMesh(cubeMesh);
+			renderer->SetMaterial(boxMaterial);
+
+			TriggerVolume::Sptr volume = movingPlat->Add<TriggerVolume>();
+
+			ConvexMeshCollider::Sptr collider = ConvexMeshCollider::Create();
+			collider->SetScale(glm::vec3(2.0f, 2.0f, 1.0f));
+
+			RigidBody::Sptr physics = movingPlat->Add<RigidBody>(RigidBodyType::Kinematic);
+			physics->AddCollider(collider);
+			volume->AddCollider(collider);
+
+			movingPlat->Add<TriggerVolumeEnterBehaviour>();
+			//movingPlat->Add<MovingPlatform>(glm::vec3(10.0f, 0.0f, 5.0f), glm::vec3(20.0f, 0.0f, 5.0f), 8.0f);
+
+		}
+
 		GameObject::Sptr monkey1 = scene->CreateGameObject("Monkey 1");
 		{
 			// Set position in the scene
@@ -557,19 +598,30 @@ int main() {
 		
 		GameObject::Sptr cube = scene->CreateGameObject("Player");
 		{
+			// Add a dynamic rigid body to this monkey
+			RigidBody::Sptr physics = cube->Add<RigidBody>(RigidBodyType::Dynamic);
+
+			BoxCollider::Sptr collider = BoxCollider::Create(glm::vec3(0.5f, 0.3f, 1.2f));
+			collider->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+			collider->SetPosition(glm::vec3(0.0f, 1.15f, 0.0f));
+
+			physics->AddCollider(collider);
+
 			// Set position in the scene
 			cube->SetPostion(glm::vec3(1.5f, 3.0f, 1.0f));
+
+			cube->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+			cube->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
 			
-			cube->Add<JumpBehaviour>();
+			//cube->Add<JumpBehaviour>();
 
 			// Create and attach a renderer for the monkey
 			RenderComponent::Sptr renderer = cube->Add<RenderComponent>();
-			renderer->SetMesh(cubeMesh);
-			renderer->SetMaterial(cubeMaterial);
+			renderer->SetMesh(charMesh);
+			renderer->SetMaterial(charMat);
 
-			// Add a dynamic rigid body to this monkey
-			RigidBody::Sptr physics = cube->Add<RigidBody>(RigidBodyType::Dynamic);
-			physics->AddCollider(ConvexMeshCollider::Create());
+
+			//physics->SetAngularFactor(glm::vec3(0.f));
 
 			cube->Add<MaterialSwapBehaviour>();
 
@@ -638,13 +690,21 @@ int main() {
 
 	nlohmann::json editorSceneState;
 
+	///Temp lerp properties
+	float t = 0;
+	glm::vec3 startPos = glm::vec3(10.0f, 0.0f, 5.0f);
+	glm::vec3 endPos = glm::vec3(20.0f, 0.0f, 5.0f);
+	float duration = 8.0f;
+	bool forward = true;
+	////////////////
+	
 	///// Game loop /////
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
 		GameObject::Sptr playerObject = scene->FindObjectByName("Mobile Camera");
 		GameObject::Sptr boomerang = scene->FindObjectByName("Boomerang");
-
+		GameObject::Sptr movingPlat = scene->FindObjectByName("GroundMoving");
 
 
 		ImGuiHelper::StartFrame();
@@ -760,7 +820,7 @@ int main() {
 			boomerang->Get<RigidBody>()->SetLinearVelocity(glm::vec3(
 				glm::inverse(playerObject->Get<Camera>()->GetView())[2].x,
 				glm::inverse(playerObject->Get<Camera>()->GetView())[2].y, 
-				glm::inverse(playerObject->Get<Camera>()->GetView())[2].z) * -5.0f);
+				glm::inverse(playerObject->Get<Camera>()->GetView())[2].z) * -10.0f);
 		}
 
 		//boomerang->SetPostion(camera->G);
@@ -769,6 +829,39 @@ int main() {
 		if (isDebugWindowOpen) {
 			scene->DrawAllGameObjectGUIs();
 		}
+
+		////////////////Temporary moving platform lerp area////////////////////
+
+
+		if (forward)
+		{
+			if (t < 1)
+			{
+				movingPlat->SetPostion(lerp(startPos, endPos, t));
+				t += dt / duration;
+			}
+
+			else if (t >= 1)
+			{
+				t = 0;
+				forward = false;
+			}
+		}
+		else
+		{
+			if (t < 1)
+			{
+				movingPlat->SetPostion(lerp(endPos, startPos, t));
+				t += dt / duration;
+			}
+			else if (t >= 1)
+			{
+				t = 0;
+				forward = true;
+			}
+
+		}
+		//////////////////////////////////////////////////////////////////////
 		
 		// The current material that is bound for rendering
 		Material::Sptr currentMat = nullptr;
