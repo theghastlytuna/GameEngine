@@ -278,11 +278,12 @@ int main() {
 			{ ShaderPartType::Vertex, "shaders/vertex_shader.glsl" }, 
 			{ ShaderPartType::Fragment, "shaders/frag_spec_texture.glsl" } 
 		}); 
-
+		/*
 		Shader::Sptr morphShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
 			{ ShaderPartType::Vertex, "shaders/morph_vertex.glsl" },
 			{ ShaderPartType::Fragment, "shaders/frag_spec_texture.glsl" }
 		});
+		*/
 
 		/*
 		Shader::Sptr reflectiveShader2 = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
@@ -305,7 +306,7 @@ int main() {
 
 		MeshResource::Sptr charMesh = ResourceManager::CreateAsset<MeshResource>("mainChar.obj");
 		Texture2D::Sptr charTex = ResourceManager::CreateAsset<Texture2D>("textures/Char.png");
-
+		/*
 		MeshResource::Sptr boiMesh[7];
 
 		for (int i = 0; i < 7; i++)
@@ -314,6 +315,7 @@ int main() {
 		}
 
 		MeshResource::Sptr mainBoiMesh = ResourceManager::CreateAsset<MeshResource>("boi-tpose.obj");
+		*/
 
 		// Here we'll load in the cubemap, as well as a special shader to handle drawing the skybox
 		TextureCube::Sptr testCubemap = ResourceManager::CreateAsset<TextureCube>("cubemaps/ocean/ocean.jpg");
@@ -361,7 +363,7 @@ int main() {
 			monkeyMaterial->Shininess = 1.0f;
 
 		}
-
+		/*
 		// This will be our box material, with no environment reflections
 		Material::Sptr boiMat = ResourceManager::CreateAsset<Material>();
 		{
@@ -371,6 +373,7 @@ int main() {
 			boiMat->Specular = cubeSpec;
 			boiMat->Shininess = 0.8f;
 		}
+		*/
 
 		Material::Sptr charMat = ResourceManager::CreateAsset<Material>();
 		{
@@ -397,6 +400,7 @@ int main() {
 		planeMesh->AddParam(MeshBuilderParam::CreatePlane(ZERO, UNIT_Z, UNIT_X, glm::vec2(1.0f)));
 		planeMesh->GenerateMesh();
 
+		/*
 		GameObject::Sptr boiObjects[7];
 
 		for (int i = 0; i < 7; i++)
@@ -412,7 +416,6 @@ int main() {
 				renderer->SetMaterial(boxMaterial);
 			}
 		}
-
 		GameObject::Sptr boi = scene->CreateGameObject("Boi");
 		{
 			// Set position in the scene
@@ -424,6 +427,7 @@ int main() {
 			renderer->SetTargetMesh(boiMesh[1]);
 			renderer->SetMaterial(boiMat);
 		}
+		*/
 
 		GameObject::Sptr boomerang = scene->CreateGameObject("Boomerang");
 		{
