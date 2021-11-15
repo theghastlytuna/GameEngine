@@ -115,6 +115,7 @@
     <ClInclude Include="src\Gameplay\Components\IComponent.h" />
     <ClInclude Include="src\Gameplay\Components\JumpBehaviour.h" />
     <ClInclude Include="src\Gameplay\Components\MaterialSwapBehaviour.h" />
+    <ClInclude Include="src\Gameplay\Components\MovingPlatform.h" />
     <ClInclude Include="src\Gameplay\Components\RenderComponent.h" />
     <ClInclude Include="src\Gameplay\Components\RotatingBehaviour.h" />
     <ClInclude Include="src\Gameplay\Components\SimpleCameraControl.h" />
@@ -169,6 +170,7 @@
     <ClCompile Include="src\Gameplay\Components\IComponent.cpp" />
     <ClCompile Include="src\Gameplay\Components\JumpBehaviour.cpp" />
     <ClCompile Include="src\Gameplay\Components\MaterialSwapBehaviour.cpp" />
+    <ClCompile Include="src\Gameplay\Components\MovingPlatform.cpp" />
     <ClCompile Include="src\Gameplay\Components\RenderComponent.cpp" />
     <ClCompile Include="src\Gameplay\Components\RotatingBehaviour.cpp" />
     <ClCompile Include="src\Gameplay\Components\SimpleCameraControl.cpp" />
@@ -237,4 +239,4 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-</Project>
+</Project> 

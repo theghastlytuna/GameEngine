@@ -52,6 +52,7 @@
 #include "Gameplay/Components/RenderComponent.h"
 #include "Gameplay/Components/MaterialSwapBehaviour.h"
 #include "Gameplay/Components/FirstPersonCamera.h"
+#include "Gameplay/Components/MovingPlatform.h"
 
 // Physics
 #include "Gameplay/Physics/RigidBody.h"
@@ -254,6 +255,7 @@ int main() {
 	ComponentManager::RegisterType<TriggerVolumeEnterBehaviour>();
 	ComponentManager::RegisterType<SimpleCameraControl>();
 	ComponentManager::RegisterType<FirstPersonCamera>();
+	ComponentManager::RegisterType<MovingPlatform>();
 
 	// GL states, we'll enable depth testing and backface fulling
 	glEnable(GL_DEPTH_TEST);
@@ -493,10 +495,6 @@ int main() {
 			scene->PlayerCamera = cam;
 		}
 
-		GameObject::Sptr platform = scene->CreateGameObject("Moving Platform");
-		{
-
-		}
 		/*
 		// Create a trigger volume for testing how we can detect collisions with objects;
 		GameObject::Sptr trigger = scene->CreateGameObject("Trigger");
@@ -578,8 +576,11 @@ int main() {
 			volume->AddCollider(collider);
 
 			movingPlat->Add<TriggerVolumeEnterBehaviour>();
-			//movingPlat->Add<MovingPlatform>(glm::vec3(10.0f, 0.0f, 5.0f), glm::vec3(20.0f, 0.0f, 5.0f), 8.0f);
 
+			MovingPlatform::Sptr platform = movingPlat->Add<MovingPlatform>();
+			platform->startPos = glm::vec3(10.0f, 0.0f, 5.0f);
+			platform->endPos = glm::vec3(20.0f, 0.0f, 5.0f);
+			platform->duration = 8.0f;
 		}
 
 		GameObject::Sptr monkey1 = scene->CreateGameObject("Monkey 1");
@@ -708,7 +709,6 @@ int main() {
 
 		GameObject::Sptr playerObject = scene->FindObjectByName("Mobile Camera");
 		GameObject::Sptr boomerang = scene->FindObjectByName("Boomerang");
-		GameObject::Sptr movingPlat = scene->FindObjectByName("GroundMoving");
 
 
 		ImGuiHelper::StartFrame();
@@ -836,7 +836,7 @@ int main() {
 
 		////////////////Temporary moving platform lerp area////////////////////
 
-
+		/*
 		if (forward)
 		{
 			if (t < 1)
@@ -865,6 +865,7 @@ int main() {
 			}
 
 		}
+		*/
 		//////////////////////////////////////////////////////////////////////
 		
 		// The current material that is bound for rendering

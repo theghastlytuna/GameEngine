@@ -3,7 +3,11 @@
 #include "Utils/GlmBulletConversions.h"
 
 MovingPlatform::MovingPlatform() : 
-	IComponent()
+	IComponent(),
+	startPos({ 0.f, 0.f, 0.f }),
+	endPos({ 0.f, 0.f, 0.f }),
+	duration(1.f),
+	forward(true)
 { }
 
 MovingPlatform::~MovingPlatform() = default;

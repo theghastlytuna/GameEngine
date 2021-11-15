@@ -19,10 +19,10 @@ public:
 	virtual nlohmann::json ToJson() const override;
 	static MovingPlatform::Sptr FromJson(const nlohmann::json& blob);
 
-	glm::vec3 startPos;
-	glm::vec3 endPos;
-	float duration;
-	bool forward;
+	glm::vec3 startPos = { 0.f, 0.f, 0.f };
+	glm::vec3 endPos = { 0.f, 0.f, 0.f };
+	float duration = 1.f;
+	bool forward = true;
 protected:
-	float t;
+	float t = 0.f;
 };

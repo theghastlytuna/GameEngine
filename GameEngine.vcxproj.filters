@@ -42,6 +42,9 @@
     <ClInclude Include="src\Gameplay\Components\MaterialSwapBehaviour.h">
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
+    <ClInclude Include="src\Gameplay\Components\MovingPlatform.h">
+      <Filter>Gameplay\Components</Filter>
+    </ClInclude>
     <ClInclude Include="src\Gameplay\Components\RenderComponent.h">
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
@@ -198,6 +201,9 @@
       <Filter>Gameplay\Components</Filter>
     </ClCompile>
     <ClCompile Include="src\Gameplay\Components\MaterialSwapBehaviour.cpp">
+      <Filter>Gameplay\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gameplay\Components\MovingPlatform.cpp">
       <Filter>Gameplay\Components</Filter>
     </ClCompile>
     <ClCompile Include="src\Gameplay\Components\RenderComponent.cpp">
