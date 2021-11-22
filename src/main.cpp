@@ -114,10 +114,13 @@ using namespace Gameplay::Physics;
 Scene::Sptr scene = nullptr;
 
 void GlfwWindowResizedCallback(GLFWwindow* window, int width, int height) {
+	glEnable(GL_SCISSOR_TEST);
 	glViewport(0, 0, width, height);
+	glScissor(0, 0, width, height / 2);
 	windowSize = glm::ivec2(width, height);
 	if (windowSize.x * windowSize.y > 0) {
 		scene->MainCamera->ResizeWindow(width, height);
+		//scene->MainCamera2->ResizeWindow(width / 2, height / 2);
 	}
 }
 
@@ -231,6 +234,9 @@ int main() {
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(GlDebugMessage, nullptr);
 
+	
+	glEnable(GL_SCISSOR_TEST);
+	
 	// Initialize our ImGui helper
 	ImGuiHelper::Init(window);
 
@@ -472,6 +478,29 @@ int main() {
 			scene->WorldCamera = cam;
 		}
 
+		//Set up the scene's camera
+		GameObject::Sptr camera2 = scene->CreateGameObject("Main Camera 2");
+		{
+			camera2->SetPostion(glm::vec3(5.0f));
+			camera2->LookAt(glm::vec3(0.0f));
+
+			//camera->Add<SimpleCameraControl>();
+
+
+			//RenderComponent::Sptr renderer = camera->Add<RenderComponent>();
+			//renderer->SetMesh(cubeMesh);
+			//renderer->SetMaterial(cubeMaterial);
+
+			//camera->Add<JumpBehaviour>();
+
+			//RigidBody::Sptr physics = camera->Add<RigidBody>(RigidBodyType::Dynamic);
+			//physics->AddCollider(ConvexMeshCollider::Create());
+
+			Camera::Sptr cam = camera2->Add<Camera>();
+			// Make sure that the camera is set as the scene's main camera!
+			scene->MainCamera2 = cam;
+		}
+
 		GameObject::Sptr mobileCamera = scene->CreateGameObject("Mobile Camera");
 		{
 			mobileCamera->SetPostion(glm::vec3(0.f, 0.f, 4.f));
@@ -493,6 +522,29 @@ int main() {
 
 			Camera::Sptr cam = mobileCamera->Add<Camera>();
 			scene->PlayerCamera = cam;
+		}
+
+		GameObject::Sptr mobileCamera2 = scene->CreateGameObject("Mobile Camera 2");
+		{
+			mobileCamera2->SetPostion(glm::vec3(10.f, 0.f, 4.f));
+
+			RenderComponent::Sptr renderer = mobileCamera2->Add<RenderComponent>();
+			renderer->SetMesh(monkeyMesh);
+			renderer->SetMaterial(monkeyMaterial);
+
+			mobileCamera2->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+			RigidBody::Sptr physics = mobileCamera2->Add<RigidBody>(RigidBodyType::Dynamic);
+			physics->AddCollider(SphereCollider::Create());
+			physics->SetAngularFactor(glm::vec3(0.f));
+			physics->SetLinearDamping(0.8f);
+
+			FirstPersonCamera::Sptr cameraControl = mobileCamera2->Add<FirstPersonCamera>();
+
+			JumpBehaviour::Sptr jumping = mobileCamera2->Add<JumpBehaviour>();
+
+			Camera::Sptr cam = mobileCamera2->Add<Camera>();
+			scene->PlayerCamera2 = cam;
 		}
 
 		/*
@@ -601,6 +653,7 @@ int main() {
 			physics->AddCollider(ConvexMeshCollider::Create());
 		}
 		
+		/*
 		GameObject::Sptr cube = scene->CreateGameObject("Player");
 		{
 			// Add a dynamic rigid body to this monkey
@@ -631,7 +684,7 @@ int main() {
 			cube->Add<MaterialSwapBehaviour>();
 
 		}
-		
+		*/
 		GameObject::Sptr monkey2 = scene->CreateGameObject("Complex Object");
 		{
 			// Set and rotation position in the scene
@@ -745,9 +798,15 @@ int main() {
 			ImGui::Separator();
 			if (ImGui::Button("Toggle Camera")) {
 				if (scene->MainCamera == scene->WorldCamera)
+				{
 					scene->MainCamera = scene->PlayerCamera;
+					scene->MainCamera2 = scene->PlayerCamera2;
+				}
 				else
+				{
 					scene->MainCamera = scene->WorldCamera;
+					scene->MainCamera2 = scene->WorldCamera;
+				}
 			}
 
 			// Make a new area for the scene saving/loading
@@ -807,6 +866,23 @@ int main() {
 		// Perform updates for all components
 		scene->Update(dt);
 
+		if (glfwGetKey(window, GLFW_KEY_Q))
+		{
+			boomerang->SetPostion(glm::vec3(playerObject->GetPosition().x, playerObject->GetPosition().y, playerObject->GetPosition().z + 1.3f));
+			boomerang->Get<RigidBody>()->SetLinearVelocity(glm::vec3(
+				glm::inverse(playerObject->Get<Camera>()->GetView())[2].x,
+				glm::inverse(playerObject->Get<Camera>()->GetView())[2].y,
+				glm::inverse(playerObject->Get<Camera>()->GetView())[2].z) * -10.0f);
+		}
+
+		// Update our worlds physics!
+		scene->DoPhysics(dt);
+
+		// Draw object GUIs
+		if (isDebugWindowOpen) {
+			scene->DrawAllGameObjectGUIs();
+		}
+
 		// Grab shorthands to the camera and shader from the scene
 		Camera::Sptr camera = scene->MainCamera;
 
@@ -814,60 +890,11 @@ int main() {
 		glm::mat4 viewProj = camera->GetViewProjection();
 		DebugDrawer::Get().SetViewProjection(viewProj);
 
-		// Update our worlds physics!
-		scene->DoPhysics(dt);
+		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y);
+		//glScissor(0, windowSize.y / 2, windowSize.x, windowSize.y);
 
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		if (glfwGetKey(window, GLFW_KEY_Q))
-		{
-			boomerang->SetPostion(glm::vec3(playerObject->GetPosition().x, playerObject->GetPosition().y, playerObject->GetPosition().z + 1.3f));
-			boomerang->Get<RigidBody>()->SetLinearVelocity(glm::vec3(
-				glm::inverse(playerObject->Get<Camera>()->GetView())[2].x,
-				glm::inverse(playerObject->Get<Camera>()->GetView())[2].y, 
-				glm::inverse(playerObject->Get<Camera>()->GetView())[2].z) * -10.0f);
-		}
-
-		//boomerang->SetPostion(camera->G);
-
-		// Draw object GUIs
-		if (isDebugWindowOpen) {
-			scene->DrawAllGameObjectGUIs();
-		}
-
-		////////////////Temporary moving platform lerp area////////////////////
-
-		/*
-		if (forward)
-		{
-			if (t < 1)
-			{
-				movingPlat->SetPostion(lerp(startPos, endPos, t));
-				t += dt / duration;
-			}
-
-			else if (t >= 1)
-			{
-				t = 0;
-				forward = false;
-			}
-		}
-		else
-		{
-			if (t < 1)
-			{
-				movingPlat->SetPostion(lerp(endPos, startPos, t));
-				t += dt / duration;
-			}
-			else if (t >= 1)
-			{
-				t = 0;
-				forward = true;
-			}
-
-		}
-		*/
-		//////////////////////////////////////////////////////////////////////
-		
 		// The current material that is bound for rendering
 		Material::Sptr currentMat = nullptr;
 		Shader::Sptr shader = nullptr;
@@ -922,6 +949,79 @@ int main() {
 				*/
 			}
 			
+			// Draw the object
+			renderable->GetMesh()->Draw();
+		});
+
+		scene->DrawSkybox();
+
+		//VertexArrayObject::Unbind();
+		
+		glViewport(0, 0, windowSize.x, windowSize.y / 2);
+		//glScissor(0, 0, windowSize.x, windowSize.y / 2);
+
+		// Grab shorthands to the camera and shader from the scene
+		Camera::Sptr camera2 = scene->MainCamera2;
+
+		// Cache the camera's viewprojection
+		glm::mat4 viewProj2 = camera2->GetViewProjection();
+		DebugDrawer::Get().SetViewProjection(viewProj2);
+
+		// The current material that is bound for rendering
+		Material::Sptr currentMat2 = nullptr;
+		Shader::Sptr shader2 = nullptr;
+
+		TextureCube::Sptr environment2 = scene->GetSkyboxTexture();
+		if (environment) environment->Bind(0);
+
+		// Render all our objects
+		ComponentManager::Each<RenderComponent>([&](const RenderComponent::Sptr& renderable) {
+			// Early bail if mesh not set
+			if (renderable->GetMesh() == nullptr) {
+				return;
+			}
+
+			// If we don't have a material, try getting the scene's fallback material
+			// If none exists, do not draw anything
+			if (renderable->GetMaterial() == nullptr) {
+				if (scene->DefaultMaterial != nullptr) {
+					renderable->SetMaterial(scene->DefaultMaterial);
+				}
+				else {
+					return;
+				}
+			}
+
+			// If the material has changed, we need to bind the new shader and set up our material and frame data
+			// Note: This is a good reason why we should be sorting the render components in ComponentManager
+			if (renderable->GetMaterial() != currentMat2) {
+				currentMat2 = renderable->GetMaterial();
+				shader2 = currentMat2->MatShader;
+
+				shader2->Bind();
+				shader2->SetUniform("u_CamPos", scene->MainCamera2->GetGameObject()->GetPosition());
+				currentMat2->Apply();
+			}
+
+			// Grab the game object so we can do some stuff with it
+			GameObject* object = renderable->GetGameObject();
+
+			// Set vertex shader parameters
+			shader->SetUniformMatrix("u_ModelViewProjection", viewProj2 * object->GetTransform());
+			shader->SetUniformMatrix("u_Model", object->GetTransform());
+			shader->SetUniformMatrix("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(object->GetTransform()))));
+
+			if (renderable->GetGameObject()->Name == "Boi")
+			{/*
+				VertexArrayObject::Sptr tempMesh = renderable->GetMesh();
+				VertexBuffer::Sptr tempBuf;
+				tempBuf->LoadData;
+				tempMesh->AddVertexBuffer()
+				//tempMesh->AddVertexBuffer();
+				shader->SetUniform("t", 0.0f);
+				*/
+			}
+
 			// Draw the object
 			renderable->GetMesh()->Draw();
 		});
