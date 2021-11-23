@@ -398,20 +398,65 @@ void CreateScene() {
 			Camera::Sptr cam = camera->Add<Camera>();
 			// Make sure that the camera is set as the scene's main camera!
 			scene->MainCamera = cam;
+			scene->WorldCamera = cam;
 		}
 
+		//Set up the scene's camera 
 		GameObject::Sptr camera2 = scene->CreateGameObject("Main Camera 2");
 		{
-			camera2->SetPostion(glm::vec3(2.0f));
+			camera2->SetPostion(glm::vec3(5.0f));
 			camera2->LookAt(glm::vec3(0.0f));
 
-			camera2->Add<SimpleCameraControl>();
-
 			Camera::Sptr cam = camera2->Add<Camera>();
-			// Make sure that the camera is set as the scene's main camera!
+			// Make sure that the camera is set as the scene's main camera! 
 			scene->MainCamera2 = cam;
 		}
 
+		GameObject::Sptr mobileCamera = scene->CreateGameObject("Mobile Camera");
+		{
+			mobileCamera->SetPostion(glm::vec3(0.f, 0.f, 4.f));
+
+			RenderComponent::Sptr renderer = mobileCamera->Add<RenderComponent>();
+			renderer->SetMesh(monkeyMesh);
+			renderer->SetMaterial(monkeyMaterial);
+
+			mobileCamera->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+			RigidBody::Sptr physics = mobileCamera->Add<RigidBody>(RigidBodyType::Dynamic);
+			physics->AddCollider(SphereCollider::Create());
+			physics->SetAngularFactor(glm::vec3(0.f));
+			physics->SetLinearDamping(0.8f);
+
+			FirstPersonCamera::Sptr cameraControl = mobileCamera->Add<FirstPersonCamera>();
+
+			JumpBehaviour::Sptr jumping = mobileCamera->Add<JumpBehaviour>();
+
+			Camera::Sptr cam = mobileCamera->Add<Camera>();
+			scene->PlayerCamera = cam;
+		}
+
+		GameObject::Sptr mobileCamera2 = scene->CreateGameObject("Mobile Camera 2");
+		{
+			mobileCamera2->SetPostion(glm::vec3(10.f, 0.f, 4.f));
+
+			RenderComponent::Sptr renderer = mobileCamera2->Add<RenderComponent>();
+			renderer->SetMesh(monkeyMesh);
+			renderer->SetMaterial(monkeyMaterial);
+
+			mobileCamera2->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+			RigidBody::Sptr physics = mobileCamera2->Add<RigidBody>(RigidBodyType::Dynamic);
+			physics->AddCollider(SphereCollider::Create());
+			physics->SetAngularFactor(glm::vec3(0.f));
+			physics->SetLinearDamping(0.8f);
+
+			FirstPersonCamera::Sptr cameraControl = mobileCamera2->Add<FirstPersonCamera>();
+
+			JumpBehaviour::Sptr jumping = mobileCamera2->Add<JumpBehaviour>();
+
+			Camera::Sptr cam = mobileCamera2->Add<Camera>();
+			scene->PlayerCamera2 = cam;
+		}
 
 		// Set up all our sample objects
 		GameObject::Sptr plane = scene->CreateGameObject("Plane");
@@ -446,23 +491,27 @@ void CreateScene() {
 
 			// Add a dynamic rigid body to this monkey
 			RigidBody::Sptr physics = monkey1->Add<RigidBody>(RigidBodyType::Dynamic);
-			physics->AddCollider(ConvexMeshCollider::Create());
+			physics->AddCollider(SphereCollider::Create());
 		}
 
-		GameObject::Sptr monkey2 = scene->CreateGameObject("Complex Object");
+		GameObject::Sptr monkey2 = scene->CreateGameObject("Monkey 2");
 		{
 			// Set and rotation position in the scene
 			monkey2->SetPostion(glm::vec3(-1.5f, 0.0f, 1.0f));
 			monkey2->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Add some behaviour that relies on the physics body
+			monkey2->Add<JumpBehaviour>();
 
 			// Add a render component
 			RenderComponent::Sptr renderer = monkey2->Add<RenderComponent>();
 			renderer->SetMesh(monkeyMesh);
 			renderer->SetMaterial(boxMaterial);
 
-			// This is an example of attaching a component and setting some parameters
-			RotatingBehaviour::Sptr behaviour = monkey2->Add<RotatingBehaviour>();
-			behaviour->RotationSpeed = glm::vec3(0.0f, 0.0f, -90.0f);
+			// Add a dynamic rigid body to this monkey
+			RigidBody::Sptr physics = monkey2->Add<RigidBody>(RigidBodyType::Dynamic);
+			physics->AddCollider(SphereCollider::Create());
+
 		}
 
 		// Box to showcase the specular material
@@ -531,11 +580,6 @@ void CreateScene() {
 			renderer->SetMaterial(toonMaterial);
 		}
 
-		// Kinematic rigid bodies are those controlled by some outside controller
-		// and ONLY collide with dynamic objects
-		RigidBody::Sptr physics = monkey2->Add<RigidBody>(RigidBodyType::Kinematic);
-		physics->AddCollider(ConvexMeshCollider::Create());
-
 		// Create a trigger volume for testing how we can detect collisions with objects!
 		GameObject::Sptr trigger = scene->CreateGameObject("Trigger");
 		{
@@ -597,6 +641,8 @@ int main() {
 	ComponentManager::RegisterType<MaterialSwapBehaviour>();
 	ComponentManager::RegisterType<TriggerVolumeEnterBehaviour>();
 	ComponentManager::RegisterType<SimpleCameraControl>();
+	ComponentManager::RegisterType<FirstPersonCamera>();
+	ComponentManager::RegisterType<MovingPlatform>();
 
 	// GL states, we'll enable depth testing and backface fulling
 	glEnable(GL_DEPTH_TEST);
@@ -698,6 +744,21 @@ int main() {
 					scene->Awake();
 				}
 			}
+
+			ImGui::Separator();
+			if (ImGui::Button("Toggle Camera")) {
+				if (scene->MainCamera == scene->WorldCamera)
+				{
+					scene->MainCamera = scene->PlayerCamera;
+					scene->MainCamera2 = scene->PlayerCamera2;
+				}
+				else
+				{
+					scene->MainCamera = scene->WorldCamera;
+					scene->MainCamera2 = scene->WorldCamera;
+				}
+			}
+
 
 			// Make a new area for the scene saving/loading
 			ImGui::Separator();
