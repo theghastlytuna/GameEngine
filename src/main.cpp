@@ -476,121 +476,6 @@ void CreateScene() {
 			physics->AddCollider(BoxCollider::Create(glm::vec3(50.0f, 50.0f, 1.0f)))->SetPosition({ 0,0,-1 });
 		}
 
-		GameObject::Sptr monkey1 = scene->CreateGameObject("Monkey 1");
-		{
-			// Set position in the scene
-			monkey1->SetPostion(glm::vec3(1.5f, 0.0f, 1.0f));
-
-			// Add some behaviour that relies on the physics body
-			monkey1->Add<JumpBehaviour>();
-
-			// Create and attach a renderer for the monkey
-			RenderComponent::Sptr renderer = monkey1->Add<RenderComponent>();
-			renderer->SetMesh(monkeyMesh);
-			renderer->SetMaterial(wavyMaterial);
-
-			// Add a dynamic rigid body to this monkey
-			RigidBody::Sptr physics = monkey1->Add<RigidBody>(RigidBodyType::Dynamic);
-			physics->AddCollider(SphereCollider::Create());
-		}
-
-		GameObject::Sptr monkey2 = scene->CreateGameObject("Monkey 2");
-		{
-			// Set and rotation position in the scene
-			monkey2->SetPostion(glm::vec3(-1.5f, 0.0f, 1.0f));
-			monkey2->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
-
-			// Add some behaviour that relies on the physics body
-			monkey2->Add<JumpBehaviour>();
-
-			// Add a render component
-			RenderComponent::Sptr renderer = monkey2->Add<RenderComponent>();
-			renderer->SetMesh(monkeyMesh);
-			renderer->SetMaterial(boxMaterial);
-
-			// Add a dynamic rigid body to this monkey
-			RigidBody::Sptr physics = monkey2->Add<RigidBody>(RigidBodyType::Dynamic);
-			physics->AddCollider(SphereCollider::Create());
-
-		}
-
-		// Box to showcase the specular material
-		GameObject::Sptr specBox = scene->CreateGameObject("Specular Object");
-		{
-			MeshResource::Sptr boxMesh = ResourceManager::CreateAsset<MeshResource>();
-			boxMesh->AddParam(MeshBuilderParam::CreateCube(ZERO, ONE));
-			boxMesh->GenerateMesh();
-
-			// Set and rotation position in the scene
-			specBox->SetPostion(glm::vec3(0, -4.0f, 1.0f));
-
-			// Add a render component
-			RenderComponent::Sptr renderer = specBox->Add<RenderComponent>();
-			renderer->SetMesh(boxMesh);
-			renderer->SetMaterial(testMaterial);
-		}
-
-		///// NEW OBJECTS ////
-
-		// sphere to showcase the foliage material
-		GameObject::Sptr foliageBall = scene->CreateGameObject("Foliage Sphere");
-		{
-			MeshResource::Sptr sphere = ResourceManager::CreateAsset<MeshResource>();
-			sphere->AddParam(MeshBuilderParam::CreateIcoSphere(ZERO, ONE, 8));
-			sphere->GenerateMesh(); 
-
-			// Set and rotation position in the scene
-			foliageBall->SetPostion(glm::vec3(-4.0f, -4.0f, 1.0f));
-
-			// Add a render component
-			RenderComponent::Sptr renderer = foliageBall->Add<RenderComponent>();
-			renderer->SetMesh(sphere);
-			renderer->SetMaterial(foliageMaterial);
-		}
-
-		// Box to showcase the foliage material
-		GameObject::Sptr foliageBox = scene->CreateGameObject("Foliage Box");
-		{
-			MeshResource::Sptr box = ResourceManager::CreateAsset<MeshResource>();
-			box->AddParam(MeshBuilderParam::CreateCube(glm::vec3(0, 0, 0.5f) , ONE));
-			box->GenerateMesh();
-
-			// Set and rotation position in the scene
-			foliageBox->SetPostion(glm::vec3(-6.0f, -4.0f, 1.0f));
-
-			// Add a render component
-			RenderComponent::Sptr renderer = foliageBox->Add<RenderComponent>();
-			renderer->SetMesh(box);
-			renderer->SetMaterial(foliageMaterial);
-		}
-
-		// Box to showcase the specular material
-		GameObject::Sptr toonBall = scene->CreateGameObject("Toon Object");
-		{
-			MeshResource::Sptr sphere = ResourceManager::CreateAsset<MeshResource>();
-			sphere->AddParam(MeshBuilderParam::CreateIcoSphere(ZERO, ONE, 8));
-			sphere->GenerateMesh();
-
-			// Set and rotation position in the scene
-			toonBall->SetPostion(glm::vec3(-2.0f, -4.0f, 1.0f));
-
-			// Add a render component
-			RenderComponent::Sptr renderer = toonBall->Add<RenderComponent>();
-			renderer->SetMesh(sphere);
-			renderer->SetMaterial(toonMaterial);
-		}
-
-		// Create a trigger volume for testing how we can detect collisions with objects!
-		GameObject::Sptr trigger = scene->CreateGameObject("Trigger");
-		{
-			TriggerVolume::Sptr volume = trigger->Add<TriggerVolume>();
-			CylinderCollider::Sptr collider = CylinderCollider::Create(glm::vec3(3.0f, 3.0f, 1.0f));
-			collider->SetPosition(glm::vec3(0.0f, 0.0f, 0.5f));
-			volume->AddCollider(collider);
-
-			trigger->Add<TriggerVolumeEnterBehaviour>();
-		}
-
 		// Call scene awake to start up all of our components
 		scene->Window = window;
 		scene->Awake();
@@ -828,12 +713,6 @@ int main() {
 		// Cache the camera's viewprojection
 		glm::mat4 viewProj = camera->GetViewProjection();
 		DebugDrawer::Get().SetViewProjection(viewProj);
-
-
-		// Draw object GUIs
-		if (isDebugWindowOpen) {
-			scene->DrawAllGameObjectGUIs();
-		}
 		
 		// The current material that is bound for rendering
 		Material::Sptr currentMat = nullptr;
@@ -912,12 +791,6 @@ int main() {
 		glm::mat4 viewProj = camera->GetViewProjection();
 		DebugDrawer::Get().SetViewProjection(viewProj);
 
-
-		// Draw object GUIs
-		if (isDebugWindowOpen) {
-			scene->DrawAllGameObjectGUIs();
-		}
-
 		// The current material that is bound for rendering
 		Material::Sptr currentMat = nullptr;
 		Shader::Sptr shader = nullptr;
@@ -984,6 +857,10 @@ int main() {
 			});
 		};
 
+		// Draw object GUIs
+		if (isDebugWindowOpen) {
+			scene->DrawAllGameObjectGUIs();
+		}
 
 		// Use our cubemap to draw our skybox
 		scene->DrawSkybox();
