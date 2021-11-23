@@ -1,4 +1,4 @@
-#include "Gameplay/Components/Camera.h"
+#include "Camera.h"
 
 #include <GLM/gtc/matrix_transform.hpp>
 #include "Utils/JsonGlmHelpers.h"

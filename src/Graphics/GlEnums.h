@@ -356,6 +356,8 @@ constexpr uint32_t ShaderDataTypeComponentCount(ShaderDataType type)
 		case ShaderDataTypecode::MatrixD:
 			return (uint32_t)type & ShaderDataType_Size1Mask * (((uint32_t)type & ShaderDataType_Size2Mask) >> 3);
 			return (uint32_t)type & ShaderDataType_Size1Mask;
+		case ShaderDataTypecode::Texture:
+			return 1;
 		default:
 			LOG_WARN(false, "Unknown ShaderDataType! {}", type);
 			return 1;

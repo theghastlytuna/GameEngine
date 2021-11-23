@@ -21,7 +21,7 @@ struct Light {
 
 // Our uniform buffer that will store all our lighting data
 // so that it can be shared between shaders
-layout (std140, binding = 0) uniform b_LightBlock {
+layout (std140, binding = 2) uniform b_LightBlock {
     // Stores ambient light color in rgb, and number
 	// of lights in w, allowing for easier struct packing
 	// on the C++ side
@@ -65,7 +65,7 @@ vec3 CalcPointLightContribution(vec3 worldPos, vec3 normal, vec3 viewDir, Light 
 	vec3 halfDir     = normalize(toLight + viewDir);
 
 	// Calculate our specular power
-	float specPower  = max(pow(max(dot(normal, halfDir), 0.0), pow(256, shininess)), 1);
+	float specPower  = max(pow(max(dot(normal, halfDir), 0.0), pow(256, shininess)), 1.0);
 	// Calculate specular color
 	vec3 specularOut = specPower * light.ColorAttenuation.rgb;
 

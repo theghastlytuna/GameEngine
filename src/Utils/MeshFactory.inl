@@ -634,10 +634,10 @@ void MeshFactory::AddParameterized(MeshBuilder<Vertex>& mesh, const MeshBuilderP
 			MeshFactory::AddCube(mesh, Params.at("position"), Params.at("scale"), Params.at("rotation"), param.Color);
 			break;
 		case MeshBuilderType::IcoShere:
-			MeshFactory::AddIcoSphere(mesh, Params.at("position"), Params.at("scale"), Params.at("tessellation").x, param.Color);
+			MeshFactory::AddIcoSphere(mesh, Params.at("position"), Params.at("radius"), Params.at("tessellation").x, param.Color);
 			break;
 		case MeshBuilderType::UvSphere:
-			MeshFactory::AddUvSphere(mesh, Params.at("position"), Params.at("scale"), Params.at("tessellation").x, param.Color);
+			MeshFactory::AddUvSphere(mesh, Params.at("position"), Params.at("radius"), Params.at("tessellation").x, param.Color);
 			break;
 		case MeshBuilderType::FaceInvert:
 			MeshFactory::InvertFaces(mesh);

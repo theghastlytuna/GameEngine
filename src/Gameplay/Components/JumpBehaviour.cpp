@@ -3,7 +3,6 @@
 #include "Gameplay/GameObject.h"
 #include "Gameplay/Scene.h"
 #include "Utils/ImGuiHelper.h"
-#include "Gameplay/Components/MaterialSwapBehaviour.h"
 
 void JumpBehaviour::Awake()
 {
@@ -15,18 +14,6 @@ void JumpBehaviour::Awake()
 
 void JumpBehaviour::RenderImGui() {
 	LABEL_LEFT(ImGui::DragFloat, "Impulse", &_impulse, 1.0f);
-}
-
-void JumpBehaviour::OnEnteredTrigger(const std::shared_ptr<Gameplay::Physics::TriggerVolume>& trigger)
-{
-	LOG_INFO("Entered trigger: {}", trigger->GetGameObject()->Name);
-	if (trigger->GetGameObject()->Name.find("Ground") != std::string::npos) _onGround = true;
-}
-
-void JumpBehaviour::OnLeavingTrigger(const std::shared_ptr<Gameplay::Physics::TriggerVolume>& trigger)
-{
-	LOG_INFO("Exited trigger: {}", trigger->GetGameObject()->Name);
-	if (trigger->GetGameObject()->Name.find("Ground") != std::string::npos) _onGround = false;
 }
 
 nlohmann::json JumpBehaviour::ToJson() const {
@@ -49,10 +36,14 @@ JumpBehaviour::Sptr JumpBehaviour::FromJson(const nlohmann::json& blob) {
 }
 
 void JumpBehaviour::Update(float deltaTime) {
-	//Find whether the attached object is on the ground
-	if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_SPACE) && _onGround) 
-	{
-		_body->ApplyImpulse(glm::vec3(0.0f, 0.0f, _impulse));
+	bool pressed = glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_SPACE);
+	if (pressed) {
+		if (_isPressed == false) {
+			_body->ApplyImpulse(glm::vec3(0.0f, 0.0f, _impulse));
+		}
+		_isPressed = pressed;
+	} else {
+		_isPressed = false;
 	}
 }
 

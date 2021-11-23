@@ -35,15 +35,12 @@ namespace Gameplay {
 		typedef std::shared_ptr<Scene> Sptr;
 
 		static const int MAX_LIGHTS = 8;
+		static const int LIGHT_UBO_BINDING = 2;
 
 		// Stores all the lights in our scene
 		std::vector<Light>         Lights;
 		// The camera for our scene
 		Camera::Sptr               MainCamera;
-		Camera::Sptr			   MainCamera2;
-		Camera::Sptr			   PlayerCamera;
-		Camera::Sptr			   PlayerCamera2;
-		Camera::Sptr			   WorldCamera;
 
 		// Instead of a "base shader", we can specify a default material
 		std::shared_ptr<Material>  DefaultMaterial;
@@ -140,6 +137,11 @@ namespace Gameplay {
 		/// </summary>
 		/// <param name="dt">The time in seconds since the last frame</param>
 		void Update(float dt);
+
+		/// <summary>
+		/// Performs setup before rendering
+		/// </summary>
+		void PreRender();
 
 		/// <summary>
 		/// Handles setting the shader uniforms for our light structure in our array of lights
