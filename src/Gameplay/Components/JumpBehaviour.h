@@ -1,6 +1,7 @@
 #pragma once
 #include "IComponent.h"
 #include "Gameplay/Physics/RigidBody.h"
+#include "Gameplay/Physics/TriggerVolume.h"
 
 /// <summary>
 /// A simple behaviour that applies an impulse along the Z axis to the 
@@ -18,6 +19,8 @@ public:
 
 public:
 	virtual void RenderImGui() override;
+	virtual void OnEnteredTrigger(const std::shared_ptr<Gameplay::Physics::TriggerVolume>& trigger) override;
+	virtual void OnLeavingTrigger(const std::shared_ptr<Gameplay::Physics::TriggerVolume>& trigger) override;
 	MAKE_TYPENAME(JumpBehaviour);
 	virtual nlohmann::json ToJson() const override;
 	static JumpBehaviour::Sptr FromJson(const nlohmann::json& blob);
@@ -25,6 +28,8 @@ public:
 protected:
 	float _impulse;
 
-	bool _isPressed = false;
+	//Boolean to represent whether the attached object is on a ground object
+	bool _onGround = false;
+
 	Gameplay::Physics::RigidBody::Sptr _body;
 };

@@ -51,6 +51,8 @@
 #include "Gameplay/Components/JumpBehaviour.h"
 #include "Gameplay/Components/RenderComponent.h"
 #include "Gameplay/Components/MaterialSwapBehaviour.h"
+#include "Gameplay/Components/FirstPersonCamera.h"
+#include "Gameplay/Components/MovingPlatform.h"
 
 // Physics
 #include "Gameplay/Physics/RigidBody.h"
@@ -103,7 +105,7 @@ GLFWwindow* window;
 // The current size of our window in pixels
 glm::ivec2 windowSize = glm::ivec2(800, 800);
 // The title of our GLFW window
-std::string windowTitle = "Jordan Pelayo - 100790170";
+std::string windowTitle = "Boomerangers";
 
 // using namespace should generally be avoided, and if used, make sure it's ONLY in cpp files
 using namespace Gameplay;
@@ -113,7 +115,9 @@ using namespace Gameplay::Physics;
 Scene::Sptr scene = nullptr;
 
 void GlfwWindowResizedCallback(GLFWwindow* window, int width, int height) {
+	glEnable(GL_SCISSOR_TEST);
 	glViewport(0, 0, width, height);
+	glScissor(0, 0, width, height / 2);
 	windowSize = glm::ivec2(width, height);
 	if (windowSize.x * windowSize.y > 0) {
 		scene->MainCamera->ResizeWindow(width, height);
@@ -395,6 +399,19 @@ void CreateScene() {
 			// Make sure that the camera is set as the scene's main camera!
 			scene->MainCamera = cam;
 		}
+
+		GameObject::Sptr camera2 = scene->CreateGameObject("Main Camera 2");
+		{
+			camera2->SetPostion(glm::vec3(2.0f));
+			camera2->LookAt(glm::vec3(0.0f));
+
+			camera2->Add<SimpleCameraControl>();
+
+			Camera::Sptr cam = camera2->Add<Camera>();
+			// Make sure that the camera is set as the scene's main camera!
+			scene->MainCamera2 = cam;
+		}
+
 
 		// Set up all our sample objects
 		GameObject::Sptr plane = scene->CreateGameObject("Plane");
@@ -737,6 +754,13 @@ int main() {
 		// Perform updates for all components
 		scene->Update(dt);
 
+		// Update our worlds physics!
+		scene->DoPhysics(dt);
+
+		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y);
+
+		//camera 1
+		{;
 		// Grab shorthands to the camera and shader from the scene
 		Camera::Sptr camera = scene->MainCamera;
 
@@ -744,8 +768,6 @@ int main() {
 		glm::mat4 viewProj = camera->GetViewProjection();
 		DebugDrawer::Get().SetViewProjection(viewProj);
 
-		// Update our worlds physics!
-		scene->DoPhysics(dt);
 
 		// Draw object GUIs
 		if (isDebugWindowOpen) {
@@ -815,6 +837,92 @@ int main() {
 			// Draw the object
 			renderable->GetMesh()->Draw();
 		});
+		};
+
+		//split the screen
+		glViewport(0, 0, windowSize.x, windowSize.y / 2);
+
+		//camera 2
+		{;
+		// Grab shorthands to the camera and shader from the scene
+		Camera::Sptr camera = scene->MainCamera2;
+
+		// Cache the camera's viewprojection
+		glm::mat4 viewProj = camera->GetViewProjection();
+		DebugDrawer::Get().SetViewProjection(viewProj);
+
+
+		// Draw object GUIs
+		if (isDebugWindowOpen) {
+			scene->DrawAllGameObjectGUIs();
+		}
+
+		// The current material that is bound for rendering
+		Material::Sptr currentMat = nullptr;
+		Shader::Sptr shader = nullptr;
+
+		// Bind the skybox texture to a reserved texture slot
+		// See Material.h and Material.cpp for how we're reserving texture slots
+		TextureCube::Sptr environment = scene->GetSkyboxTexture();
+		if (environment) environment->Bind(0);
+
+		// Here we'll bind all the UBOs to their corresponding slots
+		scene->PreRender();
+		frameUniforms->Bind(FRAME_UBO_BINDING);
+		instanceUniforms->Bind(INSTANCE_UBO_BINDING);
+
+		// Upload frame level uniforms
+		auto& frameData = frameUniforms->GetData();
+		frameData.u_Projection = camera->GetProjection();
+		frameData.u_View = camera->GetView();
+		frameData.u_ViewProjection = camera->GetViewProjection();
+		frameData.u_CameraPos = glm::vec4(camera->GetGameObject()->GetPosition(), 1.0f);
+		frameData.u_Time = static_cast<float>(thisFrame);
+		frameUniforms->Update();
+
+		// Render all our objects
+		ComponentManager::Each<RenderComponent>([&](const RenderComponent::Sptr& renderable) {
+			// Early bail if mesh not set
+			if (renderable->GetMesh() == nullptr) {
+				return;
+			}
+
+			// If we don't have a material, try getting the scene's fallback material
+			// If none exists, do not draw anything
+			if (renderable->GetMaterial() == nullptr) {
+				if (scene->DefaultMaterial != nullptr) {
+					renderable->SetMaterial(scene->DefaultMaterial);
+				}
+				else {
+					return;
+				}
+			}
+
+			// If the material has changed, we need to bind the new shader and set up our material and frame data
+			// Note: This is a good reason why we should be sorting the render components in ComponentManager
+			if (renderable->GetMaterial() != currentMat) {
+				currentMat = renderable->GetMaterial();
+				shader = currentMat->GetShader();
+
+				shader->Bind();
+				currentMat->Apply();
+			}
+
+			// Grab the game object so we can do some stuff with it
+			GameObject* object = renderable->GetGameObject();
+
+			// Use our uniform buffer for our instance level uniforms
+			auto& instanceData = instanceUniforms->GetData();
+			instanceData.u_Model = object->GetTransform();
+			instanceData.u_ModelViewProjection = viewProj * object->GetTransform();
+			instanceData.u_NormalMatrix = glm::mat3(glm::transpose(glm::inverse(object->GetTransform())));
+			instanceUniforms->Update();
+
+			// Draw the object
+			renderable->GetMesh()->Draw();
+			});
+		};
+
 
 		// Use our cubemap to draw our skybox
 		scene->DrawSkybox();
