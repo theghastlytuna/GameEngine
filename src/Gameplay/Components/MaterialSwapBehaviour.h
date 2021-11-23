@@ -28,10 +28,7 @@ public:
 	static MaterialSwapBehaviour::Sptr FromJson(const nlohmann::json& blob);
 	MAKE_TYPENAME(MaterialSwapBehaviour);
 
-	bool GetOnGround();
-
 protected:
 
-	bool _onGround = false;
 	RenderComponent::Sptr _renderer;
 };

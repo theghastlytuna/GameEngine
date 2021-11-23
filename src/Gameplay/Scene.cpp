@@ -169,6 +169,10 @@ namespace Gameplay {
 		_FlushDeleteQueue();
 	}
 
+	void Scene::PreRender() {
+		_lightingUbo->Bind(LIGHT_UBO_BINDING);
+	}
+
 	void Scene::SetShaderLight(int index, bool update /*= true*/) {
 		if (index >= 0 && index < Lights.size() && index < MAX_LIGHTS) {
 			// Get a reference to the light UBO data so we can update it

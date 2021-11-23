@@ -8,8 +8,6 @@
 #include "Utils/JsonGlmHelpers.h"
 #include "Utils/ImGuiHelper.h"
 
-#include "Gameplay/Physics/RigidBody.h"
-
 SimpleCameraControl::SimpleCameraControl() :
 	IComponent(),
 	_mouseSensitivity({ 0.5f, 0.3f }),
@@ -75,13 +73,8 @@ void SimpleCameraControl::Update(float deltaTime)
 
 		input *= deltaTime;
 
-		glm::vec3 worldMovement = glm::vec3((currentRot * glm::vec4(input, 1.0f)).x, (currentRot * glm::vec4(input, 1.0f)).y, 0.0f);
-
-		if (worldMovement != glm::vec3(0.0f))
-		{
-			worldMovement = 10.0f * glm::normalize(worldMovement);
-		}
-		GetGameObject()->Get<Gameplay::Physics::RigidBody>()->ApplyForce(worldMovement);
+		glm::vec3 worldMovement = currentRot * glm::vec4(input, 1.0f);
+		GetGameObject()->SetPostion(GetGameObject()->GetPosition() + worldMovement);
 	}
 }
 

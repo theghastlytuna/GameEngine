@@ -35,9 +35,6 @@ public:
 	/// </summary>
 	/// <param name="mesh">The mesh resource containing info about the model to be rendered</param>
 	void SetMesh(const Gameplay::MeshResource::Sptr& mesh);
-
-	void SetTargetMesh(const Gameplay::MeshResource::Sptr& mesh);
-
 	/// <summary>
 	/// Sets this render component's material, which will be used to feed material parameters to the appropriate
 	/// shader, and ensure that the shader is bound when this object should be drawn
@@ -55,9 +52,6 @@ public:
 protected:
 	// The object's mesh
 	Gameplay::MeshResource::Sptr _mesh;
-
-	Gameplay::MeshResource::Sptr _targetMesh;
-
 	// The object's material
 	Gameplay::Material::Sptr      _material;
 

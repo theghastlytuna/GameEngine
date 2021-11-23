@@ -11,12 +11,12 @@ TriggerVolumeEnterBehaviour::~TriggerVolumeEnterBehaviour() = default;
 void TriggerVolumeEnterBehaviour::OnTriggerVolumeEntered(const std::shared_ptr<Gameplay::Physics::RigidBody>& body)
 {
 	LOG_INFO("Body has entered our trigger volume: {}", body->GetGameObject()->Name);
-	if (body->GetGameObject()->Name == "Player") _playerInTrigger = true;
+	_playerInTrigger = true;
 }
 
 void TriggerVolumeEnterBehaviour::OnTriggerVolumeLeaving(const std::shared_ptr<Gameplay::Physics::RigidBody>& body) {
 	LOG_INFO("Body has left our trigger volume: {}", body->GetGameObject()->Name);
-	if (body->GetGameObject()->Name == "Player") _playerInTrigger = false;
+	_playerInTrigger = false;
 }
 
 void TriggerVolumeEnterBehaviour::RenderImGui() { }

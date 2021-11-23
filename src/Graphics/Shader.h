@@ -122,6 +122,8 @@ public:
 	static Shader::Sptr FromJson(const nlohmann::json& data);
 
 public:
+	bool FindUniform(const std::string& name, UniformInfo* out);
+
 	void SetUniformMatrix(int location, const glm::mat3* value, int count = 1, bool transposed = false);
 	void SetUniformMatrix(int location, const glm::mat4* value, int count = 1, bool transposed = false);
 	void SetUniform(int location, const float* value, int count = 1);
@@ -136,6 +138,16 @@ public:
 	void SetUniform(int location, const glm::bvec2* value, int count = 1); 
 	void SetUniform(int location, const glm::bvec3* value, int count = 1);
 	void SetUniform(int location, const glm::bvec4* value, int count = 1);
+
+	/// <summary>
+	/// Sets a uniform based on a shader data type, can be used by our materials class
+	/// </summary>
+	/// <param name="location">The uniform location</param>
+	/// <param name="type">The type of the uniform</param>
+	/// <param name="data">A pointer to the data to upload</param>
+	/// <param name="count">The size of the uniform array, in elements</param>
+	/// <param name="transposed"True if matrices should be transposed</param>
+	void SetUniform(int location, ShaderDataType type, void* data, int count = 1, bool transposed = false);
 
 	template <typename T>
 	void SetUniform(const std::string& name, const T& value) {

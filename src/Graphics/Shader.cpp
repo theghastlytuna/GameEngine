@@ -92,7 +92,10 @@ bool Shader::LoadShaderPartFromFile(const char* path, ShaderPartType type) {
 		bool result =  LoadShaderPart(source.c_str(), type);
 		_fileSourceMap[type].IsFilePath = true;
 		_fileSourceMap[type].Source = path;
-		return result;
+		if (result == false) {
+			LOG_ERROR("Source File: {}", path);
+		}
+		return result; 
 	} else {
 		LOG_WARN("Could not open file at \"{}\"", path);
 		return false;
@@ -213,6 +216,92 @@ void Shader::SetUniform(int location, const glm::bvec4* value, int count) {
 	glProgramUniform4i(location, value->x, value->y, value->z, value->w, 1);
 }
 
+void Shader::SetUniform(int location, ShaderDataType type, void* data, int count /*= 1*/, bool transposed  /* =false*/) {
+	switch (type)
+	{
+		case ShaderDataType::Float:   glProgramUniform1fv(_handle, location, count, static_cast<const float*>(data)); break;
+		case ShaderDataType::Float2:  glProgramUniform2fv(_handle, location, count, static_cast<const float*>(data)); break;
+		case ShaderDataType::Float3:  glProgramUniform3fv(_handle, location, count, static_cast<const float*>(data)); break;
+		case ShaderDataType::Float4:  glProgramUniform4fv(_handle, location, count, static_cast<const float*>(data)); break;
+		case ShaderDataType::Mat2:    glProgramUniformMatrix2fv(_handle, location, count, transposed, static_cast<const float*>(data)); break;
+		case ShaderDataType::Mat3:    glProgramUniformMatrix3fv(_handle, location, count, transposed, static_cast<const float*>(data)); break;
+		case ShaderDataType::Mat4:    glProgramUniformMatrix4fv(_handle, location, count, transposed, static_cast<const float*>(data)); break;
+		case ShaderDataType::Mat2x3:  glProgramUniformMatrix2x3fv(_handle, location, count, transposed, static_cast<const float*>(data)); break;
+		case ShaderDataType::Mat2x4:  glProgramUniformMatrix2x4fv(_handle, location, count, transposed, static_cast<const float*>(data)); break;
+		case ShaderDataType::Mat3x2:  glProgramUniformMatrix3x2fv(_handle, location, count, transposed, static_cast<const float*>(data)); break;
+		case ShaderDataType::Mat3x4:  glProgramUniformMatrix3x4fv(_handle, location, count, transposed, static_cast<const float*>(data)); break;
+		case ShaderDataType::Mat4x2:  glProgramUniformMatrix4x2fv(_handle, location, count, transposed, static_cast<const float*>(data)); break;
+		case ShaderDataType::Mat4x3:  glProgramUniformMatrix4x3fv(_handle, location, count, transposed, static_cast<const float*>(data)); break;
+		case ShaderDataType::Int:     glProgramUniform1iv(_handle, location, count, static_cast<const int*>(data)); break;
+		case ShaderDataType::Int2:    glProgramUniform2iv(_handle, location, count, static_cast<const int*>(data)); break;
+		case ShaderDataType::Int3:    glProgramUniform3iv(_handle, location, count, static_cast<const int*>(data)); break;
+		case ShaderDataType::Int4:    glProgramUniform4iv(_handle, location, count, static_cast<const int*>(data)); break;
+		case ShaderDataType::Uint:    glProgramUniform1uiv(_handle, location, count, static_cast<const uint32_t*>(data));  break;
+		case ShaderDataType::Uint2:   glProgramUniform2uiv(_handle, location, count, static_cast<const uint32_t*>(data)); break;
+		case ShaderDataType::Uint3:   glProgramUniform3uiv(_handle, location, count, static_cast<const uint32_t*>(data)); break;
+		case ShaderDataType::Uint4:   glProgramUniform4uiv(_handle, location, count, static_cast<const uint32_t*>(data)); break;
+		case ShaderDataType::Double:  glProgramUniform1dv(_handle, location, count, static_cast<const double*>(data)); break;
+		case ShaderDataType::Double2: glProgramUniform2dv(_handle, location, count, static_cast<const double*>(data)); break;
+		case ShaderDataType::Double3: glProgramUniform3dv(_handle, location, count, static_cast<const double*>(data)); break;
+		case ShaderDataType::Double4: glProgramUniform4dv(_handle, location, count, static_cast<const double*>(data)); break;
+		case ShaderDataType::Dmat2:   glProgramUniformMatrix2dv(_handle, location, count, transposed, static_cast<const double*>(data)); break;
+		case ShaderDataType::Dmat3:   glProgramUniformMatrix3dv(_handle, location, count, transposed, static_cast<const double*>(data)); break;
+		case ShaderDataType::Dmat4:   glProgramUniformMatrix4dv(_handle, location, count, transposed, static_cast<const double*>(data)); break;
+		case ShaderDataType::Dmat2x3: glProgramUniformMatrix2x3dv(_handle, location, count, transposed, static_cast<const double*>(data)); break;
+		case ShaderDataType::Dmat2x4: glProgramUniformMatrix2x4dv(_handle, location, count, transposed, static_cast<const double*>(data)); break;
+		case ShaderDataType::Dmat3x2: glProgramUniformMatrix3x2dv(_handle, location, count, transposed, static_cast<const double*>(data)); break;
+		case ShaderDataType::Dmat3x4: glProgramUniformMatrix3x4dv(_handle, location, count, transposed, static_cast<const double*>(data)); break;
+		case ShaderDataType::Dmat4x2: glProgramUniformMatrix4x2dv(_handle, location, count, transposed, static_cast<const double*>(data)); break;
+		case ShaderDataType::Dmat4x3: glProgramUniformMatrix4x3dv(_handle, location, count, transposed, static_cast<const double*>(data)); break;
+		case ShaderDataType::Tex1D:
+		case ShaderDataType::Tex1D_Array:
+		case ShaderDataType::Tex1D_Shadow:
+		case ShaderDataType::Tex1D_ShadowArray:
+		case ShaderDataType::Tex2D:
+		case ShaderDataType::Tex2D_Rect:
+		case ShaderDataType::Tex2D_Rect_Shadow:
+		case ShaderDataType::Tex2D_Array:
+		case ShaderDataType::Tex2D_Shadow:
+		case ShaderDataType::Tex2D_ShadowArray:
+		case ShaderDataType::Tex2D_Multisample:
+		case ShaderDataType::Tex2D_MultisampleArray:
+		case ShaderDataType::Tex3D:
+		case ShaderDataType::TexCube:
+		case ShaderDataType::TexCubeShadow:
+		case ShaderDataType::Tex1D_Int:
+		case ShaderDataType::Tex1D_Int_Array:
+		case ShaderDataType::Tex2D_Int:
+		case ShaderDataType::Tex2D_Int_Rect:
+		case ShaderDataType::Tex2D_Int_Array:
+		case ShaderDataType::Tex2D_Int_Multisample:
+		case ShaderDataType::Tex2D_Int_MultisampleArray:
+		case ShaderDataType::Tex3D_Int:
+		case ShaderDataType::TexCube_Int:
+		case ShaderDataType::Tex1D_Uint:
+		case ShaderDataType::Tex2D_Uint_Rect:
+		case ShaderDataType::Tex1D_Uint_Array:
+		case ShaderDataType::Tex2D_Uint:
+		case ShaderDataType::Tex2D_Uint_Array:
+		case ShaderDataType::Tex2D_Uint_Multisample:
+		case ShaderDataType::Tex2D_Uint_MultisampleArray:
+		case ShaderDataType::Tex3D_Uint:
+		case ShaderDataType::TexCube_Uint:
+		case ShaderDataType::BufferTexture:
+		case ShaderDataType::BufferTextureInt:
+		case ShaderDataType::BufferTextureUint:
+			glProgramUniform1iv(_handle, location, count, static_cast<const int*>(data));
+		case ShaderDataType::None: break;
+		default:
+		{
+			static std::map<ShaderDataType, bool> loggedWarns;
+			if (!loggedWarns[type]) {
+				LOG_WARN("No support for uniforms of type \"{}\", skipping...", type);
+				loggedWarns[type] = true;
+			}
+		}
+	}
+}
+
 int Shader::__GetUniformLocation(const std::string& name) {
 	// Since the default constructor for UniformInfo sets location to -1,
 	// we can simply index the map and if it doesn't exist, the default
@@ -237,8 +326,8 @@ Shader::Sptr Shader::FromJson(const nlohmann::json& data) {
 		// As long as the type is valid
 		if (type != ShaderPartType::Unknown) {
 			// If it has a file, we load from file
-			if (blob.contains("file")) {
-				result->LoadShaderPartFromFile(blob["file"].get<std::string>().c_str(), type);
+			if (blob.contains("path")) {
+				result->LoadShaderPartFromFile(blob["path"].get<std::string>().c_str(), type);
 			}
 			// Otherwise we see if there's a source and load that instead
 			else if (blob.contains("source")) {
@@ -247,6 +336,7 @@ Shader::Sptr Shader::FromJson(const nlohmann::json& data) {
 			// Otherwise do nothing
 		}
 	}
+	result->Link();
 	return result;
 }
 
@@ -398,4 +488,16 @@ void Shader::BindUniformBlockToSlot(const std::string& name, int uboSlot)
 		glUniformBlockBinding(_handle, block.BlockIndex, uboSlot);
 		block.CurrentBinding = uboSlot;
 	}
+}
+
+bool Shader::FindUniform(const std::string& name, UniformInfo* out) {
+	for (auto& [key, uniform] : _uniforms) {
+		if (uniform.Name == name) {
+			if (out != nullptr) {
+				*out = uniform;
+			}
+			return true;
+		}
+	}
+	return false;
 }
