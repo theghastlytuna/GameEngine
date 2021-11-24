@@ -470,7 +470,7 @@ void CreateScene() {
 		}
 
 		// Set up all our sample objects
-		GameObject::Sptr plane = scene->CreateGameObject("Plane");
+		GameObject::Sptr plane = scene->CreateGameObject("Ground");
 		{
 			// Make a big tiled mesh
 			MeshResource::Sptr tiledMesh = ResourceManager::CreateAsset<MeshResource>();
@@ -482,9 +482,17 @@ void CreateScene() {
 			renderer->SetMesh(tiledMesh);
 			renderer->SetMaterial(boxMaterial);
 
+			BoxCollider::Sptr collider = BoxCollider::Create(glm::vec3(50.0f, 50.0f, 1.0f));
+			collider->SetPosition({ 0,0,-1 });
+
 			// Attach a plane collider that extends infinitely along the X/Y axis
 			RigidBody::Sptr physics = plane->Add<RigidBody>(/*static by default*/);
-			physics->AddCollider(BoxCollider::Create(glm::vec3(50.0f, 50.0f, 1.0f)))->SetPosition({ 0,0,-1 });
+			physics->AddCollider(collider);
+
+			TriggerVolume::Sptr volume = plane->Add<TriggerVolume>();
+			volume->AddCollider(BoxCollider::Create(glm::vec3(50.0f, 50.0f, 1.0f)))->SetPosition({ 0,0,-1});
+
+			plane->Add<TriggerVolumeEnterBehaviour>();
 		}
 
 		// Call scene awake to start up all of our components
