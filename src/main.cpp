@@ -53,6 +53,7 @@
 #include "Gameplay/Components/MaterialSwapBehaviour.h"
 #include "Gameplay/Components/FirstPersonCamera.h"
 #include "Gameplay/Components/MovingPlatform.h"
+#include "Gameplay/Components/PlayerControl.h"
 
 // Physics
 #include "Gameplay/Physics/RigidBody.h"
@@ -244,46 +245,44 @@ void CreateScene() {
 		scene->Window = window;
 		scene->Awake();
 	} 
-	else {  
-		// This time we'll have 2 different shaders, and share data between both of them using the UBO
-		// This shader will handle reflective materials 
-		Shader::Sptr reflectiveShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
-			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
-			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_environment_reflective.glsl" }
-		});
+	else {
+			// This time we'll have 2 different shaders, and share data between both of them using the UBO
+			// This shader will handle reflective materials 
+			Shader::Sptr reflectiveShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
+				{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
+				{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_environment_reflective.glsl" }
+			});
 
-		// This shader handles our basic materials without reflections (cause they expensive)
-		Shader::Sptr basicShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
-			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
-			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_blinn_phong_textured.glsl" }
-		});
+			// This shader handles our basic materials without reflections (cause they expensive)
+			Shader::Sptr basicShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
+				{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
+				{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_blinn_phong_textured.glsl" }
+			});
 
-		// This shader handles our basic materials without reflections (cause they expensive)
-		Shader::Sptr specShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
-			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
-			{ ShaderPartType::Fragment, "shaders/fragment_shaders/textured_specular.glsl" }
-		});
+			// This shader handles our basic materials without reflections (cause they expensive)
+			Shader::Sptr specShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
+				{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
+				{ ShaderPartType::Fragment, "shaders/fragment_shaders/textured_specular.glsl" }
+			});
 
+			///////////////////// NEW SHADERS ////////////////////////////////////////////
 
-		///////////////////// NEW SHADERS ////////////////////////////////////////////
+			// This shader handles our foliage vertex shader example
+			Shader::Sptr foliageShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
+				{ ShaderPartType::Vertex, "shaders/vertex_shaders/foliage.glsl" },
+				{ ShaderPartType::Fragment, "shaders/fragment_shaders/screendoor_transparency.glsl" }
+			});
 
-		// This shader handles our foliage vertex shader example
-		Shader::Sptr foliageShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
-			{ ShaderPartType::Vertex, "shaders/vertex_shaders/foliage.glsl" },
-			{ ShaderPartType::Fragment, "shaders/fragment_shaders/screendoor_transparency.glsl" }
-		});
+			// This shader handles our cel shading example
+			Shader::Sptr toonShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
+				{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
+				{ ShaderPartType::Fragment, "shaders/fragment_shaders/toon_shading.glsl" }
+			});
 
-		// This shader handles our cel shading example
-		Shader::Sptr toonShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
-			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
-			{ ShaderPartType::Fragment, "shaders/fragment_shaders/toon_shading.glsl" }
-		});
-
-		Shader::Sptr wavyShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
-			{ ShaderPartType::Vertex, "shaders/vertex_shaders/wavy.glsl" },
-			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_blinn_phong_textured.glsl" }
-		});
-
+			Shader::Sptr wavyShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
+				{ ShaderPartType::Vertex, "shaders/vertex_shaders/wavy.glsl" },
+				{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_blinn_phong_textured.glsl" }
+			});
 
 		// Load in the meshes
 		MeshResource::Sptr monkeyMesh = ResourceManager::CreateAsset<MeshResource>("Monkey.obj");
@@ -302,6 +301,7 @@ void CreateScene() {
 			{ ShaderPartType::Vertex, "shaders/vertex_shaders/skybox_vert.glsl" },
 			{ ShaderPartType::Fragment, "shaders/fragment_shaders/skybox_frag.glsl" }
 		});
+
 
 		// Create an empty scene
 		scene = std::make_shared<Scene>();
@@ -390,7 +390,7 @@ void CreateScene() {
 		// Set up the scene's camera
 		GameObject::Sptr camera = scene->CreateGameObject("Main Camera");
 		{
-			camera->SetPostion(glm::vec3(5.0f));
+			camera->SetPosition(glm::vec3(5.0f));
 			camera->LookAt(glm::vec3(0.0f));
 
 			camera->Add<SimpleCameraControl>();
@@ -404,7 +404,7 @@ void CreateScene() {
 		//Set up the scene's camera 
 		GameObject::Sptr camera2 = scene->CreateGameObject("Main Camera 2");
 		{
-			camera2->SetPostion(glm::vec3(5.0f));
+			camera2->SetPosition(glm::vec3(5.0f));
 			camera2->LookAt(glm::vec3(0.0f));
 
 			Camera::Sptr cam = camera2->Add<Camera>();
@@ -412,49 +412,60 @@ void CreateScene() {
 			scene->MainCamera2 = cam;
 		}
 
-		GameObject::Sptr mobileCamera = scene->CreateGameObject("Mobile Camera");
+		GameObject::Sptr detachedCam = scene->CreateGameObject("Detached Camera");
 		{
-			mobileCamera->SetPostion(glm::vec3(0.f, 0.f, 4.f));
+			detachedCam->SetPosition(glm::vec3(0.f, 0.f, 0.4f));
 
-			RenderComponent::Sptr renderer = mobileCamera->Add<RenderComponent>();
-			renderer->SetMesh(monkeyMesh);
-			renderer->SetMaterial(monkeyMaterial);
+			FirstPersonCamera::Sptr cameraControl = detachedCam->Add<FirstPersonCamera>();
 
-			mobileCamera->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
-
-			RigidBody::Sptr physics = mobileCamera->Add<RigidBody>(RigidBodyType::Dynamic);
-			physics->AddCollider(SphereCollider::Create());
-			physics->SetAngularFactor(glm::vec3(0.f));
-			physics->SetLinearDamping(0.8f);
-
-			FirstPersonCamera::Sptr cameraControl = mobileCamera->Add<FirstPersonCamera>();
-
-			JumpBehaviour::Sptr jumping = mobileCamera->Add<JumpBehaviour>();
-
-			Camera::Sptr cam = mobileCamera->Add<Camera>();
+			Camera::Sptr cam = detachedCam->Add<Camera>();
 			scene->PlayerCamera = cam;
 		}
 
-		GameObject::Sptr mobileCamera2 = scene->CreateGameObject("Mobile Camera 2");
+		GameObject::Sptr player1 = scene->CreateGameObject("Player 1");
 		{
-			mobileCamera2->SetPostion(glm::vec3(10.f, 0.f, 4.f));
+			player1->SetPosition(glm::vec3(0.f, 0.f, 4.f));
 
-			RenderComponent::Sptr renderer = mobileCamera2->Add<RenderComponent>();
+			RenderComponent::Sptr renderer = player1->Add<RenderComponent>();
 			renderer->SetMesh(monkeyMesh);
 			renderer->SetMaterial(monkeyMaterial);
 
-			mobileCamera2->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+			player1->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
-			RigidBody::Sptr physics = mobileCamera2->Add<RigidBody>(RigidBodyType::Dynamic);
+			RigidBody::Sptr physics = player1->Add<RigidBody>(RigidBodyType::Dynamic);
 			physics->AddCollider(SphereCollider::Create());
 			physics->SetAngularFactor(glm::vec3(0.f));
 			physics->SetLinearDamping(0.8f);
 
-			FirstPersonCamera::Sptr cameraControl = mobileCamera2->Add<FirstPersonCamera>();
+			//FirstPersonCamera::Sptr cameraControl = player1->Add<FirstPersonCamera>();
+			PlayerControl::Sptr controller = player1->Add<PlayerControl>();
 
-			JumpBehaviour::Sptr jumping = mobileCamera2->Add<JumpBehaviour>();
+			JumpBehaviour::Sptr jumping = player1->Add<JumpBehaviour>();
 
-			Camera::Sptr cam = mobileCamera2->Add<Camera>();
+			//Camera::Sptr cam = player1->Add<Camera>();
+			//scene->PlayerCamera = cam;
+		}
+
+		GameObject::Sptr player2 = scene->CreateGameObject("Player 2");
+		{
+			player2->SetPosition(glm::vec3(10.f, 0.f, 4.f));
+
+			RenderComponent::Sptr renderer = player2->Add<RenderComponent>();
+			renderer->SetMesh(monkeyMesh);
+			renderer->SetMaterial(monkeyMaterial);
+
+			player2->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+			RigidBody::Sptr physics = player2->Add<RigidBody>(RigidBodyType::Dynamic);
+			physics->AddCollider(SphereCollider::Create());
+			physics->SetAngularFactor(glm::vec3(0.f));
+			physics->SetLinearDamping(0.8f);
+
+			FirstPersonCamera::Sptr cameraControl = player2->Add<FirstPersonCamera>();
+
+			JumpBehaviour::Sptr jumping = player2->Add<JumpBehaviour>();
+
+			Camera::Sptr cam = player2->Add<Camera>();
 			scene->PlayerCamera2 = cam;
 		}
 
@@ -528,6 +539,7 @@ int main() {
 	ComponentManager::RegisterType<SimpleCameraControl>();
 	ComponentManager::RegisterType<FirstPersonCamera>();
 	ComponentManager::RegisterType<MovingPlatform>();
+	ComponentManager::RegisterType<PlayerControl>();
 
 	// GL states, we'll enable depth testing and backface fulling
 	glEnable(GL_DEPTH_TEST);
@@ -703,9 +715,14 @@ int main() {
 		// Update our worlds physics!
 		scene->DoPhysics(dt);
 
+		GameObject::Sptr detachedCam = scene->FindObjectByName("Detached Camera");
+		GameObject::Sptr player = scene->FindObjectByName("Player 1");
+
+		detachedCam->SetPosition(player->GetPosition());
+
 		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y);
 
-		//camera 1
+		//Camera 1 Rendering
 		{;
 		// Grab shorthands to the camera and shader from the scene
 		Camera::Sptr camera = scene->MainCamera;
@@ -782,7 +799,7 @@ int main() {
 		//split the screen
 		glViewport(0, 0, windowSize.x, windowSize.y / 2);
 
-		//camera 2
+		//Camera 2 Rendering
 		{;
 		// Grab shorthands to the camera and shader from the scene
 		Camera::Sptr camera = scene->MainCamera2;

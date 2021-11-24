@@ -1,4 +1,4 @@
-#include "Gameplay/Components/FirstPersonCamera.h"
+#include "Gameplay/Components/PlayerControl.h"
 #include <GLFW/glfw3.h>
 #define  GLM_SWIZZLE
 #include <GLM/gtc/quaternion.hpp>
@@ -11,24 +11,24 @@
 
 #include "Gameplay/Physics/RigidBody.h"
 
-FirstPersonCamera::FirstPersonCamera()
+PlayerControl::PlayerControl() 
 	: IComponent(),
 	_mouseSensitivity({ 0.2f, 0.2f }),
 	_moveSpeeds(glm::vec3(10.0f)),
 	_shiftMultipler(2.0f),
 	_currentRot(glm::vec2(0.0f)),
 	_isMousePressed(false)
+{ }
 
-{}
+PlayerControl::~PlayerControl() = default;
 
-FirstPersonCamera::~FirstPersonCamera() = default;
-
-void FirstPersonCamera::Awake()
+void PlayerControl::Awake()
 {
 	_window = GetGameObject()->GetScene()->Window;
+
 }
 
-void FirstPersonCamera::Update(float deltaTime)
+void PlayerControl::Update(float deltaTime)
 {
 	if (glfwGetMouseButton(_window, 0)) {
 		if (_isMousePressed == false) {
@@ -47,13 +47,12 @@ void FirstPersonCamera::Update(float deltaTime)
 		_currentRot.x += static_cast<float>(currentMousePos.x - _prevMousePos.x) * _mouseSensitivity.x;
 		_currentRot.y += static_cast<float>(currentMousePos.y - _prevMousePos.y) * _mouseSensitivity.y;
 		glm::quat rotX = glm::angleAxis(glm::radians(_currentRot.x), glm::vec3(0, 0, 1));
-		glm::quat rotY = glm::angleAxis(glm::radians(_currentRot.y), glm::vec3(1, 0, 0));
+		glm::quat rotY = glm::angleAxis(glm::radians(90.f), glm::vec3(1, 0, 0));
 		glm::quat currentRot = rotX * rotY;
 		GetGameObject()->SetRotation(currentRot);
 
 		_prevMousePos = currentMousePos;
 
-		/*
 		glm::vec3 input = glm::vec3(0.0f);
 		if (glfwGetKey(_window, GLFW_KEY_W)) {
 			input.z -= _moveSpeeds.x;
@@ -83,31 +82,19 @@ void FirstPersonCamera::Update(float deltaTime)
 			worldMovement = 10.0f * glm::normalize(worldMovement);
 		}
 		GetGameObject()->Get<Gameplay::Physics::RigidBody>()->ApplyForce(worldMovement);
-		*/
 	}
 }
 
-void FirstPersonCamera::RenderImGui()
+void PlayerControl::RenderImGui()
 {
-	LABEL_LEFT(ImGui::DragFloat2, "Mouse Sensitivity", &_mouseSensitivity.x, 0.01f);
-	LABEL_LEFT(ImGui::DragFloat3, "Move Speed       ", &_moveSpeeds.x, 0.01f, 0.01f);
-	LABEL_LEFT(ImGui::DragFloat, "Shift Multiplier ", &_shiftMultipler, 0.01f, 1.0f);
 }
 
-nlohmann::json FirstPersonCamera::ToJson() const
+nlohmann::json PlayerControl::ToJson() const
 {
-	return {
-		{ "mouse_sensitivity", GlmToJson(_mouseSensitivity) },
-		{ "move_speed", GlmToJson(_moveSpeeds) },
-		{ "shift_mult", _shiftMultipler }
-	};
+	return nlohmann::json();
 }
 
-FirstPersonCamera::Sptr FirstPersonCamera::FromJson(const nlohmann::json& blob)
+PlayerControl::Sptr PlayerControl::FromJson(const nlohmann::json& blob)
 {
-	FirstPersonCamera::Sptr result = std::make_shared<FirstPersonCamera>();
-	result->_mouseSensitivity = ParseJsonVec2(blob["mouse_sensitivity"]);
-	result->_moveSpeeds = ParseJsonVec3(blob["move_speed"]);
-	result->_shiftMultipler = JsonGet(blob, "shift_mult", 2.0f);
-	return result;
+	return PlayerControl::Sptr();
 }
