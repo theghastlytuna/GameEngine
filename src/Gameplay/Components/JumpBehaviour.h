@@ -2,6 +2,7 @@
 #include "IComponent.h"
 #include "Gameplay/Physics/RigidBody.h"
 #include "Gameplay/Physics/TriggerVolume.h"
+#include "Gameplay/Components/ControllerInput.h"
 
 /// <summary>
 /// A simple behaviour that applies an impulse along the Z axis to the 
@@ -32,4 +33,6 @@ protected:
 	bool _onGround = false;
 
 	Gameplay::Physics::RigidBody::Sptr _body;
+
+	ControllerInput::Sptr _controller;
 };

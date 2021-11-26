@@ -165,7 +165,7 @@ namespace Gameplay {
 		/// </summary>
 		void DrawAllGameObjectGUIs();
 
-		void DrawSkybox();
+		void DrawSkybox(Camera::Sptr cam);
 
 		/// <summary>
 		/// Gets the scene's Bullet physics world

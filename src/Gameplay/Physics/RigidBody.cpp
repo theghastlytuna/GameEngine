@@ -26,7 +26,7 @@ namespace Gameplay::Physics {
 		_linearVelocityDirty(false),
 		_angularVelocity(btVector3(0, 0, 0)),
 		_angularVelocityDirty(false),
-		_angularFactor(btVector3(1,1,1)),
+		_angularFactor(btVector3(1, 1, 1)),
 		_angularFactorDirty(false)
 	{ }
 
