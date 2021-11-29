@@ -186,6 +186,7 @@
     <ClInclude Include="src\Utils\TypeHelpers.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\Gameplay\Components\BoomerangBehavior.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Gameplay\Components\Camera.cpp">
@@ -318,5 +319,6 @@
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Gameplay\Components\BoomerangBehavior.cpp" />
   </ItemGroup>
 </Project>
