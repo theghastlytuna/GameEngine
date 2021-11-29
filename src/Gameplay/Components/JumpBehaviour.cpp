@@ -10,6 +10,13 @@ void JumpBehaviour::Awake()
 	if (_body == nullptr) {
 		IsEnabled = false;
 	}
+
+	_controller = GetComponent<ControllerInput>();
+
+	if (_controller == nullptr)
+	{
+		IsEnabled = false;
+	}
 }
 
 void JumpBehaviour::RenderImGui() {
@@ -49,9 +56,24 @@ JumpBehaviour::Sptr JumpBehaviour::FromJson(const nlohmann::json& blob) {
 
 void JumpBehaviour::Update(float deltaTime) {
 	//Find whether the attached object is on the ground
-	if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_SPACE) && _onGround)
+	
+	//If the object has a controller connected, use that to find input
+
+	if (_controller->IsValid())
 	{
-		_body->ApplyImpulse(glm::vec3(0.0f, 0.0f, _impulse));
+		if (_controller->GetButtonDown(GLFW_GAMEPAD_BUTTON_A) && _onGround)
+		{
+			_body->ApplyImpulse(glm::vec3(0.0f, 0.0f, _impulse));
+		}
+	}
+
+	//Else, use the keyboard
+	else
+	{
+		if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_SPACE) && _onGround)
+		{
+			_body->ApplyImpulse(glm::vec3(0.0f, 0.0f, _impulse));
+		}
 	}
 }
 

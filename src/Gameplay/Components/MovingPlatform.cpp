@@ -22,7 +22,7 @@ void MovingPlatform::Update(float deltaTime)
 	{
 		if (t < 1)
 		{
-			this->GetGameObject()->SetPostion(ToGlm(lerp(ToBt(startPos), ToBt(endPos), t)));
+			this->GetGameObject()->SetPosition(ToGlm(lerp(ToBt(startPos), ToBt(endPos), t)));
 			t += deltaTime / duration;
 		}
 		else if (t >= 1)
@@ -35,7 +35,7 @@ void MovingPlatform::Update(float deltaTime)
 	{
 		if (t < 1)
 		{
-			this->GetGameObject()->SetPostion(ToGlm(lerp(ToBt(endPos), ToBt(startPos), t)));
+			this->GetGameObject()->SetPosition(ToGlm(lerp(ToBt(endPos), ToBt(startPos), t)));
 			t += deltaTime / duration;
 		}
 		else if (t >= 1)

@@ -67,7 +67,7 @@ namespace Gameplay {
 		}
 	}
 
-	void GameObject::SetPostion(const glm::vec3& position) {
+	void GameObject::SetPosition(const glm::vec3& position) {
 		_position = position;
 		_isTransformDirty = true;
 	}

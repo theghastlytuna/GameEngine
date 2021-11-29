@@ -8,21 +8,21 @@ struct GLFWwindow;
 /// A simple behaviour that allows movement of a gameobject with WASD, mouse,
 /// and ctrl + space
 /// </summary>
-class FirstPersonCamera : public Gameplay::IComponent {
+class PlayerControl : public Gameplay::IComponent {
 public:
-	typedef std::shared_ptr<FirstPersonCamera> Sptr;
+	typedef std::shared_ptr<PlayerControl> Sptr;
 
-	FirstPersonCamera();
-	virtual ~FirstPersonCamera();
+	PlayerControl();
+	virtual ~PlayerControl();
 
 	virtual void Awake() override;
 	virtual void Update(float deltaTime) override;
 
 public:
 	virtual void RenderImGui() override;
-	MAKE_TYPENAME(FirstPersonCamera);
+	MAKE_TYPENAME(PlayerControl);
 	virtual nlohmann::json ToJson() const override;
-	static FirstPersonCamera::Sptr FromJson(const nlohmann::json& blob);
+	static PlayerControl::Sptr FromJson(const nlohmann::json& blob);
 
 protected:
 	float _shiftMultipler;

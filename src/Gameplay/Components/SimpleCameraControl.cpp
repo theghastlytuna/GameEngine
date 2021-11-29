@@ -74,7 +74,7 @@ void SimpleCameraControl::Update(float deltaTime)
 		input *= deltaTime;
 
 		glm::vec3 worldMovement = currentRot * glm::vec4(input, 1.0f);
-		GetGameObject()->SetPostion(GetGameObject()->GetPosition() + worldMovement);
+		GetGameObject()->SetPosition(GetGameObject()->GetPosition() + worldMovement);
 	}
 }
 
