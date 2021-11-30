@@ -54,6 +54,7 @@
 #include "Gameplay/Components/FirstPersonCamera.h"
 #include "Gameplay/Components/MovingPlatform.h"
 #include "Gameplay/Components/PlayerControl.h"
+#include "Gameplay/Components/MorphAnimator.h"
 
 // Physics
 #include "Gameplay/Physics/RigidBody.h"
@@ -265,6 +266,11 @@ void CreateScene() {
 				{ ShaderPartType::Fragment, "shaders/fragment_shaders/textured_specular.glsl" }
 			});
 
+			Shader::Sptr animShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
+				{ ShaderPartType::Vertex, "shaders/vertex_shaders/morphAnim.glsl" },
+				{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_blinn_phong_textured.glsl" }
+			});
+
 			///////////////////// NEW SHADERS ////////////////////////////////////////////
 
 			// This shader handles our foliage vertex shader example
@@ -287,14 +293,35 @@ void CreateScene() {
 		// Load in the meshes
 		MeshResource::Sptr monkeyMesh = ResourceManager::CreateAsset<MeshResource>("Monkey.obj");
 		MeshResource::Sptr cubeMesh = ResourceManager::CreateAsset<MeshResource>("cube.obj");
+		MeshResource::Sptr boiMesh = ResourceManager::CreateAsset<MeshResource>("boi-tpose.obj");
+		MeshResource::Sptr catcusMesh = ResourceManager::CreateAsset<MeshResource>("CatcusAnims/Catcus_Idle_001.obj");
 
 		// Load in some textures
 		Texture2D::Sptr    boxTexture = ResourceManager::CreateAsset<Texture2D>("textures/box-diffuse.png");
 		Texture2D::Sptr    boxSpec    = ResourceManager::CreateAsset<Texture2D>("textures/box-specular.png");
 		Texture2D::Sptr    monkeyTex  = ResourceManager::CreateAsset<Texture2D>("textures/monkey-uvMap.png");
 		Texture2D::Sptr    leafTex    = ResourceManager::CreateAsset<Texture2D>("textures/leaves.png");
+		Texture2D::Sptr	   catcusTex = ResourceManager::CreateAsset<Texture2D>("textures/cattusGood.png");
+
 		leafTex->SetMinFilter(MinFilter::Nearest);
 		leafTex->SetMagFilter(MagFilter::Nearest);
+
+		//////////////Loading animation frames////////////////////////
+		std::vector<MeshResource::Sptr> boiFrames;
+
+		for (int i = 0; i < 8; i++)
+		{
+			boiFrames.push_back(ResourceManager::CreateAsset<MeshResource>("boi-" + std::to_string(i) + ".obj"));
+		}
+
+		std::vector<MeshResource::Sptr> catcusFrames;
+
+		for (int i = 1; i < 8; i++)
+		{
+			catcusFrames.push_back(ResourceManager::CreateAsset<MeshResource>("CatcusAnims/Catcus_Idle_00" + std::to_string(i) + ".obj"));
+		}
+		//////////////////////////////////////////////////////////////
+
 
 		// Here we'll load in the cubemap, as well as a special shader to handle drawing the skybox
 		TextureCube::Sptr testCubemap = ResourceManager::CreateAsset<TextureCube>("cubemaps/ocean/ocean.jpg");
@@ -320,6 +347,20 @@ void CreateScene() {
 			boxMaterial->Name = "Box";
 			boxMaterial->Set("u_Material.Diffuse", boxTexture);
 			boxMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		Material::Sptr boiMaterial = ResourceManager::CreateAsset<Material>(animShader);
+		{
+			boiMaterial->Name = "Boi";
+			boiMaterial->Set("u_Material.Diffuse", boxTexture);
+			boiMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		Material::Sptr catcusMaterial = ResourceManager::CreateAsset<Material>(animShader);
+		{
+			catcusMaterial->Name = "Catcus";
+			catcusMaterial->Set("u_Material.Diffuse", catcusTex);
+			catcusMaterial->Set("u_Material.Shininess", 0.1f);
 		}
 
 		// This will be the reflective material, we'll make the whole thing 90% reflective
@@ -564,7 +605,70 @@ void CreateScene() {
 			RigidBody::Sptr physics = boomerang->Add<RigidBody>(RigidBodyType::Dynamic);
 			physics->AddCollider(ConvexMeshCollider::Create());
 		}
+		/*
+		for (int i = 0; i < 8; i++)
+		{
+			GameObject::Sptr boiFrame = scene->CreateGameObject("Boi" + std::to_string(i));
+			{
+				// Set position in the scene
+				boiFrame->SetPosition(glm::vec3(-100.0f, 0.0f, 0.0f));
+				boiFrame->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
+				boiFrame->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
 
+				// Create and attach a renderer for the monkey
+				RenderComponent::Sptr renderer = boiFrame->Add<RenderComponent>();
+				renderer->SetMesh(boiFrames[i]);
+				renderer->SetMaterial(boxMaterial);
+			}
+		}
+		*/
+		
+		GameObject::Sptr boiBase = scene->CreateGameObject("Boi Base");
+		{
+			// Set position in the scene
+			boiBase->SetPosition(glm::vec3(-10.0f, 0.0f, 0.0f));
+			boiBase->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
+			boiBase->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer for the monkey
+			RenderComponent::Sptr renderer = boiBase->Add<RenderComponent>();
+			renderer->SetMesh(boiMesh);
+			renderer->SetMaterial(boiMaterial);
+
+			//Only add an animator when you have a clip to add.
+			MorphAnimator::Sptr animator = boiBase->Add<MorphAnimator>();
+
+			//Add the walking clip
+			animator->AddClip(boiFrames, 1.0f, "Walk");
+
+			//Make sure to always activate an animation at the time of creation (usually idle)
+			animator->ActivateAnim("walk");
+		}
+		
+		GameObject::Sptr catcus = scene->CreateGameObject("Catcus Base");
+		{
+			// Set position in the scene
+			catcus->SetPosition(glm::vec3(20.0f, 0.0f, 0.0f));
+			catcus->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			catcus->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer for the monkey
+			RenderComponent::Sptr renderer = catcus->Add<RenderComponent>();
+			renderer->SetMesh(catcusMesh);
+			renderer->SetMaterial(catcusMaterial);
+
+			
+			//Only add an animator when you have a clip to add.
+			MorphAnimator::Sptr animator = catcus->Add<MorphAnimator>();
+
+			//Add the walking clip
+			animator->AddClip(catcusFrames, 0.7f, "Idle");
+
+			//Make sure to always activate an animation at the time of creation (usually idle)
+			animator->ActivateAnim("Idle");
+			
+		}
+		
 		// Call scene awake to start up all of our components
 		scene->Window = window;
 		scene->Awake();
@@ -647,7 +751,7 @@ int main() {
 	ComponentManager::RegisterType<FirstPersonCamera>();
 	ComponentManager::RegisterType<MovingPlatform>();
 	ComponentManager::RegisterType<PlayerControl>();
-	
+	ComponentManager::RegisterType<MorphAnimator>();
 
 	// GL states, we'll enable depth testing and backface fulling
 	glEnable(GL_DEPTH_TEST);
@@ -718,6 +822,20 @@ int main() {
 
 	bool arriving = false;
 
+	float t;
+
+	float duration = 2.0f;
+
+	float frameTimer = 0.0f;
+
+	int currentFrame = 0;
+	int nextFrame = 1;
+
+	/*
+	VertexArrayObject::Sptr frame0 = scene->FindObjectByName("Boi0")->Get<RenderComponent>()->GetMesh();
+	VertexArrayObject::Sptr frame1 = scene->FindObjectByName("Boi1")->Get<RenderComponent>()->GetMesh();
+	*/
+
 	///// Game loop /////
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -726,6 +844,39 @@ int main() {
 		// Calculate the time since our last frame (dt)
 		double thisFrame = glfwGetTime();
 		float dt = static_cast<float>(thisFrame - lastFrame);
+		/*
+		frameTimer += dt;
+
+		t = frameTimer / duration;
+
+		if (t > 1)
+		{
+			t = 0.0f;
+			frameTimer = 0.0f;
+			currentFrame++;
+			nextFrame++;
+
+			if (nextFrame == 8)
+			{
+				frame0 = frame1;
+				frame1 = scene->FindObjectByName("Boi0")->Get<RenderComponent>()->GetMesh();
+				nextFrame = 0;
+			}
+
+			else if (currentFrame == 8)
+			{
+				frame0 = scene->FindObjectByName("Boi0")->Get<RenderComponent>()->GetMesh();
+				frame1 = scene->FindObjectByName("Boi" + std::to_string(nextFrame))->Get<RenderComponent>()->GetMesh();
+				currentFrame = 0;
+			}
+
+			else
+			{
+				frame0 = frame1;
+				frame1 = scene->FindObjectByName("Boi" + std::to_string(nextFrame))->Get<RenderComponent>()->GetMesh();
+			}
+		}
+		*/
 
 		// Draw our material properties window!
 		DrawMaterialsWindow();
@@ -922,6 +1073,28 @@ int main() {
 			instanceData.u_NormalMatrix = glm::mat3(glm::transpose(glm::inverse(object->GetTransform())));
 			instanceUniforms->Update();  
 
+			/*
+			if (object->Name == "Boi Base")
+			{
+				VertexArrayObject::Sptr boiObject = renderable->GetMesh();
+
+				std::vector<BufferAttribute> pos0 = frame0->GetBufferBinding(AttribUsage::Position)->Attributes;
+				std::vector<BufferAttribute> pos1 = frame1->GetBufferBinding(AttribUsage::Position)->Attributes;
+				
+				pos0.resize(1);
+				
+				pos1[0].Slot = static_cast<GLint>(4);
+				pos1.resize(1);
+
+				boiObject->GetBufferBinding(AttribUsage::Position);
+
+				boiObject->AddVertexBuffer(frame0->GetBufferBinding(AttribUsage::Position)->Buffer, pos0);
+				boiObject->AddVertexBuffer(frame1->GetBufferBinding(AttribUsage::Position)->Buffer, pos1);
+				
+				renderable->GetMaterial()->Set("t", t);
+			}
+			*/
+
 			// Draw the object
 			renderable->GetMesh()->Draw();
 		});
@@ -1009,6 +1182,28 @@ int main() {
 			instanceData.u_ModelViewProjection = viewProj * object->GetTransform();
 			instanceData.u_NormalMatrix = glm::mat3(glm::transpose(glm::inverse(object->GetTransform())));
 			instanceUniforms->Update();
+
+			/*
+			if (object->Name == "Boi Base")
+			{
+				VertexArrayObject::Sptr boiObject = renderable->GetMesh();
+
+				std::vector<BufferAttribute> pos0 = frame0->GetBufferBinding(AttribUsage::Position)->Attributes;
+				std::vector<BufferAttribute> pos1 = frame1->GetBufferBinding(AttribUsage::Position)->Attributes;
+
+				pos0.resize(1);
+
+				pos1[0].Slot = static_cast<GLint>(4);
+				pos1.resize(1);
+
+				boiObject->GetBufferBinding(AttribUsage::Position);
+
+				boiObject->AddVertexBuffer(frame0->GetBufferBinding(AttribUsage::Position)->Buffer, pos0);
+				boiObject->AddVertexBuffer(frame1->GetBufferBinding(AttribUsage::Position)->Buffer, pos1);
+
+				renderable->GetMaterial()->Set("t", t);
+			}
+			*/
 
 			// Draw the object
 			renderable->GetMesh()->Draw();
