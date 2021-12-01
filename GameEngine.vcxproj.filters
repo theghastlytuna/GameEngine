@@ -208,6 +208,8 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="src\Gameplay\Components\PlayerControl.h" />
+    <ClInclude Include="src\Gameplay\Components\MovingPlatform.h" />
+    <ClInclude Include="src\Gameplay\Components\FirstPersonCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Gameplay\Components\Camera.cpp">
@@ -353,5 +355,7 @@
     </ClCompile>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Gameplay\Components\PlayerControl.cpp" />
+    <ClCompile Include="src\Gameplay\Components\MovingPlatform.cpp" />
+    <ClCompile Include="src\Gameplay\Components\FirstPersonCamera.cpp" />
   </ItemGroup>
 </Project>

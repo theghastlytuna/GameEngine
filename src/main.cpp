@@ -294,11 +294,6 @@ void CreateScene() {
 				{ ShaderPartType::Fragment, "shaders/fragment_shaders/toon_shading.glsl" }
 			});
 
-			Shader::Sptr wavyShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
-				{ ShaderPartType::Vertex, "shaders/vertex_shaders/wavy.glsl" },
-				{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_blinn_phong_textured.glsl" }
-			});
-
 		// Load in the meshes
 		MeshResource::Sptr monkeyMesh = ResourceManager::CreateAsset<MeshResource>("Monkey.obj");
 
@@ -374,46 +369,6 @@ void CreateScene() {
 			toonMaterial->Set("u_Material.Diffuse", boxTexture);
 			toonMaterial->Set("u_Material.Shininess", 0.1f);
 			toonMaterial->Set("u_Material.Steps", 8);
-		}
-
-		/////////////// NEW MATERIALS ////////////////////
-
-		Material::Sptr displacementTest = ResourceManager::CreateAsset<Material>(displacementShader);
-		{
-			Texture2D::Sptr displacementMap = ResourceManager::CreateAsset<Texture2D>("textures/displacement_map.png");
-			Texture2D::Sptr normalMap       = ResourceManager::CreateAsset<Texture2D>("textures/normal_map.png");
-			Texture2D::Sptr diffuseMap      = ResourceManager::CreateAsset<Texture2D>("textures/bricks_diffuse.png");
-
-			displacementTest->Name = "Displacement Map";
-			displacementTest->Set("u_Material.Diffuse", diffuseMap);   
-			displacementTest->Set("s_Heightmap", displacementMap);
-			displacementTest->Set("s_NormalMap", normalMap);  
-			displacementTest->Set("u_Material.Shininess", 0.5f); 
-			displacementTest->Set("u_Scale", 0.1f);   
-		}
-
-		Material::Sptr normalmapMat = ResourceManager::CreateAsset<Material>(tangentSpaceMapping);
-		{
-			Texture2D::Sptr normalMap       = ResourceManager::CreateAsset<Texture2D>("textures/normal_map.png");
-			Texture2D::Sptr diffuseMap      = ResourceManager::CreateAsset<Texture2D>("textures/bricks_diffuse.png");
-
-			normalmapMat->Name = "Tangent Space Normal Map";
-			normalmapMat->Set("u_Material.Diffuse", diffuseMap);
-			normalmapMat->Set("s_NormalMap", normalMap);
-			normalmapMat->Set("u_Material.Shininess", 0.5f);
-			normalmapMat->Set("u_Scale", 0.1f);
-		}
-
-		Material::Sptr multiTextureMat = ResourceManager::CreateAsset<Material>(multiTextureShader); 
-		{
-			Texture2D::Sptr sand  = ResourceManager::CreateAsset<Texture2D>("textures/terrain/sand.png");
-			Texture2D::Sptr grass = ResourceManager::CreateAsset<Texture2D>("textures/terrain/grass.png");
-
-			multiTextureMat->Name = "Multitexturing";
-			multiTextureMat->Set("u_Material.DiffuseA", sand);
-			multiTextureMat->Set("u_Material.DiffuseB", grass); 
-			multiTextureMat->Set("u_Material.Shininess", 0.5f);
-			multiTextureMat->Set("u_Scale", 0.1f); 
 		}
 
 		// Create some lights for our scene

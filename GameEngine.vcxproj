@@ -111,6 +111,7 @@
   <ItemGroup>
     <ClInclude Include="src\Gameplay\Components\Camera.h" />
     <ClInclude Include="src\Gameplay\Components\ComponentManager.h" />
+    <ClInclude Include="src\Gameplay\Components\FirstPersonCamera.h" />
     <ClInclude Include="src\Gameplay\Components\GUI\GuiPanel.h" />
     <ClInclude Include="src\Gameplay\Components\GUI\GuiText.h" />
     <ClInclude Include="src\Gameplay\Components\GUI\RectTransform.h" />
@@ -174,6 +175,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Gameplay\Components\Camera.cpp" />
+    <ClCompile Include="src\Gameplay\Components\FirstPersonCamera.cpp" />
     <ClCompile Include="src\Gameplay\Components\GUI\GuiPanel.cpp" />
     <ClCompile Include="src\Gameplay\Components\GUI\GuiText.cpp" />
     <ClCompile Include="src\Gameplay\Components\GUI\RectTransform.cpp" />
