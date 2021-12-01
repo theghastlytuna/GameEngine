@@ -447,6 +447,8 @@ void CreateScene() {
 
 			JumpBehaviour::Sptr jumping = player1->Add<JumpBehaviour>();
 
+			player1->AddChild(detachedCam);
+
 			//Camera::Sptr cam = player1->Add<Camera>();
 			//scene->PlayerCamera = cam;
 		}
@@ -766,10 +768,10 @@ int main() {
 		// Update our worlds physics!
 		scene->DoPhysics(dt);
 
-		GameObject::Sptr detachedCam = scene->FindObjectByName("Detached Camera");
-		GameObject::Sptr player = scene->FindObjectByName("Player 1");
+		//GameObject::Sptr detachedCam = scene->FindObjectByName("Detached Camera");
+		//GameObject::Sptr player = scene->FindObjectByName("Player 1");
 
-		detachedCam->SetPosition(player->GetPosition());
+		//detachedCam->SetPosition(player->GetPosition());
 
 		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y);
 
