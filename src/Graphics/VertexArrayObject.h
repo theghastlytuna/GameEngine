@@ -12,23 +12,23 @@
 /// We'll use this just to make it more clear what the intended usage of an attribute is in our code!
 /// </summary>
 ENUM(AttribUsage, uint8_t, 
-	Unknown  = 0,
-	Position = 1,
-	Color    = 2,
-	Color1   = 3,   //
-	Color2   = 4,   // Extras
-	Color3   = 5,   //
-	Texture  = 6,
-	Texture1 = 7, //
-	Texture2 = 8, // Extras
-	Texture3 = 9, //
-	Normal   = 10,
-	Tangent  = 11,
-	BiNormal = 12,
-	User0    = 13,    //
-	User1    = 14,    //
-	User2    = 15,    // Extras
-	User3    = 16     //
+	 Unknown   = 0,
+	 Position  = 1,
+	 Color     = 2,
+	 Color1    = 3,   //
+	 Color2    = 4,   // Extras
+	 Color3    = 5,   //
+	 Texture   = 6,
+	 Texture1  = 7, //
+	 Texture2  = 8, // Extras
+	 Texture3  = 9, //
+	 Normal    = 10,
+	 Tangent   = 11,
+	 BiTangent = 12,
+	 User0     = 13,    //
+	 User1     = 14,    //
+	 User2     = 15,    // Extras
+	 User3     = 16     //
 );
 
 /// <summary>

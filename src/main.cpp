@@ -27,6 +27,8 @@
 #include "Graphics/Texture2D.h"
 #include "Graphics/TextureCube.h"
 #include "Graphics/VertexTypes.h"
+#include "Graphics/Font.h"
+#include "Graphics/GuiBatcher.h"
 
 // Utilities
 #include "Utils/MeshBuilder.h"
@@ -67,7 +69,13 @@
 #include "Gameplay/Components/SimpleCameraControl.h"
 #include "Gameplay/Physics/Colliders/CylinderCollider.h"
 
-//#define LOG_GL_NOTIFICATIONS
+// GUI
+#include "Gameplay/Components/GUI/RectTransform.h"
+#include "Gameplay/Components/GUI/GuiPanel.h"
+#include "Gameplay/Components/GUI/GuiText.h"
+#include "Gameplay/InputEngine.h"
+
+//#define LOG_GL_NOTIFICATIONS 
 
 /*
 	Handles debug messages from OpenGL
@@ -108,6 +116,7 @@ glm::ivec2 windowSize = glm::ivec2(800, 800);
 // The title of our GLFW window
 std::string windowTitle = "Boomerangers";
 
+
 // using namespace should generally be avoided, and if used, make sure it's ONLY in cpp files
 using namespace Gameplay;
 using namespace Gameplay::Physics;
@@ -123,6 +132,7 @@ void GlfwWindowResizedCallback(GLFWwindow* window, int width, int height) {
 	if (windowSize.x * windowSize.y > 0) {
 		scene->MainCamera->ResizeWindow(width, height);
 	}
+	GuiBatcher::SetWindowSize({ width, height });
 }
 
 /// <summary>
@@ -143,6 +153,11 @@ bool initGLFW() {
 	
 	// Set our window resized callback
 	glfwSetWindowSizeCallback(window, GlfwWindowResizedCallback);
+
+	// Pass the window to the input engine and let it initialize itself
+	InputEngine::Init(window);
+
+	GuiBatcher::SetWindowSize(windowSize);
 
 	return true;
 }
@@ -288,12 +303,13 @@ void CreateScene() {
 		MeshResource::Sptr monkeyMesh = ResourceManager::CreateAsset<MeshResource>("Monkey.obj");
 
 		// Load in some textures
-		Texture2D::Sptr    boxTexture = ResourceManager::CreateAsset<Texture2D>("textures/box-diffuse.png");
-		Texture2D::Sptr    boxSpec    = ResourceManager::CreateAsset<Texture2D>("textures/box-specular.png");
-		Texture2D::Sptr    monkeyTex  = ResourceManager::CreateAsset<Texture2D>("textures/monkey-uvMap.png");
-		Texture2D::Sptr    leafTex    = ResourceManager::CreateAsset<Texture2D>("textures/leaves.png");
+		Texture2D::Sptr    boxTexture   = ResourceManager::CreateAsset<Texture2D>("textures/box-diffuse.png");
+		Texture2D::Sptr    boxSpec      = ResourceManager::CreateAsset<Texture2D>("textures/box-specular.png");
+		Texture2D::Sptr    monkeyTex    = ResourceManager::CreateAsset<Texture2D>("textures/monkey-uvMap.png");
+		Texture2D::Sptr    leafTex      = ResourceManager::CreateAsset<Texture2D>("textures/leaves.png");
 		leafTex->SetMinFilter(MinFilter::Nearest);
 		leafTex->SetMagFilter(MagFilter::Nearest);
+
 
 		// Here we'll load in the cubemap, as well as a special shader to handle drawing the skybox
 		TextureCube::Sptr testCubemap = ResourceManager::CreateAsset<TextureCube>("cubemaps/ocean/ocean.jpg");
@@ -337,8 +353,6 @@ void CreateScene() {
 			testMaterial->Set("u_Material.Specular", boxSpec);
 		}
 
-		/////////////// NEW MATERIALS ////////////////////
-
 		// Our foliage vertex shader material
 		Material::Sptr foliageMaterial = ResourceManager::CreateAsset<Material>(foliageShader);
 		{
@@ -362,12 +376,44 @@ void CreateScene() {
 			toonMaterial->Set("u_Material.Steps", 8);
 		}
 
-		Material::Sptr wavyMaterial = ResourceManager::CreateAsset<Material>(wavyShader);
+		/////////////// NEW MATERIALS ////////////////////
+
+		Material::Sptr displacementTest = ResourceManager::CreateAsset<Material>(displacementShader);
 		{
-			wavyMaterial->Name = "Wavy";
-			wavyMaterial->Set("u_Material.Diffuse", boxTexture);
-			wavyMaterial->Set("u_Material.Shininess", 0.1f);
-			wavyMaterial->Set("u_Material.Steps", 8);
+			Texture2D::Sptr displacementMap = ResourceManager::CreateAsset<Texture2D>("textures/displacement_map.png");
+			Texture2D::Sptr normalMap       = ResourceManager::CreateAsset<Texture2D>("textures/normal_map.png");
+			Texture2D::Sptr diffuseMap      = ResourceManager::CreateAsset<Texture2D>("textures/bricks_diffuse.png");
+
+			displacementTest->Name = "Displacement Map";
+			displacementTest->Set("u_Material.Diffuse", diffuseMap);   
+			displacementTest->Set("s_Heightmap", displacementMap);
+			displacementTest->Set("s_NormalMap", normalMap);  
+			displacementTest->Set("u_Material.Shininess", 0.5f); 
+			displacementTest->Set("u_Scale", 0.1f);   
+		}
+
+		Material::Sptr normalmapMat = ResourceManager::CreateAsset<Material>(tangentSpaceMapping);
+		{
+			Texture2D::Sptr normalMap       = ResourceManager::CreateAsset<Texture2D>("textures/normal_map.png");
+			Texture2D::Sptr diffuseMap      = ResourceManager::CreateAsset<Texture2D>("textures/bricks_diffuse.png");
+
+			normalmapMat->Name = "Tangent Space Normal Map";
+			normalmapMat->Set("u_Material.Diffuse", diffuseMap);
+			normalmapMat->Set("s_NormalMap", normalMap);
+			normalmapMat->Set("u_Material.Shininess", 0.5f);
+			normalmapMat->Set("u_Scale", 0.1f);
+		}
+
+		Material::Sptr multiTextureMat = ResourceManager::CreateAsset<Material>(multiTextureShader); 
+		{
+			Texture2D::Sptr sand  = ResourceManager::CreateAsset<Texture2D>("textures/terrain/sand.png");
+			Texture2D::Sptr grass = ResourceManager::CreateAsset<Texture2D>("textures/terrain/grass.png");
+
+			multiTextureMat->Name = "Multitexturing";
+			multiTextureMat->Set("u_Material.DiffuseA", sand);
+			multiTextureMat->Set("u_Material.DiffuseB", grass); 
+			multiTextureMat->Set("u_Material.Shininess", 0.5f);
+			multiTextureMat->Set("u_Scale", 0.1f); 
 		}
 
 		// Create some lights for our scene
@@ -387,8 +433,12 @@ void CreateScene() {
 		planeMesh->AddParam(MeshBuilderParam::CreatePlane(ZERO, UNIT_Z, UNIT_X, glm::vec2(1.0f)));
 		planeMesh->GenerateMesh();
 
+		MeshResource::Sptr sphere = ResourceManager::CreateAsset<MeshResource>();
+		sphere->AddParam(MeshBuilderParam::CreateIcoSphere(ZERO, ONE, 5));
+		sphere->GenerateMesh();
+
 		// Set up the scene's camera
-		GameObject::Sptr camera = scene->CreateGameObject("Main Camera");
+		GameObject::Sptr camera = scene->CreateGameObject("Main Camera"); 
 		{
 			camera->SetPosition(glm::vec3(5.0f));
 			camera->LookAt(glm::vec3(0.0f));
@@ -495,6 +545,39 @@ void CreateScene() {
 			plane->Add<TriggerVolumeEnterBehaviour>();
 		}
 
+		/////////////////////////// UI //////////////////////////////
+		GameObject::Sptr canvas = scene->CreateGameObject("UI Canvas");
+		{
+			RectTransform::Sptr transform = canvas->Add<RectTransform>();
+			transform->SetMin({ 16, 16 });
+			transform->SetMax({ 256, 256 });
+
+			GuiPanel::Sptr canPanel = canvas->Add<GuiPanel>();
+			
+			GameObject::Sptr subPanel = scene->CreateGameObject("Sub Item");
+			{
+				RectTransform::Sptr transform = subPanel->Add<RectTransform>();
+				transform->SetMin({ 10, 10 });
+				transform->SetMax({ 128, 128 });
+
+				GuiPanel::Sptr panel = subPanel->Add<GuiPanel>();
+				panel->SetColor(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+
+				Font::Sptr font = ResourceManager::CreateAsset<Font>("fonts/Roboto-Medium.ttf", 16.0f);
+				font->Bake();
+
+				GuiText::Sptr text = subPanel->Add<GuiText>();
+				text->SetText("Hello world!");
+				text->SetFont(font);
+			}
+
+			canvas->AddChild(subPanel);
+		}
+
+		GuiBatcher::SetDefaultTexture(ResourceManager::CreateAsset<Texture2D>("textures/ui-sprite.png"));
+		GuiBatcher::SetDefaultBorderRadius(8);
+
+
 		// Call scene awake to start up all of our components
 		scene->Window = window;
 		scene->Awake();
@@ -549,11 +632,16 @@ int main() {
 	ComponentManager::RegisterType<MovingPlatform>();
 	ComponentManager::RegisterType<PlayerControl>();
 
+	ComponentManager::RegisterType<RectTransform>();
+	ComponentManager::RegisterType<GuiPanel>();
+	ComponentManager::RegisterType<GuiText>();
+
 	// GL states, we'll enable depth testing and backface fulling
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+
 
 	// Structure for our frame-level uniforms, matches layout from
 	// fragments/frame_uniforms.glsl
@@ -748,6 +836,10 @@ int main() {
 		TextureCube::Sptr environment = scene->GetSkyboxTexture();
 		if (environment) environment->Bind(0); 
 
+		// Make sure depth testing and culling are re-enabled
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+
 		// Here we'll bind all the UBOs to their corresponding slots
 		scene->PreRender();
 		frameUniforms->Bind(FRAME_UBO_BINDING);
@@ -890,6 +982,37 @@ int main() {
 		// Use our cubemap to draw our skybox
 		scene->DrawSkybox();
 
+		// Disable culling
+		glDisable(GL_CULL_FACE);
+		// Disable depth testing, we're going to use order-dependant layering
+		glDisable(GL_DEPTH_TEST);
+		// Disable depth writing
+		glDepthMask(GL_FALSE);
+
+		// Enable alpha blending
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		// Enable the scissor test;
+		glEnable(GL_SCISSOR_TEST);
+
+		// Our projection matrix will be our entire window for now
+		glm::mat4 proj = glm::ortho(0.0f, (float)windowSize.x, (float)windowSize.y, 0.0f, -1.0f, 1.0f);
+		GuiBatcher::SetProjection(proj);
+
+		// Iterate over and render all the GUI objects
+		scene->RenderGUI();
+
+		// Flush the Gui Batch renderer
+		GuiBatcher::Flush();
+
+		// Disable alpha blending
+		glDisable(GL_BLEND);
+		// Disable scissor testing
+		glDisable(GL_SCISSOR_TEST);
+		// Re-enable depth writing
+		glDepthMask(GL_TRUE);
+
 		// End our ImGui window
 		ImGui::End();
 
@@ -897,6 +1020,7 @@ int main() {
 
 		lastFrame = thisFrame;
 		ImGuiHelper::EndFrame();
+		InputEngine::EndFrame();
 		glfwSwapBuffers(window);
 	}
 

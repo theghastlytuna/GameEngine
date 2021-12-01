@@ -11,6 +11,7 @@
 
 #include "Utils/GUID.hpp"
 #include "Utils/ResourceManager/IResource.h"
+#include "Utils/StringUtils.h"
 
 /// <summary>
 /// Utility class for managing and loading resources from JSON

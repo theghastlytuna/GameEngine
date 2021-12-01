@@ -65,9 +65,11 @@ void VertexArrayObject::AddVertexBuffer(const VertexBuffer::Sptr& buffer, const 
 void VertexArrayObject::Draw(DrawMode mode) {
 	Bind();
 	if (_indexBuffer == nullptr) {
-		glDrawArrays((GLenum)mode, 0, _elementCount);
+		size_t elements = _elementCount == 0 ? _vertexBuffers[0].Buffer->GetElementCount() : _elementCount;
+		glDrawArrays((GLenum)mode, 0, elements);
 	} else {
-		glDrawElements((GLenum)mode, _elementCount, (GLenum)_indexBuffer->GetElementType(), nullptr);
+		size_t elements = _elementCount == 0 ? _indexBuffer->GetElementCount() : _elementCount;
+		glDrawElements((GLenum)mode, elements, (GLenum)_indexBuffer->GetElementType(), nullptr);
 	}
 	Unbind();
 }

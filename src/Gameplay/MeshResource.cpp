@@ -44,12 +44,13 @@ namespace Gameplay {
 		MeshResource::Sptr result = std::make_shared<MeshResource>();
 		if (blob.contains("params") && blob["params"].is_array()) {
 			std::vector<nlohmann::json> meshbuilderParams = blob["params"].get<std::vector<nlohmann::json>>();
-			MeshBuilder<VertexPosNormTexCol> mesh;
+			MeshBuilder<VertexPosNormTexColTangents> mesh;
 			for (int ix = 0; ix < meshbuilderParams.size(); ix++) {
 				MeshBuilderParam p = MeshBuilderParam::FromJson(meshbuilderParams[ix]);
 				result->MeshBuilderParams.push_back(p);
 				MeshFactory::AddParameterized(mesh, p);
 			}
+			MeshFactory::CalculateTBN(mesh);
 			result->Mesh = mesh.Bake();
 		} else {
 			result->Filename = JsonGet<std::string>(blob, "filename", "null");
@@ -66,10 +67,11 @@ namespace Gameplay {
 	}
 
 	void MeshResource::GenerateMesh() {
-		MeshBuilder<VertexPosNormTexCol> mesh;
+		MeshBuilder<VertexPosNormTexColTangents> mesh;
 		for (auto& param : MeshBuilderParams) {
 			MeshFactory::AddParameterized(mesh, param);
 		}
+		MeshFactory::CalculateTBN(mesh);
 		Mesh = mesh.Bake();
 	}
 

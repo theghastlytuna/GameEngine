@@ -42,7 +42,9 @@ Texture2D::Sptr Texture2D::FromJson(const nlohmann::json& data)
 Texture2D::Texture2D(const Texture2DDescription& description) : ITexture(TextureType::_2D) {
 	_description = description;
 	_SetTextureParams();
-	_LoadDataFromFile();
+	if (!description.Filename.empty()) {
+		_LoadDataFromFile();
+	}
 }
 
 Texture2D::Texture2D(const std::string& filePath) : ITexture(TextureType::_2D) {

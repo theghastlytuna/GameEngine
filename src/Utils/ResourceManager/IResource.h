@@ -16,6 +16,7 @@
 class IResource {
 public:
 	typedef std::shared_ptr<IResource> Sptr;
+	typedef std::weak_ptr<IResource> Wptr;
 
 	virtual ~IResource() = default;
 

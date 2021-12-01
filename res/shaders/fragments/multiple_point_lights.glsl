@@ -65,7 +65,7 @@ vec3 CalcPointLightContribution(vec3 worldPos, vec3 normal, vec3 viewDir, Light 
 	vec3 halfDir     = normalize(toLight + viewDir);
 
 	// Calculate our specular power
-	float specPower  = max(pow(max(dot(normal, halfDir), 0.0), pow(256, shininess)), 1.0);
+	float specPower  = pow(max(dot(normal, halfDir), 0.0), pow(256, shininess));
 	// Calculate specular color
 	vec3 specularOut = specPower * light.ColorAttenuation.rgb;
 
@@ -76,7 +76,7 @@ vec3 CalcPointLightContribution(vec3 worldPos, vec3 normal, vec3 viewDir, Light 
 
 	// We'll use a modified distance squared attenuation factor to keep it simple
 	// We add the one to prevent divide by zero errors
-	float attenuation = 1.0 / (1.0 + light.ColorAttenuation.w * pow(dist, 2));
+	float attenuation = clamp(1.0 / (1.0 + light.ColorAttenuation.w * pow(dist, 2)), 0, 1);
 
 	return (diffuseOut + specularOut) * attenuation;
 }
@@ -98,7 +98,7 @@ vec3 CalcAllLightContribution(vec3 worldPos, vec3 normal, vec3 camPos, float shi
 	// Iterate over all lights
 	for(int ix = 0; ix < AmbientColAndNumLights.w && ix < MAX_LIGHTS; ix++) {
 		// Additive lighting model
-		lightAccumulation += CalcPointLightContribution(worldPos, viewDir, normal, Lights[ix], shininess);
+		lightAccumulation += CalcPointLightContribution(worldPos, normal, viewDir, Lights[ix], shininess);
 	}
 
 	return lightAccumulation;

@@ -111,7 +111,9 @@
   <ItemGroup>
     <ClInclude Include="src\Gameplay\Components\Camera.h" />
     <ClInclude Include="src\Gameplay\Components\ComponentManager.h" />
-    <ClInclude Include="src\Gameplay\Components\FirstPersonCamera.h" />
+    <ClInclude Include="src\Gameplay\Components\GUI\GuiPanel.h" />
+    <ClInclude Include="src\Gameplay\Components\GUI\GuiText.h" />
+    <ClInclude Include="src\Gameplay\Components\GUI\RectTransform.h" />
     <ClInclude Include="src\Gameplay\Components\IComponent.h" />
     <ClInclude Include="src\Gameplay\Components\JumpBehaviour.h" />
     <ClInclude Include="src\Gameplay\Components\MaterialSwapBehaviour.h" />
@@ -122,6 +124,7 @@
     <ClInclude Include="src\Gameplay\Components\SimpleCameraControl.h" />
     <ClInclude Include="src\Gameplay\Components\TriggerVolumeEnterBehaviour.h" />
     <ClInclude Include="src\Gameplay\GameObject.h" />
+    <ClInclude Include="src\Gameplay\InputEngine.h" />
     <ClInclude Include="src\Gameplay\Light.h" />
     <ClInclude Include="src\Gameplay\Material.h" />
     <ClInclude Include="src\Gameplay\MeshResource.h" />
@@ -139,7 +142,9 @@
     <ClInclude Include="src\Gameplay\Physics\TriggerVolume.h" />
     <ClInclude Include="src\Gameplay\Scene.h" />
     <ClInclude Include="src\Graphics\DebugDraw.h" />
+    <ClInclude Include="src\Graphics\Font.h" />
     <ClInclude Include="src\Graphics\GlEnums.h" />
+    <ClInclude Include="src\Graphics\GuiBatcher.h" />
     <ClInclude Include="src\Graphics\IBuffer.h" />
     <ClInclude Include="src\Graphics\ITexture.h" />
     <ClInclude Include="src\Graphics\IndexBuffer.h" />
@@ -150,6 +155,7 @@
     <ClInclude Include="src\Graphics\UniformBuffer.h" />
     <ClInclude Include="src\Graphics\VertexArrayObject.h" />
     <ClInclude Include="src\Graphics\VertexBuffer.h" />
+    <ClInclude Include="src\Graphics\VertexParamMap.h" />
     <ClInclude Include="src\Graphics\VertexTypes.h" />
     <ClInclude Include="src\Utils\FileHelpers.h" />
     <ClInclude Include="src\Utils\GUID.hpp" />
@@ -160,6 +166,7 @@
     <ClInclude Include="src\Utils\MeshBuilder.h" />
     <ClInclude Include="src\Utils\MeshFactory.h" />
     <ClInclude Include="src\Utils\ObjLoader.h" />
+    <ClInclude Include="src\Utils\OptimizedObjLoader.h" />
     <ClInclude Include="src\Utils\ResourceManager\IResource.h" />
     <ClInclude Include="src\Utils\ResourceManager\ResourceManager.h" />
     <ClInclude Include="src\Utils\StringUtils.h" />
@@ -167,7 +174,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Gameplay\Components\Camera.cpp" />
-    <ClCompile Include="src\Gameplay\Components\FirstPersonCamera.cpp" />
+    <ClCompile Include="src\Gameplay\Components\GUI\GuiPanel.cpp" />
+    <ClCompile Include="src\Gameplay\Components\GUI\GuiText.cpp" />
+    <ClCompile Include="src\Gameplay\Components\GUI\RectTransform.cpp" />
     <ClCompile Include="src\Gameplay\Components\IComponent.cpp" />
     <ClCompile Include="src\Gameplay\Components\JumpBehaviour.cpp" />
     <ClCompile Include="src\Gameplay\Components\MaterialSwapBehaviour.cpp" />
@@ -178,6 +187,7 @@
     <ClCompile Include="src\Gameplay\Components\SimpleCameraControl.cpp" />
     <ClCompile Include="src\Gameplay\Components\TriggerVolumeEnterBehaviour.cpp" />
     <ClCompile Include="src\Gameplay\GameObject.cpp" />
+    <ClCompile Include="src\Gameplay\InputEngine.cpp" />
     <ClCompile Include="src\Gameplay\Material.cpp" />
     <ClCompile Include="src\Gameplay\MeshResource.cpp" />
     <ClCompile Include="src\Gameplay\Physics\BulletDebugDraw.cpp" />
@@ -194,6 +204,8 @@
     <ClCompile Include="src\Gameplay\Physics\TriggerVolume.cpp" />
     <ClCompile Include="src\Gameplay\Scene.cpp" />
     <ClCompile Include="src\Graphics\DebugDraw.cpp" />
+    <ClCompile Include="src\Graphics\Font.cpp" />
+    <ClCompile Include="src\Graphics\GuiBatcher.cpp" />
     <ClCompile Include="src\Graphics\IBuffer.cpp" />
     <ClCompile Include="src\Graphics\ITexture.cpp" />
     <ClCompile Include="src\Graphics\Shader.cpp" />
@@ -207,7 +219,7 @@
     <ClCompile Include="src\Utils\GlmDefines.cpp" />
     <ClCompile Include="src\Utils\ImGuiHelper.cpp" />
     <ClCompile Include="src\Utils\MeshFactory.cpp" />
-    <ClCompile Include="src\Utils\ObjLoader.cpp" />
+    <ClCompile Include="src\Utils\OptimizedObjLoader.cpp" />
     <ClCompile Include="src\Utils\ResourceManager\ResourceManager.cpp" />
     <ClCompile Include="src\Utils\StringUtils.cpp" />
     <ClCompile Include="src\main.cpp" />

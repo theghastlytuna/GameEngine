@@ -36,7 +36,7 @@ template <int C, typename T>
 inline glm::vec<C, T> ParseJsonVec(const nlohmann::json& blob) {
 	glm::vec<C, T> result;
 	for (int ix = 0; ix < C; ix++) {
-		result[ix] = blob["" + ('x' + ix)].get<T>();
+		result[ix] = blob[std::string(1, 'x' + ix)].get<T>(); 
 	}
 	return result;
 }
