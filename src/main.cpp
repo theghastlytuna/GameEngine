@@ -54,6 +54,7 @@
 #include "Gameplay/Components/FirstPersonCamera.h"
 #include "Gameplay/Components/MovingPlatform.h"
 #include "Gameplay/Components/PlayerControl.h"
+#include "Gameplay/Components/BoomerangBehavior.h"
 
 // Physics
 #include "Gameplay/Physics/RigidBody.h"
@@ -563,6 +564,7 @@ void CreateScene() {
 
 			RigidBody::Sptr physics = boomerang->Add<RigidBody>(RigidBodyType::Dynamic);
 			physics->AddCollider(ConvexMeshCollider::Create());
+			boomerang->Add<BoomerangBehavior>();
 		}
 
 		// Call scene awake to start up all of our components
@@ -647,6 +649,7 @@ int main() {
 	ComponentManager::RegisterType<FirstPersonCamera>();
 	ComponentManager::RegisterType<MovingPlatform>();
 	ComponentManager::RegisterType<PlayerControl>();
+	ComponentManager::RegisterType<BoomerangBehavior>();
 	
 
 	// GL states, we'll enable depth testing and backface fulling

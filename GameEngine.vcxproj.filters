@@ -24,10 +24,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Gameplay\Components\BoomerangBehavior.h">
+      <Filter>Gameplay\Components</Filter>
+    </ClInclude>
     <ClInclude Include="src\Gameplay\Components\Camera.h">
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
     <ClInclude Include="src\Gameplay\Components\ComponentManager.h">
+      <Filter>Gameplay\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Gameplay\Components\ControllerInput.h">
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
     <ClInclude Include="src\Gameplay\Components\FirstPersonCamera.h">
@@ -43,6 +49,9 @@
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
     <ClInclude Include="src\Gameplay\Components\MovingPlatform.h">
+      <Filter>Gameplay\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Gameplay\Components\PlayerControl.h">
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
     <ClInclude Include="src\Gameplay\Components\RenderComponent.h">
@@ -186,11 +195,15 @@
     <ClInclude Include="src\Utils\TypeHelpers.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\Gameplay\Components\PlayerControl.h" />
-    <ClInclude Include="src\Gameplay\Components\BoomerangBehavior.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Gameplay\Components\BoomerangBehavior.cpp">
+      <Filter>Gameplay\Components</Filter>
+    </ClCompile>
     <ClCompile Include="src\Gameplay\Components\Camera.cpp">
+      <Filter>Gameplay\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gameplay\Components\ControllerInput.cpp">
       <Filter>Gameplay\Components</Filter>
     </ClCompile>
     <ClCompile Include="src\Gameplay\Components\FirstPersonCamera.cpp">
@@ -206,6 +219,9 @@
       <Filter>Gameplay\Components</Filter>
     </ClCompile>
     <ClCompile Include="src\Gameplay\Components\MovingPlatform.cpp">
+      <Filter>Gameplay\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gameplay\Components\PlayerControl.cpp">
       <Filter>Gameplay\Components</Filter>
     </ClCompile>
     <ClCompile Include="src\Gameplay\Components\RenderComponent.cpp">
@@ -320,7 +336,5 @@
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Gameplay\Components\PlayerControl.cpp" />
-    <ClCompile Include="src\Gameplay\Components\BoomerangBehavior.cpp" />
   </ItemGroup>
 </Project>

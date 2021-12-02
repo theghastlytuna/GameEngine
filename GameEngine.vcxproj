@@ -112,6 +112,7 @@
     <ClInclude Include="src\Gameplay\Components\BoomerangBehavior.h" />
     <ClInclude Include="src\Gameplay\Components\Camera.h" />
     <ClInclude Include="src\Gameplay\Components\ComponentManager.h" />
+    <ClInclude Include="src\Gameplay\Components\ControllerInput.h" />
     <ClInclude Include="src\Gameplay\Components\FirstPersonCamera.h" />
     <ClInclude Include="src\Gameplay\Components\IComponent.h" />
     <ClInclude Include="src\Gameplay\Components\JumpBehaviour.h" />
@@ -169,6 +170,7 @@
   <ItemGroup>
     <ClCompile Include="src\Gameplay\Components\BoomerangBehavior.cpp" />
     <ClCompile Include="src\Gameplay\Components\Camera.cpp" />
+    <ClCompile Include="src\Gameplay\Components\ControllerInput.cpp" />
     <ClCompile Include="src\Gameplay\Components\FirstPersonCamera.cpp" />
     <ClCompile Include="src\Gameplay\Components\IComponent.cpp" />
     <ClCompile Include="src\Gameplay\Components\JumpBehaviour.cpp" />
