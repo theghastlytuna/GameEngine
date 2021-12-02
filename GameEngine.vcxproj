@@ -111,6 +111,7 @@
   <ItemGroup>
     <ClInclude Include="src\Gameplay\Components\Camera.h" />
     <ClInclude Include="src\Gameplay\Components\ComponentManager.h" />
+    <ClInclude Include="src\Gameplay\Components\ControllerInput.h" />
     <ClInclude Include="src\Gameplay\Components\FirstPersonCamera.h" />
     <ClInclude Include="src\Gameplay\Components\GUI\GuiPanel.h" />
     <ClInclude Include="src\Gameplay\Components\GUI\GuiText.h" />
@@ -118,6 +119,7 @@
     <ClInclude Include="src\Gameplay\Components\IComponent.h" />
     <ClInclude Include="src\Gameplay\Components\JumpBehaviour.h" />
     <ClInclude Include="src\Gameplay\Components\MaterialSwapBehaviour.h" />
+    <ClInclude Include="src\Gameplay\Components\MorphAnimator.h" />
     <ClInclude Include="src\Gameplay\Components\MovingPlatform.h" />
     <ClInclude Include="src\Gameplay\Components\PlayerControl.h" />
     <ClInclude Include="src\Gameplay\Components\RenderComponent.h" />
@@ -175,6 +177,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Gameplay\Components\Camera.cpp" />
+    <ClCompile Include="src\Gameplay\Components\ControllerInput.cpp" />
     <ClCompile Include="src\Gameplay\Components\FirstPersonCamera.cpp" />
     <ClCompile Include="src\Gameplay\Components\GUI\GuiPanel.cpp" />
     <ClCompile Include="src\Gameplay\Components\GUI\GuiText.cpp" />
@@ -182,6 +185,7 @@
     <ClCompile Include="src\Gameplay\Components\IComponent.cpp" />
     <ClCompile Include="src\Gameplay\Components\JumpBehaviour.cpp" />
     <ClCompile Include="src\Gameplay\Components\MaterialSwapBehaviour.cpp" />
+    <ClCompile Include="src\Gameplay\Components\MorphAnimator.cpp" />
     <ClCompile Include="src\Gameplay\Components\MovingPlatform.cpp" />
     <ClCompile Include="src\Gameplay\Components\PlayerControl.cpp" />
     <ClCompile Include="src\Gameplay\Components\RenderComponent.cpp" />
