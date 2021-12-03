@@ -14,7 +14,6 @@ public:
 	SimpleCameraControl();
 	virtual ~SimpleCameraControl();
 
-	virtual void Awake() override;
 	virtual void Update(float deltaTime) override;
 
 public:
@@ -31,5 +30,4 @@ protected:
 	glm::vec2 _currentRot;
 
 	bool _isMousePressed = false;
-	GLFWwindow* _window;
 };

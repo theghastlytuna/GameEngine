@@ -9,6 +9,7 @@
 #include "Logging.h"
 #include "MeshFactory.h"
 #include "Utils/JsonGlmHelpers.h"
+#include "Graphics/VertexParamMap.h"
 
 #define M_PI 3.14159265359f
 
@@ -22,122 +23,6 @@ struct RGBA_Helper {
 		};
 		uint32_t HexCode;
 	};
-};
-
-/// <summary>
-/// Structure for mapping and setting a Vertex's attribute based on a vertex declaration
-/// </summary>
-struct VertexParamMap {
-	uint32_t PositionOffset;
-	uint32_t NormalOffset;
-	uint32_t TextureOffset;
-	uint32_t ColorOffset;
-	uint32_t ColorSize;
-
-	VertexParamMap() :
-		PositionOffset(-1),
-		NormalOffset(-1),
-		TextureOffset(-1),
-		ColorOffset(-1),
-		ColorSize(0) {}
-	
-	VertexParamMap(const std::vector<BufferAttribute>& vDecl) : VertexParamMap() {
-		// Loop over all the vertex type's attributes
-		for (int ix = 0; ix < vDecl.size(); ix++) {
-			// If the attribute is a float3 position, store it's byte offset
-			if (vDecl[ix].Usage == AttribUsage::Position && vDecl[ix].Size == 3 && vDecl[ix].Type == AttributeType::Float) {
-				PositionOffset = vDecl[ix].Offset;
-			}
-			// If the attribute is a float3 normal, store it's byte offset
-			else if (vDecl[ix].Usage == AttribUsage::Normal && vDecl[ix].Size == 3 && vDecl[ix].Type == AttributeType::Float) {
-				NormalOffset = vDecl[ix].Offset;
-			}
-			// If the attribute is a float2 texture UV, store it's byte offset
-			else if (vDecl[ix].Usage == AttribUsage::Texture && vDecl[ix].Size == 2 && vDecl[ix].Type == AttributeType::Float) {
-				TextureOffset = vDecl[ix].Offset;
-			}
-			// If the attribute is a float2 texture UV, store it's byte offset
-			else if (vDecl[ix].Usage == AttribUsage::Color && vDecl[ix].Type == AttributeType::Float) {
-				ColorOffset = vDecl[ix].Offset;
-				ColorSize   = vDecl[ix].Size;
-			}
-		}
-	}
-
-	template <typename Vertex>
-	void SetPosition(Vertex& vertex, const glm::vec3& value) const {
-		if (PositionOffset != (uint32_t)-1) {
-			memcpy(GetPtrOffset(vertex, PositionOffset), glm::value_ptr(value), sizeof(glm::vec3));
-		}
-	}
-
-	template <typename Vertex>
-	void SetNormal(Vertex& vertex, const glm::vec3& value) const {
-		if (NormalOffset != (uint32_t)-1) {
-			memcpy(GetPtrOffset(vertex, NormalOffset), glm::value_ptr(value), sizeof(glm::vec3));
-		}
-	}
-
-	template <typename Vertex>
-	void SetTexture(Vertex& vertex, const glm::vec2& value) const {
-		if (TextureOffset != (uint32_t)-1) {
-			memcpy(GetPtrOffset(vertex, TextureOffset), glm::value_ptr(value), sizeof(glm::vec2));
-		}
-	}
-
-	template <typename Vertex>
-	void SetColor(Vertex& vertex, const glm::vec4& value) const {
-		if (ColorOffset != (uint32_t)-1) {
-			memcpy(GetPtrOffset(vertex, ColorOffset), glm::value_ptr(value), sizeof(float) * ColorSize);
-		}
-	}
-
-	template <typename Vertex>
-	glm::vec3 GetPosition(Vertex& vertex) const {
-		if (PositionOffset != (uint32_t)-1) {
-			return *GetPtrOffset<Vertex, glm::vec3>(vertex, PositionOffset); 
-		}
-		return glm::vec3(0.0f);
-	}
-
-	template <typename Vertex>
-	glm::vec3 GetNormal(Vertex& vertex) const {
-		if (NormalOffset != (uint32_t)-1) {
-			return *GetPtrOffset<Vertex, glm::vec3>(vertex, NormalOffset);
-		}
-		return glm::vec3(0.0f);
-	}
-
-	template <typename Vertex>
-	glm::vec2 GetTexture(Vertex& vertex) const {
-		if (TextureOffset != (uint32_t)-1) {
-			return *GetPtrOffset<Vertex, glm::vec2>(vertex, TextureOffset);
-		}
-		return glm::vec2(0.0f);
-	}
-
-	template <typename Vertex>
-	glm::vec4 GetColor(Vertex& vertex) const {
-		if (ColorOffset != (uint32_t)-1) {
-			switch (ColorSize) {
-				case 2:
-					return glm::vec4(*GetPtrOffset<Vertex, glm::vec2>(vertex, ColorOffset), 0, 1);
-				case 3:
-					return glm::vec4(*GetPtrOffset<Vertex, glm::vec3>(vertex, ColorOffset), 1);
-				case 4:
-					return *GetPtrOffset<Vertex, glm::vec4>(vertex, ColorOffset);
-			}
-		}
-		return glm::vec4(1.0f);
-	}
-
-private:
-	glm::vec4 _safetyBuffer; // Used to return references to a safe garbage data store
-
-	template <typename Vertex, typename EndType = void>
-	EndType* GetPtrOffset(Vertex& vert, uint32_t offset) const {
-		return reinterpret_cast<EndType*>(reinterpret_cast<uint8_t*>(&vert) + offset);
-	}
 };
 
 /// <summary>
@@ -646,7 +531,6 @@ void MeshFactory::AddParameterized(MeshBuilder<Vertex>& mesh, const MeshBuilderP
 	}
 }
 
-
 template <typename Vertex>
 void MeshFactory::InvertFaces(MeshBuilder<Vertex>& mesh)
 {
@@ -665,5 +549,71 @@ void MeshFactory::InvertFaces(MeshBuilder<Vertex>& mesh)
 			data[ix] = data[ix + 1];
 			data[ix + 1] = temp;
 		}
+	}
+}
+
+
+template <typename Vertex>
+void MeshFactory::CalculateTBN(MeshBuilder<Vertex>& mesh)
+{
+	VertexParamMap vMap = VertexParamMap(Vertex::V_DECL);
+	if (vMap.TangentOffset == -1 && vMap.BiTangentOffset == -1) {
+		LOG_WARN("Vertex type does not have tangent or bitangent attribute, aborting CalculateTBN");
+		return;
+	}
+	if (vMap.PositionOffset == -1 || vMap.TextureOffset == -1) {
+		LOG_WARN("Vertex type does not required position and texture attributes, aborting CalculateTBN");
+		return;
+	}
+	if ( mesh._indices.size() == 0) {
+		LOG_WARN("Mesh does not have indices, aborting CalculateTBN");
+		return;
+	}
+
+	for (size_t i = 0; i < mesh._vertices.size(); i++) {
+		vMap.SetTangent(mesh._vertices[i], glm::vec3(0.0f));
+		vMap.SetBiTangent(mesh._vertices[i], glm::vec3(0.0f));
+	}
+
+	// Iterate over all indices in the mesh, we'll assume that the mesh is indexed
+	for (size_t i = 0; i < mesh._indices.size(); i += 3) {
+		Vertex& v1 = mesh._vertices[mesh._indices[i + 0u]];
+		Vertex& v2 = mesh._vertices[mesh._indices[i + 1u]];
+		Vertex& v3 = mesh._vertices[mesh._indices[i + 2u]];
+
+		// Extract the positions from the mesh
+		glm::vec3 pos[3];
+		pos[0] = vMap.GetPosition(v1);
+		pos[1] = vMap.GetPosition(v2);
+		pos[2] = vMap.GetPosition(v3);
+
+		// Extract the UVs from the mesh
+		glm::vec2 uvs[3];
+		uvs[0] = vMap.GetTexture(v1);
+		uvs[1] = vMap.GetTexture(v2);
+		uvs[2] = vMap.GetTexture(v3);
+
+		// Calculate 2 corner vectors
+		glm::vec3 deltaP1 = pos[1] - pos[0];
+		glm::vec3 deltaP2 = pos[2] - pos[0];
+
+		// Calculate UV deltas
+		glm::vec2 deltaT1 = uvs[1] - uvs[0];
+		glm::vec2 deltaT2 = uvs[2] - uvs[0];
+
+		// Use the deltas in position and UV to calculate the tangent and bitangent
+		// https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+		float r = 1.0f / (deltaT1.x * deltaT2.y - deltaT1.y * deltaT2.x);
+		glm::vec3 tangent = glm::normalize((deltaP1 * deltaT2.y - deltaP2 * deltaT1.y) * r);
+		glm::vec3 bitangent = glm::normalize((deltaP2 * deltaT1.x - deltaP1 * deltaT2.x) * r);
+
+		// Set attributes in the vertex
+		vMap.SetTangent(v1, glm::normalize((vMap.GetTangent(v1) + tangent) / 2.0f));
+		vMap.SetTangent(v2, glm::normalize((vMap.GetTangent(v2) + tangent) / 2.0f));
+		vMap.SetTangent(v3, glm::normalize((vMap.GetTangent(v3) + tangent) / 2.0f));
+
+		vMap.SetBiTangent(v1, glm::normalize((vMap.GetBiTangent(v1) + bitangent) / 2.0f));
+		vMap.SetBiTangent(v2, glm::normalize((vMap.GetBiTangent(v1) + bitangent) / 2.0f));
+		vMap.SetBiTangent(v3, glm::normalize((vMap.GetBiTangent(v1) + bitangent) / 2.0f));
 	}
 }

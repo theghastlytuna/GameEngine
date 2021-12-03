@@ -27,6 +27,8 @@
 #include "Graphics/Texture2D.h"
 #include "Graphics/TextureCube.h"
 #include "Graphics/VertexTypes.h"
+#include "Graphics/Font.h"
+#include "Graphics/GuiBatcher.h"
 
 // Utilities
 #include "Utils/MeshBuilder.h"
@@ -53,6 +55,8 @@
 #include "Gameplay/Components/MaterialSwapBehaviour.h"
 #include "Gameplay/Components/FirstPersonCamera.h"
 #include "Gameplay/Components/MovingPlatform.h"
+#include "Gameplay/Components/PlayerControl.h"
+#include "Gameplay/Components/MorphAnimator.h"
 
 // Physics
 #include "Gameplay/Physics/RigidBody.h"
@@ -66,7 +70,13 @@
 #include "Gameplay/Components/SimpleCameraControl.h"
 #include "Gameplay/Physics/Colliders/CylinderCollider.h"
 
-//#define LOG_GL_NOTIFICATIONS
+// GUI
+#include "Gameplay/Components/GUI/RectTransform.h"
+#include "Gameplay/Components/GUI/GuiPanel.h"
+#include "Gameplay/Components/GUI/GuiText.h"
+#include "Gameplay/InputEngine.h"
+
+//#define LOG_GL_NOTIFICATIONS 
 
 /*
 	Handles debug messages from OpenGL
@@ -107,6 +117,7 @@ glm::ivec2 windowSize = glm::ivec2(800, 800);
 // The title of our GLFW window
 std::string windowTitle = "Boomerangers";
 
+
 // using namespace should generally be avoided, and if used, make sure it's ONLY in cpp files
 using namespace Gameplay;
 using namespace Gameplay::Physics;
@@ -122,6 +133,7 @@ void GlfwWindowResizedCallback(GLFWwindow* window, int width, int height) {
 	if (windowSize.x * windowSize.y > 0) {
 		scene->MainCamera->ResizeWindow(width, height);
 	}
+	GuiBatcher::SetWindowSize({ width, height });
 }
 
 /// <summary>
@@ -142,6 +154,11 @@ bool initGLFW() {
 	
 	// Set our window resized callback
 	glfwSetWindowSizeCallback(window, GlfwWindowResizedCallback);
+
+	// Pass the window to the input engine and let it initialize itself
+	InputEngine::Init(window);
+
+	GuiBatcher::SetWindowSize(windowSize);
 
 	return true;
 }
@@ -244,57 +261,77 @@ void CreateScene() {
 		scene->Window = window;
 		scene->Awake();
 	} 
-	else {  
-		// This time we'll have 2 different shaders, and share data between both of them using the UBO
-		// This shader will handle reflective materials 
-		Shader::Sptr reflectiveShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
-			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
-			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_environment_reflective.glsl" }
-		});
+	else {
+			// This time we'll have 2 different shaders, and share data between both of them using the UBO
+			// This shader will handle reflective materials 
+			Shader::Sptr reflectiveShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
+				{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
+				{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_environment_reflective.glsl" }
+			});
 
-		// This shader handles our basic materials without reflections (cause they expensive)
-		Shader::Sptr basicShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
-			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
-			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_blinn_phong_textured.glsl" }
-		});
+			// This shader handles our basic materials without reflections (cause they expensive)
+			Shader::Sptr basicShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
+				{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
+				{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_blinn_phong_textured.glsl" }
+			});
 
-		// This shader handles our basic materials without reflections (cause they expensive)
-		Shader::Sptr specShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
-			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
-			{ ShaderPartType::Fragment, "shaders/fragment_shaders/textured_specular.glsl" }
-		});
+			// This shader handles our basic materials without reflections (cause they expensive)
+			Shader::Sptr specShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
+				{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
+				{ ShaderPartType::Fragment, "shaders/fragment_shaders/textured_specular.glsl" }
+			});
 
+			Shader::Sptr animShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
+				{ ShaderPartType::Vertex, "shaders/vertex_shaders/morphAnim.glsl" },
+				{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_blinn_phong_textured.glsl" }
+			});
 
-		///////////////////// NEW SHADERS ////////////////////////////////////////////
+			///////////////////// NEW SHADERS ////////////////////////////////////////////
 
-		// This shader handles our foliage vertex shader example
-		Shader::Sptr foliageShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
-			{ ShaderPartType::Vertex, "shaders/vertex_shaders/foliage.glsl" },
-			{ ShaderPartType::Fragment, "shaders/fragment_shaders/screendoor_transparency.glsl" }
-		});
+			// This shader handles our foliage vertex shader example
+			Shader::Sptr foliageShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
+				{ ShaderPartType::Vertex, "shaders/vertex_shaders/foliage.glsl" },
+				{ ShaderPartType::Fragment, "shaders/fragment_shaders/screendoor_transparency.glsl" }
+			});
 
-		// This shader handles our cel shading example
-		Shader::Sptr toonShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
-			{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
-			{ ShaderPartType::Fragment, "shaders/fragment_shaders/toon_shading.glsl" }
-		});
-
-		Shader::Sptr wavyShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
-			{ ShaderPartType::Vertex, "shaders/vertex_shaders/wavy.glsl" },
-			{ ShaderPartType::Fragment, "shaders/fragment_shaders/frag_blinn_phong_textured.glsl" }
-		});
-
+			// This shader handles our cel shading example
+			Shader::Sptr toonShader = ResourceManager::CreateAsset<Shader>(std::unordered_map<ShaderPartType, std::string>{
+				{ ShaderPartType::Vertex, "shaders/vertex_shaders/basic.glsl" },
+				{ ShaderPartType::Fragment, "shaders/fragment_shaders/toon_shading.glsl" }
+			});
 
 		// Load in the meshes
 		MeshResource::Sptr monkeyMesh = ResourceManager::CreateAsset<MeshResource>("Monkey.obj");
+		MeshResource::Sptr cubeMesh = ResourceManager::CreateAsset<MeshResource>("cube.obj");
+		MeshResource::Sptr boiMesh = ResourceManager::CreateAsset<MeshResource>("boi-tpose.obj");
+		MeshResource::Sptr catcusMesh = ResourceManager::CreateAsset<MeshResource>("CatcusAnims/Catcus_Idle_001.obj");
 
 		// Load in some textures
 		Texture2D::Sptr    boxTexture = ResourceManager::CreateAsset<Texture2D>("textures/box-diffuse.png");
 		Texture2D::Sptr    boxSpec    = ResourceManager::CreateAsset<Texture2D>("textures/box-specular.png");
 		Texture2D::Sptr    monkeyTex  = ResourceManager::CreateAsset<Texture2D>("textures/monkey-uvMap.png");
 		Texture2D::Sptr    leafTex    = ResourceManager::CreateAsset<Texture2D>("textures/leaves.png");
+		Texture2D::Sptr	   catcusTex = ResourceManager::CreateAsset<Texture2D>("textures/cattusGood.png");
+
 		leafTex->SetMinFilter(MinFilter::Nearest);
 		leafTex->SetMagFilter(MagFilter::Nearest);
+
+		//////////////Loading animation frames////////////////////////
+		std::vector<MeshResource::Sptr> boiFrames;
+
+		for (int i = 0; i < 8; i++)
+		{
+			boiFrames.push_back(ResourceManager::CreateAsset<MeshResource>("boi-" + std::to_string(i) + ".obj"));
+		}
+
+		std::vector<MeshResource::Sptr> catcusFrames;
+
+		for (int i = 1; i < 8; i++)
+		{
+			catcusFrames.push_back(ResourceManager::CreateAsset<MeshResource>("CatcusAnims/Catcus_Idle_00" + std::to_string(i) + ".obj"));
+		}
+		//////////////////////////////////////////////////////////////
+
 
 		// Here we'll load in the cubemap, as well as a special shader to handle drawing the skybox
 		TextureCube::Sptr testCubemap = ResourceManager::CreateAsset<TextureCube>("cubemaps/ocean/ocean.jpg");
@@ -302,6 +339,7 @@ void CreateScene() {
 			{ ShaderPartType::Vertex, "shaders/vertex_shaders/skybox_vert.glsl" },
 			{ ShaderPartType::Fragment, "shaders/fragment_shaders/skybox_frag.glsl" }
 		});
+
 
 		// Create an empty scene
 		scene = std::make_shared<Scene>();
@@ -321,6 +359,20 @@ void CreateScene() {
 			boxMaterial->Set("u_Material.Shininess", 0.1f);
 		}
 
+		Material::Sptr boiMaterial = ResourceManager::CreateAsset<Material>(animShader);
+		{
+			boiMaterial->Name = "Boi";
+			boiMaterial->Set("u_Material.Diffuse", boxTexture);
+			boiMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		Material::Sptr catcusMaterial = ResourceManager::CreateAsset<Material>(animShader);
+		{
+			catcusMaterial->Name = "Catcus";
+			catcusMaterial->Set("u_Material.Diffuse", catcusTex);
+			catcusMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
 		// This will be the reflective material, we'll make the whole thing 90% reflective
 		Material::Sptr monkeyMaterial = ResourceManager::CreateAsset<Material>(reflectiveShader);
 		{
@@ -336,8 +388,6 @@ void CreateScene() {
 			testMaterial->Set("u_Material.Diffuse", boxTexture);
 			testMaterial->Set("u_Material.Specular", boxSpec);
 		}
-
-		/////////////// NEW MATERIALS ////////////////////
 
 		// Our foliage vertex shader material
 		Material::Sptr foliageMaterial = ResourceManager::CreateAsset<Material>(foliageShader);
@@ -362,14 +412,6 @@ void CreateScene() {
 			toonMaterial->Set("u_Material.Steps", 8);
 		}
 
-		Material::Sptr wavyMaterial = ResourceManager::CreateAsset<Material>(wavyShader);
-		{
-			wavyMaterial->Name = "Wavy";
-			wavyMaterial->Set("u_Material.Diffuse", boxTexture);
-			wavyMaterial->Set("u_Material.Shininess", 0.1f);
-			wavyMaterial->Set("u_Material.Steps", 8);
-		}
-
 		// Create some lights for our scene
 		scene->Lights.resize(3);
 		scene->Lights[0].Position = glm::vec3(0.0f, 1.0f, 3.0f);
@@ -387,10 +429,14 @@ void CreateScene() {
 		planeMesh->AddParam(MeshBuilderParam::CreatePlane(ZERO, UNIT_Z, UNIT_X, glm::vec2(1.0f)));
 		planeMesh->GenerateMesh();
 
+		MeshResource::Sptr sphere = ResourceManager::CreateAsset<MeshResource>();
+		sphere->AddParam(MeshBuilderParam::CreateIcoSphere(ZERO, ONE, 5));
+		sphere->GenerateMesh();
+
 		// Set up the scene's camera
-		GameObject::Sptr camera = scene->CreateGameObject("Main Camera");
+		GameObject::Sptr camera = scene->CreateGameObject("Main Camera"); 
 		{
-			camera->SetPostion(glm::vec3(5.0f));
+			camera->SetPosition(glm::vec3(5.0f));
 			camera->LookAt(glm::vec3(0.0f));
 
 			camera->Add<SimpleCameraControl>();
@@ -404,7 +450,7 @@ void CreateScene() {
 		//Set up the scene's camera 
 		GameObject::Sptr camera2 = scene->CreateGameObject("Main Camera 2");
 		{
-			camera2->SetPostion(glm::vec3(5.0f));
+			camera2->SetPosition(glm::vec3(5.0f));
 			camera2->LookAt(glm::vec3(0.0f));
 
 			Camera::Sptr cam = camera2->Add<Camera>();
@@ -412,54 +458,91 @@ void CreateScene() {
 			scene->MainCamera2 = cam;
 		}
 
-		GameObject::Sptr mobileCamera = scene->CreateGameObject("Mobile Camera");
+		GameObject::Sptr detachedCam = scene->CreateGameObject("Detached Camera");
 		{
-			mobileCamera->SetPostion(glm::vec3(0.f, 0.f, 4.f));
+			ControllerInput::Sptr controller1 = detachedCam->Add<ControllerInput>();
+			controller1->SetController(GLFW_JOYSTICK_1);
 
-			RenderComponent::Sptr renderer = mobileCamera->Add<RenderComponent>();
-			renderer->SetMesh(monkeyMesh);
-			renderer->SetMaterial(monkeyMaterial);
+			detachedCam->SetPosition(glm::vec3(0.f, 0.f, 0.4f));
 
-			mobileCamera->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+			FirstPersonCamera::Sptr cameraControl = detachedCam->Add<FirstPersonCamera>();
 
-			RigidBody::Sptr physics = mobileCamera->Add<RigidBody>(RigidBodyType::Dynamic);
-			physics->AddCollider(SphereCollider::Create());
-			physics->SetAngularFactor(glm::vec3(0.f));
-			physics->SetLinearDamping(0.8f);
-
-			FirstPersonCamera::Sptr cameraControl = mobileCamera->Add<FirstPersonCamera>();
-
-			JumpBehaviour::Sptr jumping = mobileCamera->Add<JumpBehaviour>();
-
-			Camera::Sptr cam = mobileCamera->Add<Camera>();
+			Camera::Sptr cam = detachedCam->Add<Camera>();
 			scene->PlayerCamera = cam;
 		}
 
-		GameObject::Sptr mobileCamera2 = scene->CreateGameObject("Mobile Camera 2");
+		GameObject::Sptr player1 = scene->CreateGameObject("Player 1");
 		{
-			mobileCamera2->SetPostion(glm::vec3(10.f, 0.f, 4.f));
+			ControllerInput::Sptr controller1 = player1->Add<ControllerInput>();
+			controller1->SetController(GLFW_JOYSTICK_1);
+			
+			player1->SetPosition(glm::vec3(0.f, 0.f, 4.f));
 
-			RenderComponent::Sptr renderer = mobileCamera2->Add<RenderComponent>();
+			RenderComponent::Sptr renderer = player1->Add<RenderComponent>();
 			renderer->SetMesh(monkeyMesh);
 			renderer->SetMaterial(monkeyMaterial);
 
-			mobileCamera2->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+			player1->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
-			RigidBody::Sptr physics = mobileCamera2->Add<RigidBody>(RigidBodyType::Dynamic);
+			RigidBody::Sptr physics = player1->Add<RigidBody>(RigidBodyType::Dynamic);
 			physics->AddCollider(SphereCollider::Create());
 			physics->SetAngularFactor(glm::vec3(0.f));
 			physics->SetLinearDamping(0.8f);
 
-			FirstPersonCamera::Sptr cameraControl = mobileCamera2->Add<FirstPersonCamera>();
+			//FirstPersonCamera::Sptr cameraControl = player1->Add<FirstPersonCamera>();
+			PlayerControl::Sptr controller = player1->Add<PlayerControl>();
 
-			JumpBehaviour::Sptr jumping = mobileCamera2->Add<JumpBehaviour>();
+			JumpBehaviour::Sptr jumping = player1->Add<JumpBehaviour>();
 
-			Camera::Sptr cam = mobileCamera2->Add<Camera>();
+			player1->AddChild(detachedCam);
+
+			//Camera::Sptr cam = player1->Add<Camera>();
+			//scene->PlayerCamera = cam;
+		}
+
+		GameObject::Sptr detachedCam2 = scene->CreateGameObject("Detached Camera 2");
+		{
+			ControllerInput::Sptr controller2 = detachedCam2->Add<ControllerInput>();
+			controller2->SetController(GLFW_JOYSTICK_2);
+
+			detachedCam2->SetPosition(glm::vec3(10.f, 0.f, 0.4f));
+
+			FirstPersonCamera::Sptr cameraControl = detachedCam2->Add<FirstPersonCamera>();
+
+			Camera::Sptr cam = detachedCam2->Add<Camera>();
 			scene->PlayerCamera2 = cam;
 		}
 
+		GameObject::Sptr player2 = scene->CreateGameObject("Player 2");
+		{
+			ControllerInput::Sptr controller2 = player2->Add<ControllerInput>();
+			controller2->SetController(GLFW_JOYSTICK_2);
+
+			player2->SetPosition(glm::vec3(10.f, 0.f, 4.f));
+
+			RenderComponent::Sptr renderer = player2->Add<RenderComponent>();
+			renderer->SetMesh(monkeyMesh);
+			renderer->SetMaterial(monkeyMaterial);
+
+			player2->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+
+			RigidBody::Sptr physics = player2->Add<RigidBody>(RigidBodyType::Dynamic);
+			physics->AddCollider(SphereCollider::Create(0.7f));
+			physics->SetAngularFactor(glm::vec3(0.f));
+			physics->SetLinearDamping(0.8f);
+
+			//FirstPersonCamera::Sptr cameraControl = player2->Add<FirstPersonCamera>();
+
+			PlayerControl::Sptr controller = player2->Add<PlayerControl>();
+
+			JumpBehaviour::Sptr jumping = player2->Add<JumpBehaviour>();
+
+			//Camera::Sptr cam = player2->Add<Camera>();
+			//scene->PlayerCamera2 = cam;
+		}
+
 		// Set up all our sample objects
-		GameObject::Sptr plane = scene->CreateGameObject("Plane");
+		GameObject::Sptr plane = scene->CreateGameObject("Ground");
 		{
 			// Make a big tiled mesh
 			MeshResource::Sptr tiledMesh = ResourceManager::CreateAsset<MeshResource>();
@@ -471,10 +554,162 @@ void CreateScene() {
 			renderer->SetMesh(tiledMesh);
 			renderer->SetMaterial(boxMaterial);
 
+			BoxCollider::Sptr collider = BoxCollider::Create(glm::vec3(50.0f, 50.0f, 1.0f));
+			collider->SetPosition({ 0,0,-1 });
+
 			// Attach a plane collider that extends infinitely along the X/Y axis
 			RigidBody::Sptr physics = plane->Add<RigidBody>(/*static by default*/);
-			physics->AddCollider(BoxCollider::Create(glm::vec3(50.0f, 50.0f, 1.0f)))->SetPosition({ 0,0,-1 });
+			physics->AddCollider(collider);
+
+			TriggerVolume::Sptr volume = plane->Add<TriggerVolume>();
+			volume->AddCollider(BoxCollider::Create(glm::vec3(50.0f, 50.0f, 1.0f)))->SetPosition({ 0,0,-1});
+
+			plane->Add<TriggerVolumeEnterBehaviour>();
 		}
+
+		// Set up all our sample objects
+		GameObject::Sptr movingPlat = scene->CreateGameObject("GroundMoving");
+		{
+			// Set position in the scene
+			movingPlat->SetPosition(glm::vec3(10.0f, 0.0f, 5.0f));
+			// Scale down the plane
+			movingPlat->SetScale(glm::vec3(1.0f, 1.0f, 0.5f));
+
+			// Create and attach a render component
+			RenderComponent::Sptr renderer = movingPlat->Add<RenderComponent>();
+			renderer->SetMesh(cubeMesh);
+			renderer->SetMaterial(boxMaterial);
+
+			TriggerVolume::Sptr volume = movingPlat->Add<TriggerVolume>();
+
+			ConvexMeshCollider::Sptr collider = ConvexMeshCollider::Create();
+			collider->SetScale(glm::vec3(2.0f, 2.0f, 0.5f));
+
+			RigidBody::Sptr physics = movingPlat->Add<RigidBody>(RigidBodyType::Kinematic);
+			physics->AddCollider(collider);
+			volume->AddCollider(collider);
+
+			movingPlat->Add<TriggerVolumeEnterBehaviour>();
+			
+			movingPlat->Add<MovingPlatform>();
+			
+			std::vector<glm::vec3> nodes = { glm::vec3(10, 0, 5), glm::vec3(7, 0, 7), glm::vec3(4, 3, 5), glm::vec3(6, 2, 2) };
+
+			movingPlat->Get<MovingPlatform>()->SetMode(MovingPlatform::MovementMode::LERP);
+			movingPlat->Get<MovingPlatform>()->SetNodes(nodes, 3.0f);
+			
+		}
+
+		GameObject::Sptr boomerang = scene->CreateGameObject("Boomerang");
+		{
+			// Set position in the scene
+			boomerang->SetPosition(glm::vec3(2.0f, 0.0f, 0.0f));
+			boomerang->SetScale(glm::vec3(0.5f, 0.25f, 0.5f));
+
+			// Create and attach a renderer for the monkey
+			RenderComponent::Sptr renderer = boomerang->Add<RenderComponent>();
+			renderer->SetMesh(cubeMesh);
+			renderer->SetMaterial(boxMaterial);
+
+			RigidBody::Sptr physics = boomerang->Add<RigidBody>(RigidBodyType::Dynamic);
+			physics->AddCollider(ConvexMeshCollider::Create());
+		}
+		/*
+		for (int i = 0; i < 8; i++)
+		{
+			GameObject::Sptr boiFrame = scene->CreateGameObject("Boi" + std::to_string(i));
+			{
+				// Set position in the scene
+				boiFrame->SetPosition(glm::vec3(-100.0f, 0.0f, 0.0f));
+				boiFrame->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
+				boiFrame->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+				// Create and attach a renderer for the monkey
+				RenderComponent::Sptr renderer = boiFrame->Add<RenderComponent>();
+				renderer->SetMesh(boiFrames[i]);
+				renderer->SetMaterial(boxMaterial);
+			}
+		}
+		*/
+		
+		GameObject::Sptr boiBase = scene->CreateGameObject("Boi Base");
+		{
+			// Set position in the scene
+			boiBase->SetPosition(glm::vec3(-10.0f, 0.0f, 0.0f));
+			boiBase->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
+			boiBase->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer for the monkey
+			RenderComponent::Sptr renderer = boiBase->Add<RenderComponent>();
+			renderer->SetMesh(boiMesh);
+			renderer->SetMaterial(boiMaterial);
+
+			//Only add an animator when you have a clip to add.
+			MorphAnimator::Sptr animator = boiBase->Add<MorphAnimator>();
+
+			//Add the walking clip
+			animator->AddClip(boiFrames, 1.0f, "Walk");
+
+			//Make sure to always activate an animation at the time of creation (usually idle)
+			animator->ActivateAnim("walk");
+		}
+		
+		GameObject::Sptr catcus = scene->CreateGameObject("Catcus Base");
+		{
+			// Set position in the scene
+			catcus->SetPosition(glm::vec3(20.0f, 0.0f, 0.0f));
+			catcus->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			catcus->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer for the monkey
+			RenderComponent::Sptr renderer = catcus->Add<RenderComponent>();
+			renderer->SetMesh(catcusMesh);
+			renderer->SetMaterial(catcusMaterial);
+
+			
+			//Only add an animator when you have a clip to add.
+			MorphAnimator::Sptr animator = catcus->Add<MorphAnimator>();
+
+			//Add the walking clip
+			animator->AddClip(catcusFrames, 0.7f, "Idle");
+
+			//Make sure to always activate an animation at the time of creation (usually idle)
+			animator->ActivateAnim("Idle");
+			
+		}
+		
+		/////////////////////////// UI //////////////////////////////
+		GameObject::Sptr canvas = scene->CreateGameObject("UI Canvas");
+		{
+			RectTransform::Sptr transform = canvas->Add<RectTransform>();
+			transform->SetMin({ 16, 16 });
+			transform->SetMax({ 256, 256 });
+
+			GuiPanel::Sptr canPanel = canvas->Add<GuiPanel>();
+			
+			GameObject::Sptr subPanel = scene->CreateGameObject("Sub Item");
+			{
+				RectTransform::Sptr transform = subPanel->Add<RectTransform>();
+				transform->SetMin({ 10, 10 });
+				transform->SetMax({ 128, 128 });
+
+				GuiPanel::Sptr panel = subPanel->Add<GuiPanel>();
+				panel->SetColor(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+
+				Font::Sptr font = ResourceManager::CreateAsset<Font>("fonts/Roboto-Medium.ttf", 16.0f);
+				font->Bake();
+
+				GuiText::Sptr text = subPanel->Add<GuiText>();
+				text->SetText("Hello world!");
+				text->SetFont(font);
+			}
+
+			canvas->AddChild(subPanel);
+		}
+
+		GuiBatcher::SetDefaultTexture(ResourceManager::CreateAsset<Texture2D>("textures/ui-sprite.png"));
+		GuiBatcher::SetDefaultBorderRadius(8);
+
 
 		// Call scene awake to start up all of our components
 		scene->Window = window;
@@ -485,6 +720,34 @@ void CreateScene() {
 		// Save the scene to a JSON file
 		scene->Save("scene.json");
 	}
+}
+
+void arrive(GameObject::Sptr object, GameObject::Sptr target, float deltaT)
+{
+	//Find the current velocity, and the target velocity (which is just the position of the target - the position of the object)
+	glm::vec3 currentVel =object->Get<RigidBody>()->GetLinearVelocity();
+	glm::vec3 targVel = target->GetPosition() - object->GetPosition();
+
+	//Scalar to be multiplied with the force. Proportionate to 1 / length of the target velocity, meaning it will speed up as it gets closer
+	float scalar = glm::length(targVel - currentVel) > 25 ? 5.0f : 30.0f - glm::length(targVel - currentVel);
+
+	//Find the mass of the object
+	float objMass = object->Get<RigidBody>()->GetMass();
+
+	glm::vec3 dir = glm::normalize(glm::normalize(targVel) - glm::normalize(currentVel));
+
+	//if the length of dir is 0, meaning the target and current velocities are in the same direction,
+	//just set the the direction to be the target velocity
+	if (glm::length(dir) == 0)
+		dir = glm::normalize(targVel);
+
+	//Find the force which we want to apply, which is just the target velocity - the current velocity * some scalar
+	//plus add the gravity back, since we don't want gravity to interrupt the seeking
+	glm::vec3 forceToApply = scalar * dir + objMass * glm::vec3(0.0f, 0.0f, 9.8f);
+
+	//Apply the force
+	object->Get<RigidBody>()->ApplyForce(forceToApply);
+
 }
 
 int main() {
@@ -517,6 +780,7 @@ int main() {
 	ResourceManager::RegisterType<MeshResource>();
 
 	// Register all of our component types so we can load them from files
+	ComponentManager::RegisterType<ControllerInput>();
 	ComponentManager::RegisterType<Camera>();
 	ComponentManager::RegisterType<RenderComponent>();
 	ComponentManager::RegisterType<RigidBody>();
@@ -528,12 +792,19 @@ int main() {
 	ComponentManager::RegisterType<SimpleCameraControl>();
 	ComponentManager::RegisterType<FirstPersonCamera>();
 	ComponentManager::RegisterType<MovingPlatform>();
+	ComponentManager::RegisterType<PlayerControl>();
+	ComponentManager::RegisterType<MorphAnimator>();
+
+	ComponentManager::RegisterType<RectTransform>();
+	ComponentManager::RegisterType<GuiPanel>();
+	ComponentManager::RegisterType<GuiText>();
 
 	// GL states, we'll enable depth testing and backface fulling
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+
 
 	// Structure for our frame-level uniforms, matches layout from
 	// fragments/frame_uniforms.glsl
@@ -592,14 +863,67 @@ int main() {
 
 	nlohmann::json editorSceneState;
 
+	GameObject::Sptr player1 = scene->FindObjectByName("Player 1");
+	GameObject::Sptr player2 = scene->FindObjectByName("Player 2");
+	GameObject::Sptr boomerang = scene->FindObjectByName("Boomerang");
+
+	bool arriving = false;
+
+	float t;
+
+	float duration = 2.0f;
+
+	float frameTimer = 0.0f;
+
+	int currentFrame = 0;
+	int nextFrame = 1;
+
+	/*
+	VertexArrayObject::Sptr frame0 = scene->FindObjectByName("Boi0")->Get<RenderComponent>()->GetMesh();
+	VertexArrayObject::Sptr frame1 = scene->FindObjectByName("Boi1")->Get<RenderComponent>()->GetMesh();
+	*/
+
 	///// Game loop /////
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 		ImGuiHelper::StartFrame();
-
+		
 		// Calculate the time since our last frame (dt)
 		double thisFrame = glfwGetTime();
 		float dt = static_cast<float>(thisFrame - lastFrame);
+		/*
+		frameTimer += dt;
+
+		t = frameTimer / duration;
+
+		if (t > 1)
+		{
+			t = 0.0f;
+			frameTimer = 0.0f;
+			currentFrame++;
+			nextFrame++;
+
+			if (nextFrame == 8)
+			{
+				frame0 = frame1;
+				frame1 = scene->FindObjectByName("Boi0")->Get<RenderComponent>()->GetMesh();
+				nextFrame = 0;
+			}
+
+			else if (currentFrame == 8)
+			{
+				frame0 = scene->FindObjectByName("Boi0")->Get<RenderComponent>()->GetMesh();
+				frame1 = scene->FindObjectByName("Boi" + std::to_string(nextFrame))->Get<RenderComponent>()->GetMesh();
+				currentFrame = 0;
+			}
+
+			else
+			{
+				frame0 = frame1;
+				frame1 = scene->FindObjectByName("Boi" + std::to_string(nextFrame))->Get<RenderComponent>()->GetMesh();
+			}
+		}
+		*/
 
 		// Draw our material properties window!
 		DrawMaterialsWindow();
@@ -697,15 +1021,37 @@ int main() {
 
 		dt *= playbackSpeed;
 
+		if (glfwGetKey(window, GLFW_KEY_Q))
+		{
+			boomerang->SetPosition(player1->GetPosition() + glm::vec3(0.0f, 0.0f, 1.0f));
+			boomerang->Get<RigidBody>()->SetLinearVelocity(glm::vec3(
+				scene->PlayerCamera->GetView()[0][2],
+				scene->PlayerCamera->GetView()[1][2],
+				scene->PlayerCamera->GetView()[2][2]) * -10.0f);
+			arriving = true;
+		}
+
+		
+
 		// Perform updates for all components
 		scene->Update(dt);
 
 		// Update our worlds physics!
 		scene->DoPhysics(dt);
 
+		if (arriving)
+		{
+			arrive(boomerang, player2, dt);
+		}
+
+		GameObject::Sptr detachedCam = scene->FindObjectByName("Detached Camera");
+		GameObject::Sptr player = scene->FindObjectByName("Player 1");
+
+		//detachedCam->SetPosition(player->GetPosition());
+
 		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y);
 
-		//camera 1
+		//Camera 1 Rendering
 		{;
 		// Grab shorthands to the camera and shader from the scene
 		Camera::Sptr camera = scene->MainCamera;
@@ -722,6 +1068,10 @@ int main() {
 		// See Material.h and Material.cpp for how we're reserving texture slots
 		TextureCube::Sptr environment = scene->GetSkyboxTexture();
 		if (environment) environment->Bind(0); 
+
+		// Make sure depth testing and culling are re-enabled
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
 
 		// Here we'll bind all the UBOs to their corresponding slots
 		scene->PreRender();
@@ -774,15 +1124,47 @@ int main() {
 			instanceData.u_NormalMatrix = glm::mat3(glm::transpose(glm::inverse(object->GetTransform())));
 			instanceUniforms->Update();  
 
+			/*
+			if (object->Name == "Boi Base")
+			{
+				VertexArrayObject::Sptr boiObject = renderable->GetMesh();
+
+				std::vector<BufferAttribute> pos0 = frame0->GetBufferBinding(AttribUsage::Position)->Attributes;
+				std::vector<BufferAttribute> pos1 = frame1->GetBufferBinding(AttribUsage::Position)->Attributes;
+				
+				pos0.resize(1);
+				
+				pos1[0].Slot = static_cast<GLint>(4);
+				pos1.resize(1);
+
+				boiObject->GetBufferBinding(AttribUsage::Position);
+
+				boiObject->AddVertexBuffer(frame0->GetBufferBinding(AttribUsage::Position)->Buffer, pos0);
+				boiObject->AddVertexBuffer(frame1->GetBufferBinding(AttribUsage::Position)->Buffer, pos1);
+				
+				renderable->GetMaterial()->Set("t", t);
+			}
+			*/
+
 			// Draw the object
 			renderable->GetMesh()->Draw();
 		});
+
 		};
+		// Use our cubemap to draw our skybox
+		scene->DrawSkybox(scene->MainCamera);
+
+		VertexArrayObject::Unbind();
+
+		GameObject::Sptr detachedCam2 = scene->FindObjectByName("Detached Camera 2");
+		GameObject::Sptr player2 = scene->FindObjectByName("Player 2");
+
+		detachedCam2->SetPosition(player2->GetPosition());
 
 		//split the screen
 		glViewport(0, 0, windowSize.x, windowSize.y / 2);
 
-		//camera 2
+		//Camera 2 Rendering
 		{;
 		// Grab shorthands to the camera and shader from the scene
 		Camera::Sptr camera = scene->MainCamera2;
@@ -798,7 +1180,7 @@ int main() {
 		// Bind the skybox texture to a reserved texture slot
 		// See Material.h and Material.cpp for how we're reserving texture slots
 		TextureCube::Sptr environment = scene->GetSkyboxTexture();
-		if (environment) environment->Bind(0);
+		if (environment) environment->Bind(1);
 
 		// Here we'll bind all the UBOs to their corresponding slots
 		scene->PreRender();
@@ -852,6 +1234,28 @@ int main() {
 			instanceData.u_NormalMatrix = glm::mat3(glm::transpose(glm::inverse(object->GetTransform())));
 			instanceUniforms->Update();
 
+			/*
+			if (object->Name == "Boi Base")
+			{
+				VertexArrayObject::Sptr boiObject = renderable->GetMesh();
+
+				std::vector<BufferAttribute> pos0 = frame0->GetBufferBinding(AttribUsage::Position)->Attributes;
+				std::vector<BufferAttribute> pos1 = frame1->GetBufferBinding(AttribUsage::Position)->Attributes;
+
+				pos0.resize(1);
+
+				pos1[0].Slot = static_cast<GLint>(4);
+				pos1.resize(1);
+
+				boiObject->GetBufferBinding(AttribUsage::Position);
+
+				boiObject->AddVertexBuffer(frame0->GetBufferBinding(AttribUsage::Position)->Buffer, pos0);
+				boiObject->AddVertexBuffer(frame1->GetBufferBinding(AttribUsage::Position)->Buffer, pos1);
+
+				renderable->GetMaterial()->Set("t", t);
+			}
+			*/
+
 			// Draw the object
 			renderable->GetMesh()->Draw();
 			});
@@ -863,7 +1267,38 @@ int main() {
 		}
 
 		// Use our cubemap to draw our skybox
-		scene->DrawSkybox();
+		scene->DrawSkybox(scene->MainCamera2);
+
+		// Disable culling
+		glDisable(GL_CULL_FACE);
+		// Disable depth testing, we're going to use order-dependant layering
+		glDisable(GL_DEPTH_TEST);
+		// Disable depth writing
+		glDepthMask(GL_FALSE);
+
+		// Enable alpha blending
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		// Enable the scissor test;
+		glEnable(GL_SCISSOR_TEST);
+
+		// Our projection matrix will be our entire window for now
+		glm::mat4 proj = glm::ortho(0.0f, (float)windowSize.x, (float)windowSize.y, 0.0f, -1.0f, 1.0f);
+		GuiBatcher::SetProjection(proj);
+
+		// Iterate over and render all the GUI objects
+		scene->RenderGUI();
+
+		// Flush the Gui Batch renderer
+		GuiBatcher::Flush();
+
+		// Disable alpha blending
+		glDisable(GL_BLEND);
+		// Disable scissor testing
+		glDisable(GL_SCISSOR_TEST);
+		// Re-enable depth writing
+		glDepthMask(GL_TRUE);
 
 		// End our ImGui window
 		ImGui::End();
@@ -872,6 +1307,7 @@ int main() {
 
 		lastFrame = thisFrame;
 		ImGuiHelper::EndFrame();
+		InputEngine::EndFrame();
 		glfwSwapBuffers(window);
 	}
 

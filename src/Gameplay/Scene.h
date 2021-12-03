@@ -94,14 +94,14 @@ namespace Gameplay {
 		/// is found
 		/// </summary>
 		/// <param name="name">The name of the object to find</param>
-		GameObject::Sptr FindObjectByName(const std::string name);
+		GameObject::Sptr FindObjectByName(const std::string name) const;
 		/// <summary>
 		/// Searches all render objects in the scene and returns the first
 		/// one who's guid matches the one given, or nullptr if no object
 		/// is found
 		/// </summary>
 		/// <param name="id">The guid of the object to find</param>
-		GameObject::Sptr FindObjectByGUID(Guid id);
+		GameObject::Sptr FindObjectByGUID(Guid id) const;
 
 		/// <summary>
 		/// Sets the ambient light color for this scene
@@ -148,6 +148,11 @@ namespace Gameplay {
 		void PreRender();
 
 		/// <summary>
+		/// Draws all GUI objects in the scene
+		/// </summary>
+		void RenderGUI();
+
+		/// <summary>
 		/// Handles setting the shader uniforms for our light structure in our array of lights
 		/// </summary>
 		/// <param name="shader">The pointer to the shader</param>
@@ -165,7 +170,7 @@ namespace Gameplay {
 		/// </summary>
 		void DrawAllGameObjectGUIs();
 
-		void DrawSkybox();
+		void DrawSkybox(Camera::Sptr cam);
 
 		/// <summary>
 		/// Gets the scene's Bullet physics world

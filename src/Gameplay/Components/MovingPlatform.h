@@ -19,10 +19,33 @@ public:
 	virtual nlohmann::json ToJson() const override;
 	static MovingPlatform::Sptr FromJson(const nlohmann::json& blob);
 
-	glm::vec3 startPos = { 0.f, 0.f, 0.f };
-	glm::vec3 endPos = { 0.f, 0.f, 0.f };
-	float duration = 1.f;
-	bool forward = true;
+	enum MovementMode
+	{
+		LERP = 0,
+		CATMULL = 1,
+		BEZIER = 2
+	};
+
+	void SetMode(MovementMode inMode);
+
+	void SetNodes(std::vector<glm::vec3> inNodes, float inDuration);
+
 protected:
-	float t = 0.f;
+	float timer;
+	float t;
+	float duration;
+	bool forward;
+
+	glm::vec3 Lerp(glm::vec3 p0, glm::vec3 p1);
+
+	glm::vec3 Catmull(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3);
+
+	glm::vec3 Bezier(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3);
+
+	std::vector<glm::vec3> nodes;
+
+	MovementMode currentMode;
+
+	int currentInd;
+	int nextInd;
 };

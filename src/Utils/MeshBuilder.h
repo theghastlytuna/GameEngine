@@ -36,8 +36,8 @@ public:
 		uint32_t index = _vertices.size();
 		// Reserve space for the incoming vertices, ensures the underlying datastore will be large enough
 		_vertices.reserve(_vertices.size() + count);
-		// We can use memcpy to efficiently copy the incoming buffer data to the underlying data store
-		memcpy(_vertices.data() + (_vertices.size() * sizeof(VertType)), data, count * sizeof(VertType));
+		// Copy data into the container, this will also update the container's size!
+		std::copy(data, data + count, std::back_inserter(_vertices));
 		// Return the index of the start of the range
 		return index;
 	}
@@ -141,6 +141,14 @@ public:
 		return result;
 	}
 	
+	/// <summary>
+	/// Resets this mesh, removing all vertices and indices
+	/// </summary>
+	void Reset() {
+		_vertices.clear();
+		_indices.clear();
+	}
+
 	/// <summary>
 	/// Gets a pointer to the underlying vertex data in the mesh, valid only
 	/// until another call to AddVertex

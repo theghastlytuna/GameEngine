@@ -172,7 +172,6 @@ namespace Gameplay::Physics {
 		static RigidBody::Sptr FromJson(const nlohmann::json& data);
 		MAKE_TYPENAME(RigidBody)
 
-
 	protected:
 		// The physics update mode for the body (static, dynamic, kinematic)
 		RigidBodyType _type;
@@ -197,6 +196,7 @@ namespace Gameplay::Physics {
 		bool             _angularVelocityDirty;
 		btVector3        _angularFactor;
 		bool             _angularFactorDirty;
+
 
 		// Handles resolving any dirty state stuff for our object
 		void _HandleStateDirty();

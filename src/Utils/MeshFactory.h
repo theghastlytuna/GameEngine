@@ -140,8 +140,21 @@ public:
 	template <typename Vertex>
 	static void AddParameterized(MeshBuilder<Vertex>& mesh, const MeshBuilderParam& param);
 
+	/// <summary>
+	/// Manipulates a MeshBuilder by inverting all faces in the mesh
+	/// </summary>
+	/// <typeparam name="Vertex">The type of vertex the mesh consists of</typeparam>
+	/// <param name="mesh">The mesh to manipulate</param>
 	template <typename Vertex>
 	static void InvertFaces(MeshBuilder<Vertex>& mesh);
+
+	/// <summary>
+	/// Calculates the tangents and bitangents from the normal and UV coords
+	/// </summary>
+	/// <typeparam name="Vertex">The type of vertex the mesh consists of</typeparam>
+	/// <param name="mesh">The mesh to manipulate</param>
+	template <typename Vertex>
+	static void CalculateTBN(MeshBuilder<Vertex>& mesh);
 
 protected:	
 	MeshFactory() = default;

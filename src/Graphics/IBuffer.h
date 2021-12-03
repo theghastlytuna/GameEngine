@@ -63,6 +63,8 @@ public:
 	/// <param name="elementCount">The number of elements to upload</param>
 	virtual void LoadData(const void* data, size_t elementSize, size_t elementCount);
 
+	virtual void UpdateData(const void* data, size_t elementSize, size_t elementCount, bool allowResize = true);
+
 	/// <summary>
 	/// Loads an array of data into this buffer, using the bindless method glNamedBufferData
 	/// </summary>
@@ -85,7 +87,7 @@ public:
 	/// <summary>
 	/// Returns the total size in bytes that this buffer occupies
 	/// </summary>
-	size_t GetTotalSize() const { return _elementCount * _elementSize; }
+	size_t GetTotalSize() const { return _size; }
 	/// <summary>
 	/// Returns the type of buffer (ex GL_ARRAY_BUFFER, GL_ARRAY_ELEMENT_BUFFER, etc...)
 	/// </summary>
@@ -126,6 +128,7 @@ protected:
 	
 	size_t _elementSize; // The size or stride of our elements
 	size_t _elementCount; // The number of elements in the buffer
+	size_t _size; // The size of the buffer in bytes
 	GLuint _handle; // The OpenGL handle for the underlying buffer
 	BufferUsage _usage; // The buffer usage mode (GL_STATIC_DRAW, GL_DYNAMIC_DRAW)
 	BufferType _type; // The buffer type (ex GL_ARRAY_BUFFER, GL_ARRAY_ELEMENT_BUFFER)

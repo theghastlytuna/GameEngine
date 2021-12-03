@@ -11,9 +11,9 @@
 namespace Gameplay::Physics {
 	TriggerVolume::TriggerVolume() :
 		PhysicsBase(),
-		_ghost(nullptr)
+		_ghost(nullptr),
+		_typeFlags(TriggerTypeFlags::Dynamics)
 	{
-
 	}
 
 	TriggerVolume::~TriggerVolume() {
@@ -86,8 +86,9 @@ namespace Gameplay::Physics {
 
 					// Make sure that the object is not a kinematic or static object (note: you may want
 					// to modify this behaviour depending on your game)
-					if ((body->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT)    == 0 &&
-						(body->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT) == 0) {
+					if ((body->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT & btCollisionObject::CF_KINEMATIC_OBJECT == 0) ||
+						((body->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT) == *(_typeFlags & TriggerTypeFlags::Statics)) ||
+						((body->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT) == *(_typeFlags & TriggerTypeFlags::Kinematics))) {
 
 						// Extract the weak pointer that we stored in all our rigidbody user pointers
 						std::weak_ptr<IComponent> rawPtr = *reinterpret_cast<std::weak_ptr<IComponent>*>(body->getUserPointer());
@@ -95,7 +96,7 @@ namespace Gameplay::Physics {
 						std::shared_ptr<RigidBody> physicsPtr = std::dynamic_pointer_cast<RigidBody>(rawPtr.lock());
 
 						// As long as we got a pointer out, we can proceed to try and invoke
-						if (physicsPtr != nullptr) {
+						if (physicsPtr != nullptr && physicsPtr->GetGameObject() != GetGameObject()) {
 							// Add the object to the known collisions for this frame
 							thisFrameCollision.push_back(physicsPtr);
 
@@ -190,5 +191,14 @@ namespace Gameplay::Physics {
 	btBroadphaseProxy* TriggerVolume::_GetBroadphaseHandle() {
 		return _ghost != nullptr ? _ghost->getBroadphaseHandle() : nullptr;
 	}
+
+	void TriggerVolume::SetFlags(TriggerTypeFlags flags) {
+		_typeFlags = flags;
+	}
+
+	Gameplay::Physics::TriggerTypeFlags TriggerVolume::GetFlags() const {
+		return _typeFlags;
+	}
+
 }
 

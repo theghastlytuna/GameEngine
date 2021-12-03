@@ -1,5 +1,6 @@
 #pragma once
 #include "IComponent.h"
+#include "Gameplay/Components/ControllerInput.h"
 
 struct GLFWwindow;
 
@@ -32,4 +33,7 @@ protected:
 
 	bool _isMousePressed = false;
 	GLFWwindow* _window;
+
+	ControllerInput::Sptr _controller;
+	glm::vec2 _controllerSensitivity;
 };

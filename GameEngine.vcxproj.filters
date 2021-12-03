@@ -7,6 +7,9 @@
     <Filter Include="Gameplay\Components">
       <UniqueIdentifier>{CA49D3CF-36AB-B0DD-BF18-F78F2B79E79C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Gameplay\Components\GUI">
+      <UniqueIdentifier>{DE1DB2B8-4A55-FA4F-535F-5E73BF152149}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Gameplay\Physics">
       <UniqueIdentifier>{479C8837-3395-A789-5CC7-8C0E481F8795}</UniqueIdentifier>
     </Filter>
@@ -30,8 +33,20 @@
     <ClInclude Include="src\Gameplay\Components\ComponentManager.h">
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
+    <ClInclude Include="src\Gameplay\Components\ControllerInput.h">
+      <Filter>Gameplay\Components</Filter>
+    </ClInclude>
     <ClInclude Include="src\Gameplay\Components\FirstPersonCamera.h">
       <Filter>Gameplay\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Gameplay\Components\GUI\GuiPanel.h">
+      <Filter>Gameplay\Components\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Gameplay\Components\GUI\GuiText.h">
+      <Filter>Gameplay\Components\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Gameplay\Components\GUI\RectTransform.h">
+      <Filter>Gameplay\Components\GUI</Filter>
     </ClInclude>
     <ClInclude Include="src\Gameplay\Components\IComponent.h">
       <Filter>Gameplay\Components</Filter>
@@ -42,7 +57,13 @@
     <ClInclude Include="src\Gameplay\Components\MaterialSwapBehaviour.h">
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
+    <ClInclude Include="src\Gameplay\Components\MorphAnimator.h">
+      <Filter>Gameplay\Components</Filter>
+    </ClInclude>
     <ClInclude Include="src\Gameplay\Components\MovingPlatform.h">
+      <Filter>Gameplay\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Gameplay\Components\PlayerControl.h">
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
     <ClInclude Include="src\Gameplay\Components\RenderComponent.h">
@@ -58,6 +79,9 @@
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
     <ClInclude Include="src\Gameplay\GameObject.h">
+      <Filter>Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Gameplay\InputEngine.h">
       <Filter>Gameplay</Filter>
     </ClInclude>
     <ClInclude Include="src\Gameplay\Light.h">
@@ -111,7 +135,13 @@
     <ClInclude Include="src\Graphics\DebugDraw.h">
       <Filter>Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="src\Graphics\Font.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
     <ClInclude Include="src\Graphics\GlEnums.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\GuiBatcher.h">
       <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\Graphics\IBuffer.h">
@@ -144,6 +174,9 @@
     <ClInclude Include="src\Graphics\VertexBuffer.h">
       <Filter>Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="src\Graphics\VertexParamMap.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
     <ClInclude Include="src\Graphics\VertexTypes.h">
       <Filter>Graphics</Filter>
     </ClInclude>
@@ -174,6 +207,9 @@
     <ClInclude Include="src\Utils\ObjLoader.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\Utils\OptimizedObjLoader.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
     <ClInclude Include="src\Utils\ResourceManager\IResource.h">
       <Filter>Utils\ResourceManager</Filter>
     </ClInclude>
@@ -191,8 +227,20 @@
     <ClCompile Include="src\Gameplay\Components\Camera.cpp">
       <Filter>Gameplay\Components</Filter>
     </ClCompile>
+    <ClCompile Include="src\Gameplay\Components\ControllerInput.cpp">
+      <Filter>Gameplay\Components</Filter>
+    </ClCompile>
     <ClCompile Include="src\Gameplay\Components\FirstPersonCamera.cpp">
       <Filter>Gameplay\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gameplay\Components\GUI\GuiPanel.cpp">
+      <Filter>Gameplay\Components\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gameplay\Components\GUI\GuiText.cpp">
+      <Filter>Gameplay\Components\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gameplay\Components\GUI\RectTransform.cpp">
+      <Filter>Gameplay\Components\GUI</Filter>
     </ClCompile>
     <ClCompile Include="src\Gameplay\Components\IComponent.cpp">
       <Filter>Gameplay\Components</Filter>
@@ -203,7 +251,13 @@
     <ClCompile Include="src\Gameplay\Components\MaterialSwapBehaviour.cpp">
       <Filter>Gameplay\Components</Filter>
     </ClCompile>
+    <ClCompile Include="src\Gameplay\Components\MorphAnimator.cpp">
+      <Filter>Gameplay\Components</Filter>
+    </ClCompile>
     <ClCompile Include="src\Gameplay\Components\MovingPlatform.cpp">
+      <Filter>Gameplay\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gameplay\Components\PlayerControl.cpp">
       <Filter>Gameplay\Components</Filter>
     </ClCompile>
     <ClCompile Include="src\Gameplay\Components\RenderComponent.cpp">
@@ -219,6 +273,9 @@
       <Filter>Gameplay\Components</Filter>
     </ClCompile>
     <ClCompile Include="src\Gameplay\GameObject.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gameplay\InputEngine.cpp">
       <Filter>Gameplay</Filter>
     </ClCompile>
     <ClCompile Include="src\Gameplay\Material.cpp">
@@ -269,6 +326,12 @@
     <ClCompile Include="src\Graphics\DebugDraw.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\Font.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\GuiBatcher.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\Graphics\IBuffer.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
@@ -309,6 +372,9 @@
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="src\Utils\ObjLoader.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\OptimizedObjLoader.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="src\Utils\ResourceManager\ResourceManager.cpp">

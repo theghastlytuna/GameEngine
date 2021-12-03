@@ -234,7 +234,7 @@ int PhysicsBase::_editorSelectedColliderType = 0;
 		GameObject* context = GetGameObject();
 
 		// Update the pos and rotation params
-		context->SetPostion(ToGlm(transform.getOrigin()));
+		context->SetPosition(ToGlm(transform.getOrigin()));
 		context->SetRotation(ToGlm(transform.getRotation()));
 	}
 }
