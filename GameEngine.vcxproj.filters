@@ -371,6 +371,9 @@
     <ClCompile Include="src\Utils\MeshFactory.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\Utils\ObjLoader.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
     <ClCompile Include="src\Utils\OptimizedObjLoader.cpp">
       <Filter>Utils</Filter>
     </ClCompile>

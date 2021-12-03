@@ -225,6 +225,7 @@
     <ClCompile Include="src\Utils\GlmDefines.cpp" />
     <ClCompile Include="src\Utils\ImGuiHelper.cpp" />
     <ClCompile Include="src\Utils\MeshFactory.cpp" />
+    <ClCompile Include="src\Utils\ObjLoader.cpp" />
     <ClCompile Include="src\Utils\OptimizedObjLoader.cpp" />
     <ClCompile Include="src\Utils\ResourceManager\ResourceManager.cpp" />
     <ClCompile Include="src\Utils\StringUtils.cpp" />
