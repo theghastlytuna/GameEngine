@@ -584,11 +584,14 @@ void CreateScene() {
 			volume->AddCollider(collider);
 
 			movingPlat->Add<TriggerVolumeEnterBehaviour>();
-
+			
 			movingPlat->Add<MovingPlatform>();
+			
+			std::vector<glm::vec3> nodes = { glm::vec3(10, 0, 5), glm::vec3(7, 0, 7), glm::vec3(4, 3, 5), glm::vec3(6, 2, 2) };
 
-			movingPlat->Get<MovingPlatform>()->endPos = glm::vec3(5.0f, 5.0f, 5.0f);
-			movingPlat->Get<MovingPlatform>()->duration = 5.0f;
+			movingPlat->Get<MovingPlatform>()->SetMode(MovingPlatform::MovementMode::LERP);
+			movingPlat->Get<MovingPlatform>()->SetNodes(nodes, 3.0f);
+			
 		}
 
 		GameObject::Sptr boomerang = scene->CreateGameObject("Boomerang");
