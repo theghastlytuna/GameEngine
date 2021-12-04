@@ -707,6 +707,17 @@ void CreateScene() {
 			canvas->AddChild(subPanel);
 		}
 
+		GameObject::Sptr crossHairs = scene->CreateGameObject("Crosshairs");
+		{
+			RectTransform::Sptr transform = crossHairs->Add<RectTransform>();
+			transform->SetMin({ windowSize.x / 2 - 50, windowSize.y / 4 - 50});
+			transform->SetMax({ windowSize.x / 2 + 50, windowSize.y / 4 + 50});
+
+			GuiPanel::Sptr panel = crossHairs->Add<GuiPanel>();
+			panel->SetBorderRadius(4);
+			panel->SetTexture(ResourceManager::CreateAsset<Texture2D>("textures/CrossHairs.png"));
+		}
+
 		GuiBatcher::SetDefaultTexture(ResourceManager::CreateAsset<Texture2D>("textures/ui-sprite.png"));
 		GuiBatcher::SetDefaultBorderRadius(8);
 
