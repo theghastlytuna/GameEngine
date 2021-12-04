@@ -1011,9 +1011,9 @@ int main() {
 
 		//detachedCam->SetPosition(player->GetPosition());
 
+		///////////////////////////////////////////////////////////////////////////////////Camera 1 Rendering
 		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y / 2);
 
-		///////////////////////////////////////////////////////////////////////////////////Camera 1 Rendering
 		{;
 		// Grab shorthands to the camera and shader from the scene
 		Camera::Sptr camera = scene->MainCamera;
@@ -1130,6 +1130,7 @@ int main() {
 		// Re-enable depth writing
 		glDepthMask(GL_TRUE);
 		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
 
 
 		//split the screen
