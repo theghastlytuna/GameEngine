@@ -175,12 +175,12 @@ namespace Gameplay {
 		_lightingUbo->Bind(LIGHT_UBO_BINDING);
 	}
 
-	void Scene::RenderGUI()
+	void Scene::RenderGUI(int viewportID)
 	{
 		for (auto& obj : _objects) {
 			// Parents handle rendering for children, so ignore parented objects
 			if (obj->GetParent() == nullptr) {
-				obj->RenderGUI();
+				obj->RenderGUI(viewportID);
 			}
 		}
 	}

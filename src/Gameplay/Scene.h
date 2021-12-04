@@ -150,7 +150,7 @@ namespace Gameplay {
 		/// <summary>
 		/// Draws all GUI objects in the scene
 		/// </summary>
-		void RenderGUI();
+		void RenderGUI(int viewportID);
 
 		/// <summary>
 		/// Handles setting the shader uniforms for our light structure in our array of lights

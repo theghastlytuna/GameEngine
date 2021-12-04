@@ -214,7 +214,7 @@ namespace Gameplay {
 		/// <summary>
 		/// Allows components to render GUI elements to the screen
 		/// </summary>
-		void RenderGUI(); 
+		void RenderGUI(int viewportID); 
 
 		/// <summary>
 		/// Returns a pointer to the scene that this GameObject belongs to
@@ -319,6 +319,10 @@ namespace Gameplay {
 		/// </summary>
 		nlohmann::json ToJson() const;
 
+		int GetRenderFlag();
+
+		void SetRenderFlag(int flag);
+
 	private:
 		friend class Scene;
 
@@ -361,6 +365,8 @@ namespace Gameplay {
 		void _RecalcWorldTransform() const;
 
 		void _PurgeDeletedChildren();
+
+		int _renderFlag = 0;
 	};
 
 }

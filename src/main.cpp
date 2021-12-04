@@ -707,13 +707,15 @@ void CreateScene() {
 			canvas->AddChild(subPanel);
 		}
 
-		GameObject::Sptr crossHairs = scene->CreateGameObject("Crosshairs");
+		GameObject::Sptr crosshairs = scene->CreateGameObject("Crosshairs");
 		{
-			RectTransform::Sptr transform = crossHairs->Add<RectTransform>();
+			//crosshairs->SetRenderFlag(1);//this is how you would set this ui object to ONLY render for player 1
+
+			RectTransform::Sptr transform = crosshairs->Add<RectTransform>();
 			transform->SetMin({ windowSize.x / 2 - 50, windowSize.y / 4 - 50});
 			transform->SetMax({ windowSize.x / 2 + 50, windowSize.y / 4 + 50});
 
-			GuiPanel::Sptr panel = crossHairs->Add<GuiPanel>();
+			GuiPanel::Sptr panel = crosshairs->Add<GuiPanel>();
 			panel->SetBorderRadius(4);
 			panel->SetTexture(ResourceManager::CreateAsset<Texture2D>("textures/CrossHairs.png"));
 		}
@@ -1129,7 +1131,7 @@ int main() {
 		GuiBatcher::SetWindowSize({ windowSize.x, (float)windowSize.y / 2 });
 
 		// Iterate over and render all the GUI objects
-		scene->RenderGUI();
+		scene->RenderGUI(1);
 
 		// Flush the Gui Batch renderer
 		GuiBatcher::Flush();
@@ -1245,7 +1247,7 @@ int main() {
 		GuiBatcher::SetWindowSize({ windowSize.x, (float)windowSize.y / 2 });
 
 		// Iterate over and render all the GUI objects
-		scene->RenderGUI();
+		scene->RenderGUI(2);
 
 		// Flush the Gui Batch renderer
 		GuiBatcher::Flush();
