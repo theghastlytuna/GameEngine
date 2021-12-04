@@ -113,7 +113,7 @@ void GlDebugMessage(GLenum source, GLenum type, GLuint id, GLenum severity, GLsi
 // Stores our GLFW window in a global variable for now
 GLFWwindow* window;
 // The current size of our window in pixels
-glm::ivec2 windowSize = glm::ivec2(800, 800);
+glm::ivec2 windowSize = glm::ivec2(1600, 900);
 // The title of our GLFW window
 std::string windowTitle = "Boomerangers";
 
@@ -878,11 +878,6 @@ int main() {
 	int currentFrame = 0;
 	int nextFrame = 1;
 
-	/*
-	VertexArrayObject::Sptr frame0 = scene->FindObjectByName("Boi0")->Get<RenderComponent>()->GetMesh();
-	VertexArrayObject::Sptr frame1 = scene->FindObjectByName("Boi1")->Get<RenderComponent>()->GetMesh();
-	*/
-
 	///// Game loop /////
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -891,39 +886,6 @@ int main() {
 		// Calculate the time since our last frame (dt)
 		double thisFrame = glfwGetTime();
 		float dt = static_cast<float>(thisFrame - lastFrame);
-		/*
-		frameTimer += dt;
-
-		t = frameTimer / duration;
-
-		if (t > 1)
-		{
-			t = 0.0f;
-			frameTimer = 0.0f;
-			currentFrame++;
-			nextFrame++;
-
-			if (nextFrame == 8)
-			{
-				frame0 = frame1;
-				frame1 = scene->FindObjectByName("Boi0")->Get<RenderComponent>()->GetMesh();
-				nextFrame = 0;
-			}
-
-			else if (currentFrame == 8)
-			{
-				frame0 = scene->FindObjectByName("Boi0")->Get<RenderComponent>()->GetMesh();
-				frame1 = scene->FindObjectByName("Boi" + std::to_string(nextFrame))->Get<RenderComponent>()->GetMesh();
-				currentFrame = 0;
-			}
-
-			else
-			{
-				frame0 = frame1;
-				frame1 = scene->FindObjectByName("Boi" + std::to_string(nextFrame))->Get<RenderComponent>()->GetMesh();
-			}
-		}
-		*/
 
 		// Draw our material properties window!
 		DrawMaterialsWindow();
@@ -1234,28 +1196,6 @@ int main() {
 			instanceData.u_NormalMatrix = glm::mat3(glm::transpose(glm::inverse(object->GetTransform())));
 			instanceUniforms->Update();
 
-			/*
-			if (object->Name == "Boi Base")
-			{
-				VertexArrayObject::Sptr boiObject = renderable->GetMesh();
-
-				std::vector<BufferAttribute> pos0 = frame0->GetBufferBinding(AttribUsage::Position)->Attributes;
-				std::vector<BufferAttribute> pos1 = frame1->GetBufferBinding(AttribUsage::Position)->Attributes;
-
-				pos0.resize(1);
-
-				pos1[0].Slot = static_cast<GLint>(4);
-				pos1.resize(1);
-
-				boiObject->GetBufferBinding(AttribUsage::Position);
-
-				boiObject->AddVertexBuffer(frame0->GetBufferBinding(AttribUsage::Position)->Buffer, pos0);
-				boiObject->AddVertexBuffer(frame1->GetBufferBinding(AttribUsage::Position)->Buffer, pos1);
-
-				renderable->GetMaterial()->Set("t", t);
-			}
-			*/
-
 			// Draw the object
 			renderable->GetMesh()->Draw();
 			});
@@ -1300,6 +1240,7 @@ int main() {
 		// Re-enable depth writing
 		glDepthMask(GL_TRUE);
 
+		////////////////////////////////////////////////////////////////////////// END RENDERING
 		// End our ImGui window
 		ImGui::End();
 
