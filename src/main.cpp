@@ -682,7 +682,7 @@ void CreateScene() {
 		GameObject::Sptr canvas = scene->CreateGameObject("UI Canvas");
 		{
 			RectTransform::Sptr transform = canvas->Add<RectTransform>();
-			transform->SetMin({ 16, 16 });
+			transform->SetMin({ 0, 0 });
 			transform->SetMax({ 256, 256 });
 
 			GuiPanel::Sptr canPanel = canvas->Add<GuiPanel>();
@@ -690,8 +690,8 @@ void CreateScene() {
 			GameObject::Sptr subPanel = scene->CreateGameObject("Sub Item");
 			{
 				RectTransform::Sptr transform = subPanel->Add<RectTransform>();
-				transform->SetMin({ 10, 10 });
-				transform->SetMax({ 128, 128 });
+				transform->SetMin({ 0, 0 });
+				transform->SetMax({ 64, 64 });
 
 				GuiPanel::Sptr panel = subPanel->Add<GuiPanel>();
 				panel->SetColor(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
@@ -1011,9 +1011,9 @@ int main() {
 
 		//detachedCam->SetPosition(player->GetPosition());
 
-		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y);
+		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y / 2);
 
-		//Camera 1 Rendering
+		///////////////////////////////////////////////////////////////////////////////////Camera 1 Rendering
 		{;
 		// Grab shorthands to the camera and shader from the scene
 		Camera::Sptr camera = scene->MainCamera;
@@ -1086,28 +1086,6 @@ int main() {
 			instanceData.u_NormalMatrix = glm::mat3(glm::transpose(glm::inverse(object->GetTransform())));
 			instanceUniforms->Update();  
 
-			/*
-			if (object->Name == "Boi Base")
-			{
-				VertexArrayObject::Sptr boiObject = renderable->GetMesh();
-
-				std::vector<BufferAttribute> pos0 = frame0->GetBufferBinding(AttribUsage::Position)->Attributes;
-				std::vector<BufferAttribute> pos1 = frame1->GetBufferBinding(AttribUsage::Position)->Attributes;
-				
-				pos0.resize(1);
-				
-				pos1[0].Slot = static_cast<GLint>(4);
-				pos1.resize(1);
-
-				boiObject->GetBufferBinding(AttribUsage::Position);
-
-				boiObject->AddVertexBuffer(frame0->GetBufferBinding(AttribUsage::Position)->Buffer, pos0);
-				boiObject->AddVertexBuffer(frame1->GetBufferBinding(AttribUsage::Position)->Buffer, pos1);
-				
-				renderable->GetMaterial()->Set("t", t);
-			}
-			*/
-
 			// Draw the object
 			renderable->GetMesh()->Draw();
 		});
@@ -1126,7 +1104,7 @@ int main() {
 		//split the screen
 		glViewport(0, 0, windowSize.x, windowSize.y / 2);
 
-		//Camera 2 Rendering
+		/////////////////////////////////////////////////////////////////////////////////Camera 2 Rendering
 		{;
 		// Grab shorthands to the camera and shader from the scene
 		Camera::Sptr camera = scene->MainCamera2;
@@ -1224,8 +1202,9 @@ int main() {
 		glEnable(GL_SCISSOR_TEST);
 
 		// Our projection matrix will be our entire window for now
-		glm::mat4 proj = glm::ortho(0.0f, (float)windowSize.x, (float)windowSize.y, 0.0f, -1.0f, 1.0f);
+		glm::mat4 proj = glm::ortho(0.0f, (float)windowSize.x, (float)windowSize.y / 2, 0.f, -1.0f, 1.0f);
 		GuiBatcher::SetProjection(proj);
+		GuiBatcher::SetWindowSize({ windowSize.x, (float)windowSize.y / 2 });
 
 		// Iterate over and render all the GUI objects
 		scene->RenderGUI();
