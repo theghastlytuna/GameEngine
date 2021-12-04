@@ -1101,6 +1101,37 @@ int main() {
 
 		detachedCam2->SetPosition(player2->GetPosition());
 
+		// Disable culling
+		glDisable(GL_CULL_FACE);
+		// Disable depth testing, we're going to use order-dependant layering
+		glDisable(GL_DEPTH_TEST);
+		// Disable depth writing
+		glDepthMask(GL_FALSE);
+
+		// Enable alpha blending
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		// Our projection matrix will be our entire window for now
+		glm::mat4 proj = glm::ortho(0.0f, (float)windowSize.x, (float)windowSize.y / 2, 0.f, -1.0f, 1.0f);
+		GuiBatcher::SetProjection(proj);
+		GuiBatcher::SetWindowSize({ windowSize.x, (float)windowSize.y / 2 });
+
+		// Iterate over and render all the GUI objects
+		scene->RenderGUI();
+
+		// Flush the Gui Batch renderer
+		GuiBatcher::Flush();
+
+		// Disable alpha blending
+		glDisable(GL_BLEND);
+		// Disable scissor testing
+		glDisable(GL_SCISSOR_TEST);
+		// Re-enable depth writing
+		glDepthMask(GL_TRUE);
+		glEnable(GL_DEPTH_TEST);
+
+
 		//split the screen
 		glViewport(0, 0, windowSize.x, windowSize.y / 2);
 
@@ -1198,11 +1229,6 @@ int main() {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		// Enable the scissor test;
-		glEnable(GL_SCISSOR_TEST);
-
-		// Our projection matrix will be our entire window for now
-		glm::mat4 proj = glm::ortho(0.0f, (float)windowSize.x, (float)windowSize.y / 2, 0.f, -1.0f, 1.0f);
 		GuiBatcher::SetProjection(proj);
 		GuiBatcher::SetWindowSize({ windowSize.x, (float)windowSize.y / 2 });
 
