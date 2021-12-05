@@ -1066,7 +1066,85 @@ int main() {
 		GameObject::Sptr detachedCam = scene->FindObjectByName("Detached Camera");
 		GameObject::Sptr player1 = scene->FindObjectByName("Player 1");
 
-		//detachedCam->SetPosition(player->GetPosition());
+
+		///////////////Handle some animation stuff////////////////
+		//Note: this code sucks real bad, I need to make this better at some point
+
+		if (player1->Get<MorphAnimator>() != nullptr)
+		{
+			//If the player has just jumped, activate the jump anim
+			if (player1->Get<JumpBehaviour>()->IsStartingJump())
+			{
+				player1->Get<MorphAnimator>()->ActivateAnim("Jump");
+			}
+
+			//Else if the player is in the air and the jump anim has finished
+			else if (player1->Get<MorphAnimator>()->GetActiveAnim() == "jump" && player1->Get<MorphAnimator>()->IsEndOfClip())
+			{
+				//If the player is moving, then run in the air
+				if (player1->Get<PlayerControl>()->IsMoving())
+					player1->Get<MorphAnimator>()->ActivateAnim("Walk");
+
+				//Else, idle in the air
+				else
+					player1->Get<MorphAnimator>()->ActivateAnim("Idle");
+			}
+
+			//Else if the player is moving and isn't in the middle of jumping
+			else if (player1->Get<PlayerControl>()->IsMoving() && player1->Get<MorphAnimator>()->GetActiveAnim() != "jump")
+			{
+				//If the player is pressing sprint and isn't already in the running animation
+				if (player1->Get<MorphAnimator>()->GetActiveAnim() != "run" && player1->Get<PlayerControl>()->IsSprinting())
+					player1->Get<MorphAnimator>()->ActivateAnim("Run");
+
+				//If the player isn't pressing sprint and isn't already in the walking animation
+				else if (player1->Get<MorphAnimator>()->GetActiveAnim() != "walk" && !player1->Get<PlayerControl>()->IsSprinting())
+					player1->Get<MorphAnimator>()->ActivateAnim("Walk");
+			}
+
+			//Else if the player isn't moving and isn't jumping and isn't already idling
+			else if (!player1->Get<PlayerControl>()->IsMoving() && player1->Get<MorphAnimator>()->GetActiveAnim() != "jump" && player1->Get<MorphAnimator>()->GetActiveAnim() != "Idle")
+			{
+				player1->Get<MorphAnimator>()->ActivateAnim("Idle");
+			}
+
+			//If the player has just jumped, activate the jump anim
+			if (player2->Get<JumpBehaviour>()->IsStartingJump())
+			{
+				player2->Get<MorphAnimator>()->ActivateAnim("Jump");
+			}
+
+			//Else if the player is in the air and the jump anim has finished
+			else if (player2->Get<MorphAnimator>()->GetActiveAnim() == "jump" && player2->Get<MorphAnimator>()->IsEndOfClip())
+			{
+				//If the player is moving, then run in the air
+				if (player2->Get<PlayerControl>()->IsMoving())
+					player2->Get<MorphAnimator>()->ActivateAnim("Walk");
+
+				//Else, idle in the air
+				else
+					player2->Get<MorphAnimator>()->ActivateAnim("Idle");
+			}
+
+			//Else if the player is moving and isn't in the middle of jumping
+			else if (player2->Get<PlayerControl>()->IsMoving() && player2->Get<MorphAnimator>()->GetActiveAnim() != "jump")
+			{
+				//If the player is pressing sprint and isn't already in the running animation
+				if (player2->Get<MorphAnimator>()->GetActiveAnim() != "run" && player2->Get<PlayerControl>()->IsSprinting())
+					player2->Get<MorphAnimator>()->ActivateAnim("Run");
+
+				//If the player isn't pressing sprint and isn't already in the walking animation
+				else if (player2->Get<MorphAnimator>()->GetActiveAnim() != "walk" && !player2->Get<PlayerControl>()->IsSprinting())
+					player2->Get<MorphAnimator>()->ActivateAnim("Walk");
+			}
+
+			//Else if the player isn't moving and isn't jumping and isn't already idling
+			else if (!player2->Get<PlayerControl>()->IsMoving() && player2->Get<MorphAnimator>()->GetActiveAnim() != "jump" && player2->Get<MorphAnimator>()->GetActiveAnim() != "Idle")
+			{
+				player2->Get<MorphAnimator>()->ActivateAnim("Idle");
+			}
+		}
+		//////////////////////////////////////////////////////////
 
 		///////////////////////////////////////////////////////////////////////////////////Camera 1 Rendering
 		glViewport(0, 0, windowSize.x, windowSize.y / 2);
@@ -1285,84 +1363,6 @@ int main() {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		///////////////Handle some animation stuff////////////////
-		//Note: this code sucks real bad, I need to make this better at some point
-
-		if (player1->Get<MorphAnimator>() != nullptr)
-		{
-			//If the player has just jumped, activate the jump anim
-			if (player1->Get<JumpBehaviour>()->IsStartingJump())
-			{
-				player1->Get<MorphAnimator>()->ActivateAnim("Jump");
-			}
-
-			//Else if the player is in the air and the jump anim has finished
-			else if (player1->Get<MorphAnimator>()->GetActiveAnim() == "jump" && player1->Get<MorphAnimator>()->IsEndOfClip())
-			{
-				//If the player is moving, then run in the air
-				if (player1->Get<PlayerControl>()->IsMoving())
-					player1->Get<MorphAnimator>()->ActivateAnim("Walk");
-
-				//Else, idle in the air
-				else
-					player1->Get<MorphAnimator>()->ActivateAnim("Idle");
-			}
-
-			//Else if the player is moving and isn't in the middle of jumping
-			else if (player1->Get<PlayerControl>()->IsMoving() && player1->Get<MorphAnimator>()->GetActiveAnim() != "jump")
-			{
-				//If the player is pressing sprint and isn't already in the running animation
-				if (player1->Get<MorphAnimator>()->GetActiveAnim() != "run" && player1->Get<PlayerControl>()->IsSprinting())
-					player1->Get<MorphAnimator>()->ActivateAnim("Run");
-
-				//If the player isn't pressing sprint and isn't already in the walking animation
-				else if (player1->Get<MorphAnimator>()->GetActiveAnim() != "walk" && !player1->Get<PlayerControl>()->IsSprinting() )
-					player1->Get<MorphAnimator>()->ActivateAnim("Walk");
-			}
-
-			//Else if the player isn't moving and isn't jumping and isn't already idling
-			else if (!player1->Get<PlayerControl>()->IsMoving() && player1->Get<MorphAnimator>()->GetActiveAnim() != "jump" && player1->Get<MorphAnimator>()->GetActiveAnim() != "Idle")
-			{
-				player1->Get<MorphAnimator>()->ActivateAnim("Idle");
-			}
-
-			//If the player has just jumped, activate the jump anim
-			if (player2->Get<JumpBehaviour>()->IsStartingJump())
-			{
-				player2->Get<MorphAnimator>()->ActivateAnim("Jump");
-			}
-
-			//Else if the player is in the air and the jump anim has finished
-			else if (player2->Get<MorphAnimator>()->GetActiveAnim() == "jump" && player2->Get<MorphAnimator>()->IsEndOfClip())
-			{
-				//If the player is moving, then run in the air
-				if (player2->Get<PlayerControl>()->IsMoving())
-					player2->Get<MorphAnimator>()->ActivateAnim("Walk");
-
-				//Else, idle in the air
-				else
-					player2->Get<MorphAnimator>()->ActivateAnim("Idle");
-			}
-
-			//Else if the player is moving and isn't in the middle of jumping
-			else if (player2->Get<PlayerControl>()->IsMoving() && player2->Get<MorphAnimator>()->GetActiveAnim() != "jump")
-			{
-				//If the player is pressing sprint and isn't already in the running animation
-				if (player2->Get<MorphAnimator>()->GetActiveAnim() != "run" && player2->Get<PlayerControl>()->IsSprinting())
-					player2->Get<MorphAnimator>()->ActivateAnim("Run");
-
-				//If the player isn't pressing sprint and isn't already in the walking animation
-				else if (player2->Get<MorphAnimator>()->GetActiveAnim() != "walk" && !player2->Get<PlayerControl>()->IsSprinting())
-					player2->Get<MorphAnimator>()->ActivateAnim("Walk");
-			}
-
-			//Else if the player isn't moving and isn't jumping and isn't already idling
-			else if (!player2->Get<PlayerControl>()->IsMoving() && player2->Get<MorphAnimator>()->GetActiveAnim() != "jump" && player2->Get<MorphAnimator>()->GetActiveAnim() != "Idle")
-			{
-				player2->Get<MorphAnimator>()->ActivateAnim("Idle");
-			}
-		}
-		//////////////////////////////////////////////////////////
 		GuiBatcher::SetProjection(proj);
 		GuiBatcher::SetWindowSize({ windowSize.x, (float)windowSize.y / 2 });
 
