@@ -18,6 +18,9 @@ public:
 	virtual void Awake() override;
 	virtual void Update(float deltaTime) override;
 
+	bool IsMoving();
+	bool IsSprinting();
+
 public:
 	virtual void RenderImGui() override;
 	MAKE_TYPENAME(PlayerControl);
@@ -32,6 +35,9 @@ protected:
 	glm::vec2 _currentRot;
 
 	bool _isMousePressed = false;
+	bool _isMoving = false;
+	bool _isSprinting = false;
+	float _spintVal = 5.0f;
 	GLFWwindow* _window;
 
 	ControllerInput::Sptr _controller;

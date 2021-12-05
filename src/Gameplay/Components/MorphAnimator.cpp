@@ -8,6 +8,7 @@
 MorphAnimator::MorphAnimator()
 	: IComponent(),
 	switchClip(false),
+	reachedEnd(false),
 	timer(0.0f)
 { }
 
@@ -20,6 +21,7 @@ void MorphAnimator::Awake()
 
 void MorphAnimator::Update(float deltaTime)
 {
+	reachedEnd = false;
 
 	if (switchClip)
 	{
@@ -44,6 +46,7 @@ void MorphAnimator::Update(float deltaTime)
 		if (currentClip.currentFrame == currentClip.frames.size())
 		{
 			currentClip.currentFrame = 0;
+			reachedEnd = true;
 		}
 
 		else if (currentClip.nextFrame == currentClip.frames.size())
@@ -117,6 +120,16 @@ void MorphAnimator::ActivateAnim(std::string name)
 	}
 
 	std::cout << "No animation clip of this name: " << tempStr << std::endl;
+}
+
+bool MorphAnimator::IsEndOfClip()
+{
+	return reachedEnd;
+}
+
+std::string MorphAnimator::GetActiveAnim()
+{
+	return currentClip.animName;
 }
 
 void MorphAnimator::RenderImGui()

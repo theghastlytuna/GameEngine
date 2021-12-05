@@ -18,6 +18,10 @@ public:
 	virtual void Awake() override;
 	virtual void Update(float deltaTime) override;
 
+	bool IsInAir();
+
+	bool IsStartingJump();
+
 public:
 	virtual void RenderImGui() override;
 	virtual void OnEnteredTrigger(const std::shared_ptr<Gameplay::Physics::TriggerVolume>& trigger) override;
@@ -31,6 +35,8 @@ protected:
 
 	//Boolean to represent whether the attached object is on a ground object
 	bool _onGround = false;
+
+	bool _startingJump = false;
 
 	Gameplay::Physics::RigidBody::Sptr _body;
 

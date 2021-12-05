@@ -58,12 +58,14 @@ void JumpBehaviour::Update(float deltaTime) {
 	//Find whether the attached object is on the ground
 	
 	//If the object has a controller connected, use that to find input
+	_startingJump = false;
 
 	if (_controller->IsValid())
 	{
 		if (_controller->GetButtonDown(GLFW_GAMEPAD_BUTTON_A) && _onGround)
 		{
 			_body->ApplyImpulse(glm::vec3(0.0f, 0.0f, _impulse));
+			_startingJump = true;
 		}
 	}
 
@@ -73,7 +75,18 @@ void JumpBehaviour::Update(float deltaTime) {
 		if (glfwGetKey(GetGameObject()->GetScene()->Window, GLFW_KEY_SPACE) && _onGround)
 		{
 			_body->ApplyImpulse(glm::vec3(0.0f, 0.0f, _impulse));
+			_startingJump = true;
 		}
 	}
+}
+
+bool JumpBehaviour::IsInAir()
+{
+	return !_onGround;
+}
+
+bool JumpBehaviour::IsStartingJump()
+{
+	return _startingJump;
 }
 
