@@ -1069,7 +1069,7 @@ int main() {
 		//detachedCam->SetPosition(player->GetPosition());
 
 		///////////////////////////////////////////////////////////////////////////////////Camera 1 Rendering
-		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y / 2);
+		glViewport(0, 0, windowSize.x, windowSize.y / 2);
 
 		{;
 		// Grab shorthands to the camera and shader from the scene
