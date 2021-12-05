@@ -16,7 +16,7 @@ FirstPersonCamera::FirstPersonCamera()
 	_mouseSensitivity({ 0.2f, 0.2f }),
 	_moveSpeeds(glm::vec3(10.0f)),
 	_shiftMultipler(2.0f),
-	_currentRot(glm::vec2(0.0f)),
+	_currentRot(glm::vec2(0.0f, 180.0f)),
 	_isMousePressed(false),
 	_controllerSensitivity({ 1.1f, 1.1f })
 
@@ -46,11 +46,11 @@ void FirstPersonCamera::Update(float deltaTime)
 
 		//Since controller joysticks are physical, they often won't be perfect, meaning at a neutral state it might still have slight movement.
 		//Check to make sure that the axes aren't outputting an extremely small number, and if they are then set the input to 0.
-		if (rightX > 0.2 || rightX < -0.2) _currentRot.x -= static_cast<float>(rightX) * _controllerSensitivity.x;
-		if (rightY > 0.2 || rightY < -0.2) _currentRot.y -= static_cast<float>(rightY) * _controllerSensitivity.y;
+		if (rightX > 0.2 || rightX < -0.2) _currentRot.x += static_cast<float>(rightX) * _controllerSensitivity.x;
+		if (rightY > 0.2 || rightY < -0.2) _currentRot.y += static_cast<float>(rightY) * _controllerSensitivity.y;
 
-		glm::quat rotX = glm::angleAxis(glm::radians(0.f), glm::vec3(0, 0, 1));
-		glm::quat rotY = glm::angleAxis(glm::radians(_currentRot.y), glm::vec3(1, 0, 0));
+		glm::quat rotX = glm::angleAxis(glm::radians(180.0f), glm::vec3(0, 0, 1));
+		glm::quat rotY = glm::angleAxis(glm::radians(-_currentRot.y), glm::vec3(1, 0, 0));
 
 		glm::quat currentRot = rotX * rotY;
 
@@ -75,7 +75,7 @@ void FirstPersonCamera::Update(float deltaTime)
 
 			_currentRot.x += static_cast<float>(currentMousePos.x - _prevMousePos.x) * _mouseSensitivity.x;
 			_currentRot.y += static_cast<float>(currentMousePos.y - _prevMousePos.y) * _mouseSensitivity.y;
-			glm::quat rotX = glm::angleAxis(glm::radians(0.f), glm::vec3(0, 0, 1));
+			glm::quat rotX = glm::angleAxis(glm::radians(180.0f), glm::vec3(0, 0, 1));
 			glm::quat rotY = glm::angleAxis(glm::radians(_currentRot.y), glm::vec3(1, 0, 0));
 			glm::quat currentRot = rotX * rotY;
 			GetGameObject()->SetRotation(currentRot);

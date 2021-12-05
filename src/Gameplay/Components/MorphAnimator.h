@@ -19,6 +19,10 @@ public:
 
 	void ActivateAnim(std::string name);
 
+	bool IsEndOfClip();
+
+	std::string GetActiveAnim();
+
 	//Holds the info for an animation clip
 	struct animInfo
 	{
@@ -51,5 +55,6 @@ protected:
 	float timer;
 
 	bool switchClip;
+	bool reachedEnd = false;
 };
 

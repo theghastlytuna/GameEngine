@@ -11,13 +11,16 @@
 
 #include "Gameplay/Physics/RigidBody.h"
 
-PlayerControl::PlayerControl() 
+PlayerControl::PlayerControl()
 	: IComponent(),
 	_mouseSensitivity({ 0.2f, 0.2f }),
 	_moveSpeeds(glm::vec3(10.0f)),
 	_shiftMultipler(2.0f),
 	_currentRot(glm::vec2(0.0f)),
 	_isMousePressed(false),
+	_isMoving(false),
+	_isSprinting(false),
+	_spintVal(2.5f),
 	_controllerSensitivity({1.1f, 1.1f})
 { }
 
@@ -40,6 +43,8 @@ void PlayerControl::Update(float deltaTime)
 	//If there is a valid controller connected, then use it to find input
 	if (_controller->IsValid())
 	{
+		_isMoving = false;
+
 		float leftX = _controller->GetAxisValue(GLFW_GAMEPAD_AXIS_LEFT_X);
 		float leftY = _controller->GetAxisValue(GLFW_GAMEPAD_AXIS_LEFT_Y);
 
@@ -49,13 +54,15 @@ void PlayerControl::Update(float deltaTime)
 		float leftTrigger = _controller->GetAxisValue(GLFW_GAMEPAD_AXIS_LEFT_TRIGGER);
 		float rightTrigger = _controller->GetAxisValue(GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER);
 
+		_isSprinting = _controller->GetButtonDown(GLFW_GAMEPAD_BUTTON_B);
+
 		//Since controller joysticks are physical, they often won't be perfect, meaning at a neutral state it might still have slight movement.
 		//Check to make sure that the axes aren't outputting an extremely small number, and if they are then set the input to 0.
-		if (rightX > 0.2 || rightX < -0.2) _currentRot.x -= static_cast<float>(rightX) * _controllerSensitivity.x;	
-		if (rightY > 0.2 || rightY < -0.2) _currentRot.y -= static_cast<float>(rightY) * _controllerSensitivity.y;
+		if (rightX > 0.2 || rightX < -0.2) _currentRot.x += static_cast<float>(rightX) * _controllerSensitivity.x;	
+		if (rightY > 0.2 || rightY < -0.2) _currentRot.y += static_cast<float>(rightY) * _controllerSensitivity.y;
 
-		glm::quat rotX = glm::angleAxis(glm::radians(_currentRot.x), glm::vec3(0, 0, 1));
-		glm::quat rotY = glm::angleAxis(glm::radians(_currentRot.y), glm::vec3(1, 0, 0));
+		glm::quat rotX = glm::angleAxis(glm::radians(-_currentRot.x), glm::vec3(0, 0, 1));
+		glm::quat rotY = glm::angleAxis(glm::radians(90.0f), glm::vec3(1, 0, 0));
 
 		glm::quat currentRot = rotX * rotY;
 
@@ -66,10 +73,18 @@ void PlayerControl::Update(float deltaTime)
 		//Since controller joysticks are physical, they often won't be perfect, meaning at a neutral state it might still have slight movement.
 		//Check to make sure that the axes aren't outputting an extremely small number, and if they are then set the input to 0.
 		if (leftY < 0.2 && leftY > -0.2) input.z = 0.0f;
-		else input.z = leftY * _moveSpeeds.x;
+		else
+		{
+			_isMoving = true;
+			input.z = leftY * -_moveSpeeds.x;
+		}
 
 		if (leftX < 0.2 && leftX > -0.2) input.x = 0.0f;
-		else input.x = leftX * _moveSpeeds.y;
+		else
+		{
+			_isMoving = true;
+			input.x = leftX * -_moveSpeeds.y;
+		}
 
 		input *= deltaTime;
 
@@ -78,6 +93,8 @@ void PlayerControl::Update(float deltaTime)
 		if (worldMovement != glm::vec3(0.0f))
 		{
 			worldMovement = 10.0f * glm::normalize(worldMovement);
+
+			if (_isSprinting) worldMovement *= _spintVal;
 		}
 		GetGameObject()->Get<Gameplay::Physics::RigidBody>()->ApplyForce(worldMovement);
 	}
@@ -139,6 +156,16 @@ void PlayerControl::Update(float deltaTime)
 			GetGameObject()->Get<Gameplay::Physics::RigidBody>()->ApplyForce(worldMovement);
 		}
 	}
+}
+
+bool PlayerControl::IsMoving()
+{
+	return _isMoving;
+}
+
+bool PlayerControl::IsSprinting()
+{
+	return _isSprinting;
 }
 
 void PlayerControl::RenderImGui()

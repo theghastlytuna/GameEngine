@@ -126,12 +126,13 @@ using namespace Gameplay::Physics;
 Scene::Sptr scene = nullptr;
 
 void GlfwWindowResizedCallback(GLFWwindow* window, int width, int height) {
-	glEnable(GL_SCISSOR_TEST);
-	glViewport(0, 0, width, height);
-	glScissor(0, 0, width, height / 2);
+	//glEnable(GL_SCISSOR_TEST);
+	//glViewport(0, 0, width / 2, height);
+	//glScissor(0, 0, width, height / 2);
 	windowSize = glm::ivec2(width, height);
 	if (windowSize.x * windowSize.y > 0) {
 		scene->MainCamera->ResizeWindow(width, height);
+		scene->MainCamera2->ResizeWindow(width, height);
 	}
 	GuiBatcher::SetWindowSize({ width, height });
 }
@@ -207,6 +208,17 @@ bool DrawSaveLoadImGui(Scene::Sptr& scene, std::string& path) {
 		return true;
 	}
 	return false;
+}
+
+std::vector<MeshResource::Sptr> LoadTargets(int numTargets, std::string path)
+{
+	std::vector<MeshResource::Sptr> tempVec;
+	for (int i = 0; i < numTargets; i++)
+	{
+		tempVec.push_back(ResourceManager::CreateAsset<MeshResource>(path + std::to_string(i) + ".obj"));
+	}
+
+	return tempVec;
 }
 
 /// <summary>
@@ -305,6 +317,8 @@ void CreateScene() {
 		MeshResource::Sptr cubeMesh = ResourceManager::CreateAsset<MeshResource>("cube.obj");
 		MeshResource::Sptr boiMesh = ResourceManager::CreateAsset<MeshResource>("boi-tpose.obj");
 		MeshResource::Sptr catcusMesh = ResourceManager::CreateAsset<MeshResource>("CatcusAnims/Catcus_Idle_001.obj");
+		MeshResource::Sptr mainCharMesh = ResourceManager::CreateAsset<MeshResource>("mainChar.obj");
+		MeshResource::Sptr mainCharMesh2 = ResourceManager::CreateAsset<MeshResource>("mainChar.obj");
 
 		// Load in some textures
 		Texture2D::Sptr    boxTexture = ResourceManager::CreateAsset<Texture2D>("textures/box-diffuse.png");
@@ -312,6 +326,7 @@ void CreateScene() {
 		Texture2D::Sptr    monkeyTex  = ResourceManager::CreateAsset<Texture2D>("textures/monkey-uvMap.png");
 		Texture2D::Sptr    leafTex    = ResourceManager::CreateAsset<Texture2D>("textures/leaves.png");
 		Texture2D::Sptr	   catcusTex = ResourceManager::CreateAsset<Texture2D>("textures/cattusGood.png");
+		Texture2D::Sptr	   mainCharTex = ResourceManager::CreateAsset<Texture2D>("textures/Char.png");
 
 		leafTex->SetMinFilter(MinFilter::Nearest);
 		leafTex->SetMagFilter(MagFilter::Nearest);
@@ -332,6 +347,17 @@ void CreateScene() {
 		}
 		//////////////////////////////////////////////////////////////
 
+		std::vector<MeshResource::Sptr> mainIdle = LoadTargets(3, "MainCharacterAnims/Idle/Char_Idle_00");
+
+		std::vector<MeshResource::Sptr> mainWalk = LoadTargets(4, "MainCharacterAnims/Walk/Char_Walk_00");
+
+		std::vector<MeshResource::Sptr> mainRun = LoadTargets(4, "MainCharacterAnims/Run/Char_Run_00");
+
+		std::vector<MeshResource::Sptr> mainJump = LoadTargets(3, "MainCharacterAnims/Jump/Char_Jump_00");
+
+		std::vector<MeshResource::Sptr> mainDeath = LoadTargets(4, "MainCharacterAnims/Death/Char_Death_00");
+
+		std::vector<MeshResource::Sptr> mainAttack = LoadTargets(5, "MainCharacterAnims/Attack/Char_Throw_00");
 
 		// Here we'll load in the cubemap, as well as a special shader to handle drawing the skybox
 		TextureCube::Sptr testCubemap = ResourceManager::CreateAsset<TextureCube>("cubemaps/ocean/ocean.jpg");
@@ -339,7 +365,6 @@ void CreateScene() {
 			{ ShaderPartType::Vertex, "shaders/vertex_shaders/skybox_vert.glsl" },
 			{ ShaderPartType::Fragment, "shaders/fragment_shaders/skybox_frag.glsl" }
 		});
-
 
 		// Create an empty scene
 		scene = std::make_shared<Scene>();
@@ -371,6 +396,20 @@ void CreateScene() {
 			catcusMaterial->Name = "Catcus";
 			catcusMaterial->Set("u_Material.Diffuse", catcusTex);
 			catcusMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		Material::Sptr mainCharMaterial = ResourceManager::CreateAsset<Material>(animShader);
+		{
+			mainCharMaterial->Name = "MainCharacter";
+			mainCharMaterial->Set("u_Material.Diffuse", mainCharTex);
+			mainCharMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+		
+		Material::Sptr mainCharMaterial2 = ResourceManager::CreateAsset<Material>(animShader);
+		{
+			mainCharMaterial2->Name = "MainCharacter2";
+			mainCharMaterial2->Set("u_Material.Diffuse", mainCharTex);
+			mainCharMaterial2->Set("u_Material.Shininess", 0.1f);
 		}
 
 		// This will be the reflective material, we'll make the whole thing 90% reflective
@@ -463,7 +502,7 @@ void CreateScene() {
 			ControllerInput::Sptr controller1 = detachedCam->Add<ControllerInput>();
 			controller1->SetController(GLFW_JOYSTICK_1);
 
-			detachedCam->SetPosition(glm::vec3(0.f, 0.f, 0.4f));
+			detachedCam->SetPosition(glm::vec3(0.f, 3.5f, 0.4f));
 
 			FirstPersonCamera::Sptr cameraControl = detachedCam->Add<FirstPersonCamera>();
 
@@ -477,27 +516,38 @@ void CreateScene() {
 			controller1->SetController(GLFW_JOYSTICK_1);
 			
 			player1->SetPosition(glm::vec3(0.f, 0.f, 4.f));
+			player1->SetRotation(glm::vec3(0.f, 90.f, 0.f));
 
 			RenderComponent::Sptr renderer = player1->Add<RenderComponent>();
-			renderer->SetMesh(monkeyMesh);
-			renderer->SetMaterial(monkeyMaterial);
+			renderer->SetMesh(mainCharMesh);
+			renderer->SetMaterial(mainCharMaterial);
 
 			player1->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
 			RigidBody::Sptr physics = player1->Add<RigidBody>(RigidBodyType::Dynamic);
-			physics->AddCollider(SphereCollider::Create());
+			physics->AddCollider(BoxCollider::Create(glm::vec3(0.4f, 1.2f, 0.4f)))->SetPosition(glm::vec3(0.0f, 0.95f, 0.0f));
 			physics->SetAngularFactor(glm::vec3(0.f));
-			physics->SetLinearDamping(0.8f);
+			physics->SetLinearDamping(0.9f);
 
-			//FirstPersonCamera::Sptr cameraControl = player1->Add<FirstPersonCamera>();
 			PlayerControl::Sptr controller = player1->Add<PlayerControl>();
 
 			JumpBehaviour::Sptr jumping = player1->Add<JumpBehaviour>();
 
 			player1->AddChild(detachedCam);
 
-			//Camera::Sptr cam = player1->Add<Camera>();
-			//scene->PlayerCamera = cam;
+			// Only add an animator when you have a clip to add.
+			MorphAnimator::Sptr animator = player1->Add<MorphAnimator>();
+
+			//Add the clips
+			animator->AddClip(mainIdle, 0.8f, "Idle");
+			animator->AddClip(mainWalk, 0.4f, "Walk");
+			animator->AddClip(mainRun, 0.25f, "Run");
+			animator->AddClip(mainAttack, 1.0f, "Attack");
+			animator->AddClip(mainDeath, 1.0f, "Die");
+			animator->AddClip(mainJump, 0.1f, "Jump");
+
+			//Make sure to always activate an animation at the time of creation (usually idle)
+			animator->ActivateAnim("Idle");
 		}
 
 		GameObject::Sptr detachedCam2 = scene->CreateGameObject("Detached Camera 2");
@@ -505,7 +555,7 @@ void CreateScene() {
 			ControllerInput::Sptr controller2 = detachedCam2->Add<ControllerInput>();
 			controller2->SetController(GLFW_JOYSTICK_2);
 
-			detachedCam2->SetPosition(glm::vec3(10.f, 0.f, 0.4f));
+			detachedCam2->SetPosition(glm::vec3(0.f, 3.5f, 0.4f));
 
 			FirstPersonCamera::Sptr cameraControl = detachedCam2->Add<FirstPersonCamera>();
 
@@ -521,24 +571,35 @@ void CreateScene() {
 			player2->SetPosition(glm::vec3(10.f, 0.f, 4.f));
 
 			RenderComponent::Sptr renderer = player2->Add<RenderComponent>();
-			renderer->SetMesh(monkeyMesh);
-			renderer->SetMaterial(monkeyMaterial);
+			renderer->SetMesh(mainCharMesh2);
+			renderer->SetMaterial(mainCharMaterial2);
 
 			player2->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
 
 			RigidBody::Sptr physics = player2->Add<RigidBody>(RigidBodyType::Dynamic);
-			physics->AddCollider(SphereCollider::Create(0.7f));
+			physics->AddCollider(BoxCollider::Create(glm::vec3(0.4f, 1.2f, 0.4f)))->SetPosition(glm::vec3(0.0f, 0.95f, 0.0f));
 			physics->SetAngularFactor(glm::vec3(0.f));
-			physics->SetLinearDamping(0.8f);
-
-			//FirstPersonCamera::Sptr cameraControl = player2->Add<FirstPersonCamera>();
+			physics->SetLinearDamping(0.9f);
 
 			PlayerControl::Sptr controller = player2->Add<PlayerControl>();
 
 			JumpBehaviour::Sptr jumping = player2->Add<JumpBehaviour>();
+			
+			player2->AddChild(detachedCam2);
 
-			//Camera::Sptr cam = player2->Add<Camera>();
-			//scene->PlayerCamera2 = cam;
+			//Only add an animator when you have a clip to add.
+			MorphAnimator::Sptr animator = player2->Add<MorphAnimator>();
+			
+			//Add the clips
+			animator->AddClip(mainIdle, 0.8f, "Idle");
+			animator->AddClip(mainWalk, 0.4f, "Walk");
+			animator->AddClip(mainRun, 0.25f, "Run");
+			animator->AddClip(mainAttack, 1.0f, "Attack");
+			animator->AddClip(mainDeath, 1.0f, "Die");
+			animator->AddClip(mainJump, 0.1f, "Jump");
+
+			//Make sure to always activate an animation at the time of creation (usually idle)
+			animator->ActivateAnim("Idle");
 		}
 
 		// Set up all our sample objects
@@ -614,23 +675,6 @@ void CreateScene() {
 			RigidBody::Sptr physics = boomerang->Add<RigidBody>(RigidBodyType::Dynamic);
 			physics->AddCollider(ConvexMeshCollider::Create());
 		}
-		/*
-		for (int i = 0; i < 8; i++)
-		{
-			GameObject::Sptr boiFrame = scene->CreateGameObject("Boi" + std::to_string(i));
-			{
-				// Set position in the scene
-				boiFrame->SetPosition(glm::vec3(-100.0f, 0.0f, 0.0f));
-				boiFrame->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
-				boiFrame->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
-
-				// Create and attach a renderer for the monkey
-				RenderComponent::Sptr renderer = boiFrame->Add<RenderComponent>();
-				renderer->SetMesh(boiFrames[i]);
-				renderer->SetMaterial(boxMaterial);
-			}
-		}
-		*/
 		
 		GameObject::Sptr boiBase = scene->CreateGameObject("Boi Base");
 		{
@@ -750,6 +794,7 @@ void arrive(GameObject::Sptr object, GameObject::Sptr target, float deltaT)
 
 }
 
+
 int main() {
 	Logger::Init(); // We'll borrow the logger from the toolkit, but we need to initialize it
 
@@ -804,7 +849,6 @@ int main() {
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-
 
 	// Structure for our frame-level uniforms, matches layout from
 	// fragments/frame_uniforms.glsl
@@ -869,15 +913,6 @@ int main() {
 
 	bool arriving = false;
 
-	float t;
-
-	float duration = 2.0f;
-
-	float frameTimer = 0.0f;
-
-	int currentFrame = 0;
-	int nextFrame = 1;
-
 	/*
 	VertexArrayObject::Sptr frame0 = scene->FindObjectByName("Boi0")->Get<RenderComponent>()->GetMesh();
 	VertexArrayObject::Sptr frame1 = scene->FindObjectByName("Boi1")->Get<RenderComponent>()->GetMesh();
@@ -885,45 +920,13 @@ int main() {
 
 	///// Game loop /////
 	while (!glfwWindowShouldClose(window)) {
+		
 		glfwPollEvents();
 		ImGuiHelper::StartFrame();
 		
 		// Calculate the time since our last frame (dt)
 		double thisFrame = glfwGetTime();
 		float dt = static_cast<float>(thisFrame - lastFrame);
-		/*
-		frameTimer += dt;
-
-		t = frameTimer / duration;
-
-		if (t > 1)
-		{
-			t = 0.0f;
-			frameTimer = 0.0f;
-			currentFrame++;
-			nextFrame++;
-
-			if (nextFrame == 8)
-			{
-				frame0 = frame1;
-				frame1 = scene->FindObjectByName("Boi0")->Get<RenderComponent>()->GetMesh();
-				nextFrame = 0;
-			}
-
-			else if (currentFrame == 8)
-			{
-				frame0 = scene->FindObjectByName("Boi0")->Get<RenderComponent>()->GetMesh();
-				frame1 = scene->FindObjectByName("Boi" + std::to_string(nextFrame))->Get<RenderComponent>()->GetMesh();
-				currentFrame = 0;
-			}
-
-			else
-			{
-				frame0 = frame1;
-				frame1 = scene->FindObjectByName("Boi" + std::to_string(nextFrame))->Get<RenderComponent>()->GetMesh();
-			}
-		}
-		*/
 
 		// Draw our material properties window!
 		DrawMaterialsWindow();
@@ -1036,6 +1039,13 @@ int main() {
 		// Perform updates for all components
 		scene->Update(dt);
 
+		// Make sure depth testing and culling are re-enabled
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		// Update our worlds physics!
 		scene->DoPhysics(dt);
 
@@ -1045,11 +1055,11 @@ int main() {
 		}
 
 		GameObject::Sptr detachedCam = scene->FindObjectByName("Detached Camera");
-		GameObject::Sptr player = scene->FindObjectByName("Player 1");
+		GameObject::Sptr player1 = scene->FindObjectByName("Player 1");
 
 		//detachedCam->SetPosition(player->GetPosition());
 
-		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y);
+		glViewport(0, 0, windowSize.x, windowSize.y / 2);
 
 		//Camera 1 Rendering
 		{;
@@ -1068,10 +1078,6 @@ int main() {
 		// See Material.h and Material.cpp for how we're reserving texture slots
 		TextureCube::Sptr environment = scene->GetSkyboxTexture();
 		if (environment) environment->Bind(0); 
-
-		// Make sure depth testing and culling are re-enabled
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_CULL_FACE);
 
 		// Here we'll bind all the UBOs to their corresponding slots
 		scene->PreRender();
@@ -1124,28 +1130,6 @@ int main() {
 			instanceData.u_NormalMatrix = glm::mat3(glm::transpose(glm::inverse(object->GetTransform())));
 			instanceUniforms->Update();  
 
-			/*
-			if (object->Name == "Boi Base")
-			{
-				VertexArrayObject::Sptr boiObject = renderable->GetMesh();
-
-				std::vector<BufferAttribute> pos0 = frame0->GetBufferBinding(AttribUsage::Position)->Attributes;
-				std::vector<BufferAttribute> pos1 = frame1->GetBufferBinding(AttribUsage::Position)->Attributes;
-				
-				pos0.resize(1);
-				
-				pos1[0].Slot = static_cast<GLint>(4);
-				pos1.resize(1);
-
-				boiObject->GetBufferBinding(AttribUsage::Position);
-
-				boiObject->AddVertexBuffer(frame0->GetBufferBinding(AttribUsage::Position)->Buffer, pos0);
-				boiObject->AddVertexBuffer(frame1->GetBufferBinding(AttribUsage::Position)->Buffer, pos1);
-				
-				renderable->GetMaterial()->Set("t", t);
-			}
-			*/
-
 			// Draw the object
 			renderable->GetMesh()->Draw();
 		});
@@ -1159,13 +1143,15 @@ int main() {
 		GameObject::Sptr detachedCam2 = scene->FindObjectByName("Detached Camera 2");
 		GameObject::Sptr player2 = scene->FindObjectByName("Player 2");
 
-		detachedCam2->SetPosition(player2->GetPosition());
+		//detachedCam2->SetPosition(player2->GetPosition());
 
 		//split the screen
-		glViewport(0, 0, windowSize.x, windowSize.y / 2);
+		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y / 2);
 
 		//Camera 2 Rendering
 		{;
+
+		glm::mat4 viewProj2 = scene->MainCamera->GetViewProjection();
 		// Grab shorthands to the camera and shader from the scene
 		Camera::Sptr camera = scene->MainCamera2;
 
@@ -1234,28 +1220,6 @@ int main() {
 			instanceData.u_NormalMatrix = glm::mat3(glm::transpose(glm::inverse(object->GetTransform())));
 			instanceUniforms->Update();
 
-			/*
-			if (object->Name == "Boi Base")
-			{
-				VertexArrayObject::Sptr boiObject = renderable->GetMesh();
-
-				std::vector<BufferAttribute> pos0 = frame0->GetBufferBinding(AttribUsage::Position)->Attributes;
-				std::vector<BufferAttribute> pos1 = frame1->GetBufferBinding(AttribUsage::Position)->Attributes;
-
-				pos0.resize(1);
-
-				pos1[0].Slot = static_cast<GLint>(4);
-				pos1.resize(1);
-
-				boiObject->GetBufferBinding(AttribUsage::Position);
-
-				boiObject->AddVertexBuffer(frame0->GetBufferBinding(AttribUsage::Position)->Buffer, pos0);
-				boiObject->AddVertexBuffer(frame1->GetBufferBinding(AttribUsage::Position)->Buffer, pos1);
-
-				renderable->GetMaterial()->Set("t", t);
-			}
-			*/
-
 			// Draw the object
 			renderable->GetMesh()->Draw();
 			});
@@ -1283,8 +1247,88 @@ int main() {
 		// Enable the scissor test;
 		glEnable(GL_SCISSOR_TEST);
 
+
+		///////////////Handle some animation stuff////////////////
+		//Note: this code sucks real bad, I need to make this better at some point
+
+		if (player1->Get<MorphAnimator>() != nullptr)
+		{
+			//If the player has just jumped, activate the jump anim
+			if (player1->Get<JumpBehaviour>()->IsStartingJump())
+			{
+				player1->Get<MorphAnimator>()->ActivateAnim("Jump");
+			}
+
+			//Else if the player is in the air and the jump anim has finished
+			else if (player1->Get<MorphAnimator>()->GetActiveAnim() == "jump" && player1->Get<MorphAnimator>()->IsEndOfClip())
+			{
+				//If the player is moving, then run in the air
+				if (player1->Get<PlayerControl>()->IsMoving())
+					player1->Get<MorphAnimator>()->ActivateAnim("Walk");
+
+				//Else, idle in the air
+				else
+					player1->Get<MorphAnimator>()->ActivateAnim("Idle");
+			}
+
+			//Else if the player is moving and isn't in the middle of jumping
+			else if (player1->Get<PlayerControl>()->IsMoving() && player1->Get<MorphAnimator>()->GetActiveAnim() != "jump")
+			{
+				//If the player is pressing sprint and isn't already in the running animation
+				if (player1->Get<MorphAnimator>()->GetActiveAnim() != "run" && player1->Get<PlayerControl>()->IsSprinting())
+					player1->Get<MorphAnimator>()->ActivateAnim("Run");
+
+				//If the player isn't pressing sprint and isn't already in the walking animation
+				else if (player1->Get<MorphAnimator>()->GetActiveAnim() != "walk" && !player1->Get<PlayerControl>()->IsSprinting() )
+					player1->Get<MorphAnimator>()->ActivateAnim("Walk");
+			}
+
+			//Else if the player isn't moving and isn't jumping and isn't already idling
+			else if (!player1->Get<PlayerControl>()->IsMoving() && player1->Get<MorphAnimator>()->GetActiveAnim() != "jump" && player1->Get<MorphAnimator>()->GetActiveAnim() != "Idle")
+			{
+				player1->Get<MorphAnimator>()->ActivateAnim("Idle");
+			}
+
+			//If the player has just jumped, activate the jump anim
+			if (player2->Get<JumpBehaviour>()->IsStartingJump())
+			{
+				player2->Get<MorphAnimator>()->ActivateAnim("Jump");
+			}
+
+			//Else if the player is in the air and the jump anim has finished
+			else if (player2->Get<MorphAnimator>()->GetActiveAnim() == "jump" && player2->Get<MorphAnimator>()->IsEndOfClip())
+			{
+				//If the player is moving, then run in the air
+				if (player2->Get<PlayerControl>()->IsMoving())
+					player2->Get<MorphAnimator>()->ActivateAnim("Walk");
+
+				//Else, idle in the air
+				else
+					player2->Get<MorphAnimator>()->ActivateAnim("Idle");
+			}
+
+			//Else if the player is moving and isn't in the middle of jumping
+			else if (player2->Get<PlayerControl>()->IsMoving() && player2->Get<MorphAnimator>()->GetActiveAnim() != "jump")
+			{
+				//If the player is pressing sprint and isn't already in the running animation
+				if (player2->Get<MorphAnimator>()->GetActiveAnim() != "run" && player2->Get<PlayerControl>()->IsSprinting())
+					player2->Get<MorphAnimator>()->ActivateAnim("Run");
+
+				//If the player isn't pressing sprint and isn't already in the walking animation
+				else if (player2->Get<MorphAnimator>()->GetActiveAnim() != "walk" && !player2->Get<PlayerControl>()->IsSprinting())
+					player2->Get<MorphAnimator>()->ActivateAnim("Walk");
+			}
+
+			//Else if the player isn't moving and isn't jumping and isn't already idling
+			else if (!player2->Get<PlayerControl>()->IsMoving() && player2->Get<MorphAnimator>()->GetActiveAnim() != "jump" && player2->Get<MorphAnimator>()->GetActiveAnim() != "Idle")
+			{
+				player2->Get<MorphAnimator>()->ActivateAnim("Idle");
+			}
+		}
+		//////////////////////////////////////////////////////////
+
 		// Our projection matrix will be our entire window for now
-		glm::mat4 proj = glm::ortho(0.0f, (float)windowSize.x, (float)windowSize.y, 0.0f, -1.0f, 1.0f);
+		glm::mat4 proj = glm::ortho(0.0f, (float)windowSize.x / 2, (float)windowSize.y, 0.0f, -1.0f, 1.0f);
 		GuiBatcher::SetProjection(proj);
 
 		// Iterate over and render all the GUI objects
