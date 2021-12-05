@@ -57,6 +57,7 @@
 #include "Gameplay/Components/MovingPlatform.h"
 #include "Gameplay/Components/PlayerControl.h"
 #include "Gameplay/Components/MorphAnimator.h"
+#include "Gameplay/Components/BoomerangBehavior.h"
 
 // Physics
 #include "Gameplay/Physics/RigidBody.h"
@@ -600,10 +601,10 @@ void CreateScene() {
 			
 		}
 
-		GameObject::Sptr boomerang = scene->CreateGameObject("Boomerang");
+		GameObject::Sptr boomerang = scene->CreateGameObject("Boomerang 1");
 		{
 			// Set position in the scene
-			boomerang->SetPosition(glm::vec3(2.0f, 0.0f, 0.0f));
+			boomerang->SetPosition(glm::vec3(0.0f, 0.0f, -100.0f));
 			boomerang->SetScale(glm::vec3(0.5f, 0.25f, 0.5f));
 
 			// Create and attach a renderer for the monkey
@@ -613,6 +614,23 @@ void CreateScene() {
 
 			RigidBody::Sptr physics = boomerang->Add<RigidBody>(RigidBodyType::Dynamic);
 			physics->AddCollider(ConvexMeshCollider::Create());
+			boomerang->Add<BoomerangBehavior>();
+		}
+
+		GameObject::Sptr boomerang2 = scene->CreateGameObject("Boomerang 2");
+		{
+			// Set position in the scene
+			boomerang2->SetPosition(glm::vec3(0.0f, 0.0f, -100.0f));
+			boomerang2->SetScale(glm::vec3(0.5f, 0.25f, 0.5f));
+
+			// Create and attach a renderer for the monkey
+			RenderComponent::Sptr renderer = boomerang2->Add<RenderComponent>();
+			renderer->SetMesh(cubeMesh);
+			renderer->SetMaterial(boxMaterial);
+
+			RigidBody::Sptr physics = boomerang2->Add<RigidBody>(RigidBodyType::Dynamic);
+			physics->AddCollider(ConvexMeshCollider::Create());
+			boomerang2->Add<BoomerangBehavior>();
 		}
 		/*
 		for (int i = 0; i < 8; i++)
@@ -794,6 +812,7 @@ int main() {
 	ComponentManager::RegisterType<MovingPlatform>();
 	ComponentManager::RegisterType<PlayerControl>();
 	ComponentManager::RegisterType<MorphAnimator>();
+	ComponentManager::RegisterType<BoomerangBehavior>();
 
 	ComponentManager::RegisterType<RectTransform>();
 	ComponentManager::RegisterType<GuiPanel>();
@@ -865,7 +884,6 @@ int main() {
 
 	GameObject::Sptr player1 = scene->FindObjectByName("Player 1");
 	GameObject::Sptr player2 = scene->FindObjectByName("Player 2");
-	GameObject::Sptr boomerang = scene->FindObjectByName("Boomerang");
 
 	bool arriving = false;
 
@@ -1020,16 +1038,17 @@ int main() {
 		}
 
 		dt *= playbackSpeed;
-
+		/*
 		if (glfwGetKey(window, GLFW_KEY_Q))
 		{
-			boomerang->SetPosition(player1->GetPosition() + glm::vec3(0.0f, 0.0f, 1.0f));
-			boomerang->Get<RigidBody>()->SetLinearVelocity(glm::vec3(
+			//boomerang->SetPosition(player1->GetPosition() + glm::vec3(0.0f, 0.0f, 1.0f));
+			//boomerang->Get<RigidBody>()->SetLinearVelocity(glm::vec3(
 				scene->PlayerCamera->GetView()[0][2],
 				scene->PlayerCamera->GetView()[1][2],
 				scene->PlayerCamera->GetView()[2][2]) * -10.0f);
 			arriving = true;
 		}
+		*/
 
 		
 
@@ -1041,7 +1060,7 @@ int main() {
 
 		if (arriving)
 		{
-			arrive(boomerang, player2, dt);
+			//arrive(boomerang, player2, dt);
 		}
 
 		GameObject::Sptr detachedCam = scene->FindObjectByName("Detached Camera");

@@ -9,6 +9,7 @@
 #include "Utils/ImGuiHelper.h"
 #include "Gameplay/GameObject.h"
 
+
 #include "Gameplay/Physics/RigidBody.h"
 
 PlayerControl::PlayerControl() 
@@ -33,6 +34,21 @@ void PlayerControl::Awake()
 	{
 		IsEnabled = false;
 	}
+	
+	if (GetGameObject()->Name == "Player 1") {
+		playerID = 1;
+	}
+	else {
+		playerID = 2;
+	}
+
+	_boomerang = GetGameObject()->GetScene()->FindObjectByName("Boomerang " + std::to_string(playerID));
+	if (_boomerang->Has<BoomerangBehavior>()) {
+		_boomerangBehavior = _boomerang->Get<BoomerangBehavior>();
+	}
+	else {
+		std::cout << "Ayo the pizza here" << std::endl;
+	}
 }
 
 void PlayerControl::Update(float deltaTime)
@@ -40,6 +56,11 @@ void PlayerControl::Update(float deltaTime)
 	//If there is a valid controller connected, then use it to find input
 	if (_controller->IsValid())
 	{
+		bool Wang = _controller->GetButtonDown(GLFW_GAMEPAD_BUTTON_X);
+		bool Point = _controller->GetButtonDown(GLFW_GAMEPAD_BUTTON_Y);
+		bool Target = _controller->GetButtonDown(GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER);
+		bool returnaloni = _controller->GetButtonDown(GLFW_GAMEPAD_BUTTON_LEFT_BUMPER);
+
 		float leftX = _controller->GetAxisValue(GLFW_GAMEPAD_AXIS_LEFT_X);
 		float leftY = _controller->GetAxisValue(GLFW_GAMEPAD_AXIS_LEFT_Y);
 
@@ -80,6 +101,28 @@ void PlayerControl::Update(float deltaTime)
 			worldMovement = 10.0f * glm::normalize(worldMovement);
 		}
 		GetGameObject()->Get<Gameplay::Physics::RigidBody>()->ApplyForce(worldMovement);
+
+		if (Wang) {
+			if (_boomerangBehavior->getReadyToThrow()) {
+				_boomerangBehavior->throwWang(GetGameObject()->GetPosition(), playerID);
+			}
+			else if (Point){
+				_boomerangBehavior->UpdateTarget(glm::vec3(20, 30, 10));
+			}
+			else if (Target) {
+				if (playerID == 1) {
+					//Tracks Player 2
+					_boomerangBehavior->LockTarget(GetGameObject()->GetScene()->FindObjectByName("Player 2"));
+				}
+				else {
+					//Tracks Player 1
+					_boomerangBehavior->LockTarget(GetGameObject()->GetScene()->FindObjectByName("Player 1"));
+				}
+			}
+		}
+		if (returnaloni) {
+			_boomerangBehavior->makeBoomerangInactive();
+		}
 	}
 
 	//Else, use KBM

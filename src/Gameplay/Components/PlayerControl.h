@@ -1,6 +1,7 @@
 #pragma once
 #include "IComponent.h"
 #include "Gameplay/Components/ControllerInput.h"
+#include "BoomerangBehavior.h"
 
 struct GLFWwindow;
 
@@ -30,6 +31,12 @@ protected:
 	glm::vec3 _moveSpeeds;
 	glm::dvec2 _prevMousePos;
 	glm::vec2 _currentRot;
+	bool boomerangThrown = false;
+	Gameplay::GameObject::Sptr _boomerang;
+	BoomerangBehavior::Sptr _boomerangBehavior;
+
+	unsigned int playerID;
+
 
 	bool _isMousePressed = false;
 	GLFWwindow* _window;
