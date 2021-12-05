@@ -314,7 +314,8 @@ void CreateScene() {
 		MeshResource::Sptr stageSideWallsMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_side_walls.obj");
 				//Bridge
 		MeshResource::Sptr stageBridgeMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_bridge.obj");
-
+		MeshResource::Sptr stagePillarMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_pillar.obj");
+		MeshResource::Sptr stagePillar2Mesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_pillar2.obj");
 
 		// Load in some textures
 		Texture2D::Sptr    boxTexture = ResourceManager::CreateAsset<Texture2D>("textures/box-diffuse.png");
@@ -470,14 +471,14 @@ void CreateScene() {
 		//Wall Material
 		Material::Sptr rockWallMaterial = ResourceManager::CreateAsset<Material>(basicShader);
 		{
-			rockWallMaterial->Name = "RockPillar";
+			rockWallMaterial->Name = "RockWall";
 			rockWallMaterial->Set("u_Material.Diffuse", rockWallsTexture);
 			rockWallMaterial->Set("u_Material.Shininess", 0.1f);
 		}
 
 		Material::Sptr bridgeMaterial = ResourceManager::CreateAsset<Material>(basicShader);
 		{
-			bridgeMaterial->Name = "RockPillar";
+			bridgeMaterial->Name = "Bridge";
 			bridgeMaterial->Set("u_Material.Diffuse", bridgeTexture);
 			bridgeMaterial->Set("u_Material.Shininess", 0.1f);
 		}
@@ -947,18 +948,18 @@ void CreateScene() {
 
 			BoxCollider::Sptr collider29 = BoxCollider::Create(glm::vec3(5, 0.97, 7.82));
 			collider29->SetPosition(glm::vec3((-37.86 - d) * -1, 0.13, -19.41));
-			collider29->SetRotation(glm::vec3(-5, -20, 18));//
+			collider29->SetRotation(glm::vec3(5, -20, -18));//// Here!  
 
 
 			BoxCollider::Sptr collider30 = BoxCollider::Create(glm::vec3(5, 1, 7.9));
 			collider30->SetPosition(glm::vec3((-28.9 - d) * -1, 3.46, -22.6));
-			collider30->SetRotation(glm::vec3(-4, -14, 26));//
+			collider30->SetRotation(glm::vec3(4, -14, -26));//// Here!
 
 
 
 			BoxCollider::Sptr collider31 = BoxCollider::Create(glm::vec3(3.64, 2.67, 5.17));
 			collider31->SetPosition(glm::vec3((-20.83 - d) * -1, 4.46, -21.86));
-			collider31->SetRotation(glm::vec3(6, 36, 10));//
+			collider31->SetRotation(glm::vec3(-6, 36, -10));//// Here!
 
 
 			BoxCollider::Sptr collider32 = BoxCollider::Create(glm::vec3(3.76, 10, 1));
@@ -1039,8 +1040,150 @@ void CreateScene() {
 			physics->AddCollider(collider36);
 			physics->AddCollider(collider37);
 
+
+			/*
+			BoxCollider::Sptr collider10 = BoxCollider::Create(glm::vec3(5, 0.97, 7.82));
+			collider10->SetPosition(glm::vec3(-37.86, 0.13, 19.41));
+			collider10->SetRotation(glm::vec3(-5, -20, 18));
+			///
+
+			BoxCollider::Sptr collider11 = BoxCollider::Create(glm::vec3(5, 1, 7.9));
+			collider11->SetPosition(glm::vec3(-28.9, 3.46, 22.6));
+			collider11->SetRotation(glm::vec3(-4, -14, 26));
+			///
+
+
+			BoxCollider::Sptr collider12 = BoxCollider::Create(glm::vec3(3.64, 2.67, 5.17));
+			collider12->SetPosition(glm::vec3(-20.83, 4.46, 21.86));
+			collider12->SetRotation(glm::vec3(6, 36, 10));
+			///
+
+
+			BoxCollider::Sptr collider29 = BoxCollider::Create(glm::vec3(5, 0.97, 7.82));
+			collider29->SetPosition(glm::vec3((-37.86 - d) * -1, 0.13, -19.41));
+			collider29->SetRotation(glm::vec3(5, -20, -18));//// Here!  
+			///
+
+			BoxCollider::Sptr collider30 = BoxCollider::Create(glm::vec3(5, 1, 7.9));
+			collider30->SetPosition(glm::vec3((-28.9 - d) * -1, 3.46, -22.6));
+			collider30->SetRotation(glm::vec3(4, -14, -26));//// Here!
+			///
+
+
+			BoxCollider::Sptr collider31 = BoxCollider::Create(glm::vec3(3.64, 2.67, 5.17));
+			collider31->SetPosition(glm::vec3((-20.83 - d) * -1, 4.46, -21.86));
+			collider31->SetRotation(glm::vec3(-6, 36, -10));//// Here!
+
+			*/
+
+
+			TriggerVolume::Sptr volume = sideWalls->Add<TriggerVolume>();
+			volume->AddCollider(BoxCollider::Create(glm::vec3(5, 0.97, 7.82)))->SetPosition({ -37.86, 0.13, 19.41 })->SetRotation(glm::vec3(-5, -20, 18));//
+			volume->AddCollider(BoxCollider::Create(glm::vec3(5, 1, 7.9)))->SetPosition({ -28.9, 3.46, 22.6 })->SetRotation(glm::vec3(-4, -14, 26));//
+			volume->AddCollider(BoxCollider::Create(glm::vec3(3.64, 2.67, 5.17)))->SetPosition({ -20.83, 4.46, 21.86 })->SetRotation(glm::vec3(6, 36, 10));//
+
+
+			volume->AddCollider(BoxCollider::Create(glm::vec3(5, 0.97, 7.82)))->SetPosition(glm::vec3((-37.86 - d) * -1, 0.13, -19.41))->SetRotation(glm::vec3(5, -20, -18));//
+			volume->AddCollider(BoxCollider::Create(glm::vec3(5, 1, 7.9)))->SetPosition(glm::vec3((-28.9 - d) * -1, 3.46, -22.6))->SetRotation(glm::vec3(4, -14, -26));
+			volume->AddCollider(BoxCollider::Create(glm::vec3(3.64, 2.67, 5.17)))->SetPosition(glm::vec3((-20.83 - d) * -1, 4.46, -21.86))->SetRotation(glm::vec3(-6, 36, -10));
+
+			sideWalls->Add<TriggerVolumeEnterBehaviour>();
+
 		}
 
+		//Stage Mesh - bridge
+		GameObject::Sptr bridge = scene->CreateGameObject("Bridge Ground");
+		{
+			// Set position in the scene
+			bridge->SetPosition(glm::vec3(0.0f, 0.0f, -1.0f));
+			bridge->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			bridge->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = bridge->Add<RenderComponent>();
+			renderer->SetMesh(stageBridgeMesh);
+			renderer->SetMaterial(bridgeMaterial);
+
+			BoxCollider::Sptr collider = BoxCollider::Create(glm::vec3(40.4, 0.5, 2.12));
+			collider->SetPosition(glm::vec3(17.13, 6.97, -0.7));
+			collider->SetRotation(glm::vec3(0, 29, 0));
+
+			RigidBody::Sptr physics = bridge->Add<RigidBody>(/*static by default*/);
+			physics->AddCollider(collider);
+			
+			TriggerVolume::Sptr volume = bridge->Add<TriggerVolume>();
+			volume->AddCollider(BoxCollider::Create(glm::vec3(40.4, 0.5, 2.12)))->SetPosition({ 17.13, 6.97, -0.7 })->SetRotation(glm::vec3(0, 29, 0));
+
+			bridge->Add<TriggerVolumeEnterBehaviour>();
+		}
+		//Stage Mesh - bridge
+		GameObject::Sptr pillar = scene->CreateGameObject("Pillar 1");
+		{
+			// Set position in the scene
+			pillar->SetPosition(glm::vec3(0.0f, 0.0f, -1.0f));
+			pillar->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			pillar->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = pillar->Add<RenderComponent>();
+			renderer->SetMesh(stagePillarMesh);
+			renderer->SetMaterial(rockPillarMaterial);
+
+			
+			BoxCollider::Sptr collider1 = BoxCollider::Create(glm::vec3(2, 3, 2));
+			collider1->SetPosition(glm::vec3(10.86, 3, -11.58));
+			collider1->SetRotation(glm::vec3(0, 0, 0));
+			
+
+			
+			BoxCollider::Sptr collider2 = BoxCollider::Create(glm::vec3(4, 1.65, 4));
+			collider2->SetPosition(glm::vec3(10.86, 7.72, -11.58));
+			collider2->SetRotation(glm::vec3(0, 0, 0));
+			
+			//ConvexMeshCollider::Sptr collider = ConvexMeshCollider::Create();
+
+			RigidBody::Sptr physics = pillar->Add<RigidBody>(/*static by default*/);
+			physics->AddCollider(collider1);
+			physics->AddCollider(collider2);
+
+		}
+
+		GameObject::Sptr pillar2 = scene->CreateGameObject("Pillar 2");
+		{
+			// Set position in the scene
+			pillar2->SetPosition(glm::vec3(0.0f, 0.0f, -1.0f));
+			pillar2->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			pillar2->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = pillar2->Add<RenderComponent>();
+			renderer->SetMesh(stagePillar2Mesh);
+			renderer->SetMaterial(rockPillarMaterial);
+
+
+			BoxCollider::Sptr collider1 = BoxCollider::Create(glm::vec3(2, 3, 2));
+			collider1->SetPosition(glm::vec3(23, 3, 9.8));
+			collider1->SetRotation(glm::vec3(0, 0, 0));
+
+
+
+			BoxCollider::Sptr collider2 = BoxCollider::Create(glm::vec3(4, 1.65, 4));
+			collider2->SetPosition(glm::vec3(23, 7.72, 9.8));
+			collider2->SetRotation(glm::vec3(0, 0, 0));
+
+			//ConvexMeshCollider::Sptr collider = ConvexMeshCollider::Create();
+
+			RigidBody::Sptr physics = pillar2->Add<RigidBody>(/*static by default*/);
+			physics->AddCollider(collider1);
+			physics->AddCollider(collider2);
+
+			/*
+			TriggerVolume::Sptr volume = pillar->Add<TriggerVolume>();
+			volume->AddCollider(BoxCollider::Create(glm::vec3(4, 1.65, 4)))->SetPosition(glm::vec3(10.86, 7.72, -11.58))->SetRotation(glm::vec3(0, 0, 0));
+
+			pillar->Add<TriggerVolumeEnterBehaviour>();
+			*/
+		}
 
 
 		// Set up all our sample objects
@@ -1075,6 +1218,8 @@ void CreateScene() {
 			movingPlat->Get<MovingPlatform>()->SetNodes(nodes, 3.0f);
 			
 		}
+
+		
 
 		GameObject::Sptr boomerang = scene->CreateGameObject("Boomerang");
 		{
