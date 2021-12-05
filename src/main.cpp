@@ -55,6 +55,7 @@
 #include "Gameplay/Components/MovingPlatform.h"
 #include "Gameplay/Components/PlayerControl.h"
 #include "Gameplay/Components/BoomerangBehavior.h"
+#include "Gameplay/Components/PlayerBoomerangThrow.h"
 
 // Physics
 #include "Gameplay/Physics/RigidBody.h"
@@ -650,6 +651,7 @@ int main() {
 	ComponentManager::RegisterType<MovingPlatform>();
 	ComponentManager::RegisterType<PlayerControl>();
 	ComponentManager::RegisterType<BoomerangBehavior>();
+	ComponentManager::RegisterType<PlayerBoomerangToss>();
 	
 
 	// GL states, we'll enable depth testing and backface fulling

@@ -51,6 +51,9 @@
     <ClInclude Include="src\Gameplay\Components\MovingPlatform.h">
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
+    <ClInclude Include="src\Gameplay\Components\PlayerBoomerangToss.h">
+      <Filter>Gameplay\Components</Filter>
+    </ClInclude>
     <ClInclude Include="src\Gameplay\Components\PlayerControl.h">
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
@@ -219,6 +222,9 @@
       <Filter>Gameplay\Components</Filter>
     </ClCompile>
     <ClCompile Include="src\Gameplay\Components\MovingPlatform.cpp">
+      <Filter>Gameplay\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gameplay\Components\PlayerBoomerangToss.cpp">
       <Filter>Gameplay\Components</Filter>
     </ClCompile>
     <ClCompile Include="src\Gameplay\Components\PlayerControl.cpp">
