@@ -305,6 +305,16 @@ void CreateScene() {
 		MeshResource::Sptr cubeMesh = ResourceManager::CreateAsset<MeshResource>("cube.obj");
 		MeshResource::Sptr boiMesh = ResourceManager::CreateAsset<MeshResource>("boi-tpose.obj");
 		MeshResource::Sptr catcusMesh = ResourceManager::CreateAsset<MeshResource>("CatcusAnims/Catcus_Idle_001.obj");
+			//Stage Meshes
+				//Floors
+		MeshResource::Sptr stageCenterFloorMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_center_floor.obj");
+		MeshResource::Sptr stageSideFloorMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_side_floors.obj");
+				//Walls
+		MeshResource::Sptr stageCenterWallsMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_center_walls.obj");
+		MeshResource::Sptr stageSideWallsMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_side_walls.obj");
+				//Bridge
+		MeshResource::Sptr stageBridgeMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_bridge.obj");
+
 
 		// Load in some textures
 		Texture2D::Sptr    boxTexture = ResourceManager::CreateAsset<Texture2D>("textures/box-diffuse.png");
@@ -312,9 +322,28 @@ void CreateScene() {
 		Texture2D::Sptr    monkeyTex  = ResourceManager::CreateAsset<Texture2D>("textures/monkey-uvMap.png");
 		Texture2D::Sptr    leafTex    = ResourceManager::CreateAsset<Texture2D>("textures/leaves.png");
 		Texture2D::Sptr	   catcusTex = ResourceManager::CreateAsset<Texture2D>("textures/cattusGood.png");
+			//Stage Textures
+		Texture2D::Sptr    sandTexture = ResourceManager::CreateAsset<Texture2D>("textures/sandFloor.png");
+		Texture2D::Sptr    rockFloorTexture = ResourceManager::CreateAsset<Texture2D>("textures/rockyFloor.png");
+		Texture2D::Sptr    rockFormationTexture = ResourceManager::CreateAsset<Texture2D>("textures/bigRock.png");
+		Texture2D::Sptr    bridgeTexture = ResourceManager::CreateAsset<Texture2D>("textures/woodBridge.png");
+		Texture2D::Sptr    rockWallsTexture = ResourceManager::CreateAsset<Texture2D>("textures/walls.png");
 
 		leafTex->SetMinFilter(MinFilter::Nearest);
 		leafTex->SetMagFilter(MagFilter::Nearest);
+
+
+		sandTexture->SetMinFilter(MinFilter::Nearest);
+		sandTexture->SetMagFilter(MagFilter::Nearest);
+
+		rockFloorTexture->SetMinFilter(MinFilter::Nearest);
+		rockFloorTexture->SetMagFilter(MagFilter::Nearest);
+
+		rockFormationTexture->SetMinFilter(MinFilter::Nearest);
+		rockFormationTexture->SetMagFilter(MagFilter::Nearest);
+
+		rockWallsTexture->SetMinFilter(MinFilter::Nearest);
+		rockWallsTexture->SetMagFilter(MagFilter::Nearest);
 
 		//////////////Loading animation frames////////////////////////
 		std::vector<MeshResource::Sptr> boiFrames;
@@ -411,6 +440,48 @@ void CreateScene() {
 			toonMaterial->Set("u_Material.Shininess", 0.1f);
 			toonMaterial->Set("u_Material.Steps", 8);
 		}
+
+		/////////////Stage materials
+
+		//sand material
+		Material::Sptr sandMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		{
+			sandMaterial->Name = "Sand";
+			sandMaterial->Set("u_Material.Diffuse", sandTexture);
+			sandMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		//rock floor material
+		Material::Sptr rockFloorMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		{
+			rockFloorMaterial->Name = "RockFloor";
+			rockFloorMaterial->Set("u_Material.Diffuse", rockFloorTexture);
+			rockFloorMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		//rock Pillar material
+		Material::Sptr rockPillarMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		{
+			rockPillarMaterial->Name = "RockPillar";
+			rockPillarMaterial->Set("u_Material.Diffuse", rockFormationTexture);
+			rockPillarMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		//Wall Material
+		Material::Sptr rockWallMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		{
+			rockWallMaterial->Name = "RockPillar";
+			rockWallMaterial->Set("u_Material.Diffuse", rockWallsTexture);
+			rockWallMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		Material::Sptr bridgeMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		{
+			bridgeMaterial->Name = "RockPillar";
+			bridgeMaterial->Set("u_Material.Diffuse", bridgeTexture);
+			bridgeMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
 
 		// Create some lights for our scene
 		scene->Lights.resize(3);
@@ -542,6 +613,8 @@ void CreateScene() {
 		}
 
 		// Set up all our sample objects
+
+		/*
 		GameObject::Sptr plane = scene->CreateGameObject("Ground");
 		{
 			// Make a big tiled mesh
@@ -558,7 +631,7 @@ void CreateScene() {
 			collider->SetPosition({ 0,0,-1 });
 
 			// Attach a plane collider that extends infinitely along the X/Y axis
-			RigidBody::Sptr physics = plane->Add<RigidBody>(/*static by default*/);
+			RigidBody::Sptr physics = plane->Add<RigidBody>(/*static by default*//*);
 			physics->AddCollider(collider);
 
 			TriggerVolume::Sptr volume = plane->Add<TriggerVolume>();
@@ -566,6 +639,409 @@ void CreateScene() {
 
 			plane->Add<TriggerVolumeEnterBehaviour>();
 		}
+		*/
+
+
+		//Stage Mesh - center floor
+		GameObject::Sptr centerGround = scene->CreateGameObject("Center Ground");
+		{
+			// Set position in the scene
+			centerGround->SetPosition(glm::vec3(0.0f, 0.0f, -1.0f));
+			centerGround->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			centerGround->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer for the monkey
+			RenderComponent::Sptr renderer = centerGround->Add<RenderComponent>();
+			renderer->SetMesh(stageCenterFloorMesh);
+			renderer->SetMaterial(sandMaterial);
+
+
+			BoxCollider::Sptr collider = BoxCollider::Create(glm::vec3(110.0f, 110.0f, 1.0f));
+			collider->SetPosition({ 0,0,-1 });
+			collider->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Attach a plane collider that extends infinitely along the X/Y axis
+			RigidBody::Sptr physics = centerGround->Add<RigidBody>(/*static by default*/);
+			physics->AddCollider(collider);
+
+			TriggerVolume::Sptr volume = centerGround->Add<TriggerVolume>();
+			volume->AddCollider(BoxCollider::Create(glm::vec3(110.0f, 110.0f, 1.0f)))->SetPosition({ 0,0,-1 })->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			centerGround->Add<TriggerVolumeEnterBehaviour>();
+
+		}
+		//Stage Mesh - side floors
+		GameObject::Sptr sideGround = scene->CreateGameObject("Side Ground");
+		{
+			// Set position in the scene
+			sideGround->SetPosition(glm::vec3(0.0f, 0.0f, -1.0f));
+			sideGround->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			sideGround->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = sideGround->Add<RenderComponent>();
+			renderer->SetMesh(stageSideFloorMesh);
+			renderer->SetMaterial(rockFloorMaterial);
+
+		}
+
+		//Stage Mesh - walls
+		GameObject::Sptr centerWalls = scene->CreateGameObject("Center Walls");
+		{
+			// Set position in the scene
+			centerWalls->SetPosition(glm::vec3(0.0f, 0.0f, -1.0f));
+			centerWalls->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			centerWalls->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = centerWalls->Add<RenderComponent>();
+			renderer->SetMesh(stageCenterWallsMesh);
+			renderer->SetMaterial(rockWallMaterial);
+
+			//Collider Co-oridnates:
+			BoxCollider::Sptr collider0 = BoxCollider::Create(glm::vec3 (1, 23, 14 ));
+			collider0->SetPosition(glm::vec3(-23,19,-2));
+			collider0->SetRotation(glm::vec3(0, 0, 0));
+
+			BoxCollider::Sptr collider1 = BoxCollider::Create(glm::vec3 (1, 23, 14 ));
+			collider1->SetPosition(glm::vec3(-23,19.5,-2));
+			collider1->SetRotation(glm::vec3(0, 0, 0));
+
+			BoxCollider::Sptr collider2 = BoxCollider::Create(glm::vec3 (1, 23, 4.5 ));
+			collider2->SetPosition(glm::vec3(-23,19,-28));
+			collider2->SetRotation(glm::vec3(0, 0, 0));
+
+
+			BoxCollider::Sptr collider3 = BoxCollider::Create(glm::vec3 (16, 23, 1 ));
+			collider3->SetPosition(glm::vec3(-7,19,-33));
+			collider3->SetRotation(glm::vec3(0, 0, 0));
+
+			BoxCollider::Sptr collider4 = BoxCollider::Create(glm::vec3 (1, 23, 10 ));
+			collider4->SetPosition(glm::vec3(8.5,19,-42));
+			collider4->SetRotation(glm::vec3(0, 0, 0));
+
+			BoxCollider::Sptr collider5 = BoxCollider::Create(glm::vec3 (15, 23, 1 ));
+			collider5->SetPosition(glm::vec3(23,19,-50));
+			collider5->SetRotation(glm::vec3(0, 0, 0));
+
+			BoxCollider::Sptr collider6 = BoxCollider::Create(glm::vec3 (1, 23, 10 ));
+			collider6->SetPosition(glm::vec3(36,19,-42));
+			collider6->SetRotation(glm::vec3(0, 0, 0));
+
+
+			BoxCollider::Sptr collider7 = BoxCollider::Create(glm::vec3 (1, 12, 8 ));
+			collider7->SetPosition(glm::vec3(-21,30,17));
+			collider7->SetRotation(glm::vec3(0, 35, 0));
+
+			BoxCollider::Sptr collider8 = BoxCollider::Create(glm::vec3 (1, 23, 9.93 ));
+			collider8->SetPosition(glm::vec3(-7.92,19,28.05));
+			collider8->SetRotation(glm::vec3(0, 60, 0));
+
+
+			BoxCollider::Sptr collider9 = BoxCollider::Create(glm::vec3 (30.74, 23, 1 ));
+			collider9->SetPosition(glm::vec3(29,19,32));
+			collider9->SetRotation(glm::vec3(0, 0, 0));
+
+			BoxCollider::Sptr collider10 = BoxCollider::Create(glm::vec3 (1, 23, 4.5 ));
+			collider10->SetPosition(glm::vec3(58,19,28));
+			collider10->SetRotation(glm::vec3(0, 0, 0));
+
+			BoxCollider::Sptr collider11 = BoxCollider::Create(glm::vec3 (1, 23, 14 ));
+			collider11->SetPosition(glm::vec3(58,19,1.2));
+			collider11->SetRotation(glm::vec3(0, 0, 0));
+
+			BoxCollider::Sptr collider12 = BoxCollider::Create(glm::vec3 (1, 12, 8 ));
+			collider12->SetPosition(glm::vec3(54,30,-17));
+			collider12->SetRotation(glm::vec3(0, 35, 0));
+
+			BoxCollider::Sptr collider13 = BoxCollider::Create(glm::vec3 (1, 23, 9.93 ));
+			collider13->SetPosition(glm::vec3(44.1,19,-28.05));
+			collider13->SetRotation(glm::vec3(0, 60, 0));
+			
+			RigidBody::Sptr physics = centerWalls->Add<RigidBody>(/*static by default*/);
+			physics->AddCollider(collider0);
+			physics->AddCollider(collider1);
+			physics->AddCollider(collider2);
+			physics->AddCollider(collider3);
+			physics->AddCollider(collider4);
+			physics->AddCollider(collider5);
+			physics->AddCollider(collider6);
+			physics->AddCollider(collider7);
+			physics->AddCollider(collider8);
+			physics->AddCollider(collider9);
+			physics->AddCollider(collider10);
+			physics->AddCollider(collider11);
+			physics->AddCollider(collider12);
+			physics->AddCollider(collider13);
+			//KILL ME OH MY GOD
+		}
+
+		//Stage Mesh - side walls
+		GameObject::Sptr sideWalls = scene->CreateGameObject("Side Walls");
+		{
+			// Set position in the scene
+			sideWalls->SetPosition(glm::vec3(0.0f, 0.0f, -1.0f));
+			sideWalls->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			sideWalls->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = sideWalls->Add<RenderComponent>();
+			renderer->SetMesh(stageSideWallsMesh);
+			renderer->SetMaterial(rockWallMaterial);
+
+
+			//oh god the amount of work i did for this
+			BoxCollider::Sptr collider0 = BoxCollider::Create(glm::vec3(8, 10, 1));
+			collider0->SetPosition(glm::vec3(-30, 5, -15));
+			collider0->SetRotation(glm::vec3(0, 0, 0));
+
+			BoxCollider::Sptr collider1 = BoxCollider::Create(glm::vec3(8, 10, 1));
+			collider1->SetPosition(glm::vec3(-30, 5, -24));
+			collider1->SetRotation(glm::vec3(0, 0, 0));
+
+			
+			BoxCollider::Sptr collider2 = BoxCollider::Create(glm::vec3(1, 10, 4));
+			collider2->SetPosition(glm::vec3(-37, 5, -27.5));
+			collider2->SetRotation(glm::vec3(0, 0, 0));
+		
+
+
+			BoxCollider::Sptr collider3 = BoxCollider::Create(glm::vec3(14.71, 10, 1));
+			collider3->SetPosition(glm::vec3(-52, 5, -32.5));
+			collider3->SetRotation(glm::vec3(0, 0, 0));
+
+			
+			BoxCollider::Sptr collider4 = BoxCollider::Create(glm::vec3(1, 10, 18));
+			collider4->SetPosition(glm::vec3(-69.5, 5, -16));
+			collider4->SetRotation(glm::vec3(0, -5, 0));
+
+			
+			BoxCollider::Sptr collider5 = BoxCollider::Create(glm::vec3(1, 10, 5));
+			collider5->SetPosition(glm::vec3(-74, 5, 6));
+			collider5->SetRotation(glm::vec3(0, -38, 0));
+
+			BoxCollider::Sptr collider6 = BoxCollider::Create(glm::vec3(1, 10, 10.5));
+			collider6->SetPosition(glm::vec3(-78, 5, 19));
+			collider6->SetRotation(glm::vec3(0, 0, 0));
+
+			BoxCollider::Sptr collider7 = BoxCollider::Create(glm::vec3(18.02, 10, 1));
+			collider7->SetPosition(glm::vec3(-62, 5, 32.5));
+			collider7->SetRotation(glm::vec3(0, -7, 0));
+
+
+			
+			BoxCollider::Sptr collider8 = BoxCollider::Create(glm::vec3(1, 10, 13));
+			collider8->SetPosition(glm::vec3(-37, 5, -1));
+			collider8->SetRotation(glm::vec3(0, 0, 0));
+
+
+
+			BoxCollider::Sptr collider9 = BoxCollider::Create(glm::vec3(1, 10, 5.5));
+			collider9->SetPosition(glm::vec3(-44, 5, 30));
+			collider9->SetRotation(glm::vec3(0, -16, 0));
+
+
+			BoxCollider::Sptr collider10 = BoxCollider::Create(glm::vec3(5, 0.97, 7.82));
+			collider10->SetPosition(glm::vec3(-37.86, 0.13, 19.41));
+			collider10->SetRotation(glm::vec3(-5, -20, 18));
+
+
+			BoxCollider::Sptr collider11 = BoxCollider::Create(glm::vec3(5, 1, 7.9));
+			collider11->SetPosition(glm::vec3(-28.9, 3.46, 22.6));
+			collider11->SetRotation(glm::vec3(-4, -14, 26));
+
+
+
+			BoxCollider::Sptr collider12 = BoxCollider::Create(glm::vec3(3.64, 2.67, 5.17));
+			collider12->SetPosition(glm::vec3(-20.83, 4.46, 21.86));
+			collider12->SetRotation(glm::vec3(6, 36, 10));
+
+
+			BoxCollider::Sptr collider13 = BoxCollider::Create(glm::vec3(3.76, 10, 1));
+			collider13->SetPosition(glm::vec3(-34.89, 5, 14.05));
+			collider13->SetRotation(glm::vec3(0, -42, 0));
+
+
+
+			BoxCollider::Sptr collider14 = BoxCollider::Create(glm::vec3(3.46, 10, 1));
+			collider14->SetPosition(glm::vec3(-27.83, 5, 18.54));
+			collider14->SetRotation(glm::vec3(0, -4, 0));
+
+
+			BoxCollider::Sptr collider15 = BoxCollider::Create(glm::vec3(2.72, 10, 1));
+			collider15->SetPosition(glm::vec3(-23.36, 5, 17.63));
+			collider15->SetRotation(glm::vec3(0, 37, 0));
+
+
+
+			BoxCollider::Sptr collider16 = BoxCollider::Create(glm::vec3(4.29, 10, 1));
+			collider16->SetPosition(glm::vec3(-39.64, 5, 26.94));
+			collider16->SetRotation(glm::vec3(0, -17, 0));
+
+
+			BoxCollider::Sptr collider17 = BoxCollider::Create(glm::vec3(7.44, 10, 1));
+			collider17->SetPosition(glm::vec3(-31.03, 5, 28.35));
+			collider17->SetRotation(glm::vec3(0, -9, 0));
+
+
+			BoxCollider::Sptr collider18 = BoxCollider::Create(glm::vec3(4.91, 10, 1));
+			collider18->SetPosition(glm::vec3(-19.01, 5, 25.99));
+			collider18->SetRotation(glm::vec3(0, 34, 0));
+
+			//Alright, this is uhhhhh hell :)
+			//This is the other side
+			/// <summary>
+			/// The right side. - on the z, + 95 on the x
+			/// </summary>
+			int d = 35;
+
+			BoxCollider::Sptr collider19 = BoxCollider::Create(glm::vec3(8, 10, 1));
+			collider19->SetPosition(glm::vec3((-30 -d) * -1, 5, 15));
+			collider19->SetRotation(glm::vec3(0, 0, 0));//
+
+			BoxCollider::Sptr collider20 = BoxCollider::Create(glm::vec3(8, 10, 1));
+			collider20->SetPosition(glm::vec3((-30 - d) * -1, 5, 24));
+			collider20->SetRotation(glm::vec3(0, 0, 0));//
+
+
+			BoxCollider::Sptr collider21 = BoxCollider::Create(glm::vec3(1, 10, 4));
+			collider21->SetPosition(glm::vec3((-37 - d) * -1, 5, 27.5));
+			collider21->SetRotation(glm::vec3(0, 0, 0));//
+
+
+
+			BoxCollider::Sptr collider22 = BoxCollider::Create(glm::vec3(14.71, 10, 1));
+			collider22->SetPosition(glm::vec3((-52 - d) * -1, 5, 32.5));
+			collider22->SetRotation(glm::vec3(0, 0, 0));//
+
+
+			BoxCollider::Sptr collider23 = BoxCollider::Create(glm::vec3(1, 10, 18));
+			collider23->SetPosition(glm::vec3((-69.5 - d) * -1, 5, 16));
+			collider23->SetRotation(glm::vec3(0, -5, 0));//
+
+
+			BoxCollider::Sptr collider24 = BoxCollider::Create(glm::vec3(1, 10, 5));
+			collider24->SetPosition(glm::vec3((-74 - d) * -1, 5, -6));
+			collider24->SetRotation(glm::vec3(0, -38, 0));//
+
+			BoxCollider::Sptr collider25 = BoxCollider::Create(glm::vec3(1, 10, 10.5));
+			collider25->SetPosition(glm::vec3((-78 - d) * -1, 5, -19));
+			collider25->SetRotation(glm::vec3(0, 0, 0));//
+
+			BoxCollider::Sptr collider26 = BoxCollider::Create(glm::vec3(18.02, 10, 1));
+			collider26->SetPosition(glm::vec3((-62 - d) * -1, 5, -32.5));
+			collider26->SetRotation(glm::vec3(0, -7, 0));//
+
+
+
+			BoxCollider::Sptr collider27 = BoxCollider::Create(glm::vec3(1, 10, 13));
+			collider27->SetPosition(glm::vec3((-37 - d) * -1, 5, 1));
+			collider27->SetRotation(glm::vec3(0, 0, 0));//
+
+
+
+			BoxCollider::Sptr collider28 = BoxCollider::Create(glm::vec3(1, 10, 5.5));
+			collider28->SetPosition(glm::vec3((-44 - d) * -1, 5, -30));
+			collider28->SetRotation(glm::vec3(0, -16, 0));//
+
+
+			BoxCollider::Sptr collider29 = BoxCollider::Create(glm::vec3(5, 0.97, 7.82));
+			collider29->SetPosition(glm::vec3((-37.86 - d) * -1, 0.13, -19.41));
+			collider29->SetRotation(glm::vec3(-5, -20, 18));//
+
+
+			BoxCollider::Sptr collider30 = BoxCollider::Create(glm::vec3(5, 1, 7.9));
+			collider30->SetPosition(glm::vec3((-28.9 - d) * -1, 3.46, -22.6));
+			collider30->SetRotation(glm::vec3(-4, -14, 26));//
+
+
+
+			BoxCollider::Sptr collider31 = BoxCollider::Create(glm::vec3(3.64, 2.67, 5.17));
+			collider31->SetPosition(glm::vec3((-20.83 - d) * -1, 4.46, -21.86));
+			collider31->SetRotation(glm::vec3(6, 36, 10));//
+
+
+			BoxCollider::Sptr collider32 = BoxCollider::Create(glm::vec3(3.76, 10, 1));
+			collider32->SetPosition(glm::vec3((-34.89 - d) * -1, 5, -14.05));
+			collider32->SetRotation(glm::vec3(0, -42, 0));//
+
+
+
+			BoxCollider::Sptr collider33 = BoxCollider::Create(glm::vec3(3.46, 10, 1));
+			collider33->SetPosition(glm::vec3((-27.83 - d) * -1, 5, -18.54));
+			collider33->SetRotation(glm::vec3(0, -4, 0));//
+
+
+			BoxCollider::Sptr collider34 = BoxCollider::Create(glm::vec3(2.72, 10, 1));
+			collider34->SetPosition(glm::vec3((-23.36 - d) * -1, 5, -17.63));
+			collider34->SetRotation(glm::vec3(0, 37, 0));//
+
+
+
+			BoxCollider::Sptr collider35 = BoxCollider::Create(glm::vec3(4.29, 10, 1));
+			collider35->SetPosition(glm::vec3((-39.64 - d) * -1, 5, -26.94));
+			collider35->SetRotation(glm::vec3(0, -17, 0));//
+
+
+			BoxCollider::Sptr collider36 = BoxCollider::Create(glm::vec3(7.44, 10, 1));
+			collider36->SetPosition(glm::vec3((-31.03 - d) * -1, 5, -28.35));
+			collider36->SetRotation(glm::vec3(0, -9, 0));//
+
+
+			BoxCollider::Sptr collider37 = BoxCollider::Create(glm::vec3(4.91, 10, 1));
+			collider37->SetPosition(glm::vec3((-19.01 - d) * -1, 5, -25.99));
+			collider37->SetRotation(glm::vec3(0, 34, 0));//
+
+			/// <summary>
+			/// 
+			/// </summary>
+
+			RigidBody::Sptr physics = sideWalls->Add<RigidBody>(/*static by default*/);
+			physics->AddCollider(collider0);
+			physics->AddCollider(collider1);
+			physics->AddCollider(collider2);
+			physics->AddCollider(collider3);
+			physics->AddCollider(collider4);
+			physics->AddCollider(collider5);
+			physics->AddCollider(collider6);
+			physics->AddCollider(collider7);
+			physics->AddCollider(collider8);
+			physics->AddCollider(collider9);
+			physics->AddCollider(collider10);
+			physics->AddCollider(collider11);
+			physics->AddCollider(collider12);
+			physics->AddCollider(collider13);
+			physics->AddCollider(collider14);
+			physics->AddCollider(collider15);
+			physics->AddCollider(collider16);
+			physics->AddCollider(collider17);
+			physics->AddCollider(collider18);
+			
+			//The other side lul
+
+			physics->AddCollider(collider19);
+			physics->AddCollider(collider20);
+			physics->AddCollider(collider21);
+			physics->AddCollider(collider22);
+			physics->AddCollider(collider23);
+			physics->AddCollider(collider24);
+			physics->AddCollider(collider25);
+			physics->AddCollider(collider26);
+			physics->AddCollider(collider27);
+			physics->AddCollider(collider28);
+			physics->AddCollider(collider29);
+			physics->AddCollider(collider30);
+			physics->AddCollider(collider31);
+			physics->AddCollider(collider32);
+			physics->AddCollider(collider33);
+			physics->AddCollider(collider34);
+			physics->AddCollider(collider35);
+			physics->AddCollider(collider36);
+			physics->AddCollider(collider37);
+
+		}
+
+
 
 		// Set up all our sample objects
 		GameObject::Sptr movingPlat = scene->CreateGameObject("GroundMoving");
@@ -1036,6 +1512,11 @@ int main() {
 		// Perform updates for all components
 		scene->Update(dt);
 
+
+		// Make sure depth testing and culling are re-enabled
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+
 		// Update our worlds physics!
 		scene->DoPhysics(dt);
 
@@ -1049,7 +1530,8 @@ int main() {
 
 		//detachedCam->SetPosition(player->GetPosition());
 
-		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y);
+		glViewport(0, 0 // /2 
+			, windowSize.x, windowSize.y);
 
 		//Camera 1 Rendering
 		{;
@@ -1069,9 +1551,7 @@ int main() {
 		TextureCube::Sptr environment = scene->GetSkyboxTexture();
 		if (environment) environment->Bind(0); 
 
-		// Make sure depth testing and culling are re-enabled
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_CULL_FACE);
+		
 
 		// Here we'll bind all the UBOs to their corresponding slots
 		scene->PreRender();
@@ -1156,6 +1636,9 @@ int main() {
 
 		VertexArrayObject::Unbind();
 
+		//From here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		/*
+
 		GameObject::Sptr detachedCam2 = scene->FindObjectByName("Detached Camera 2");
 		GameObject::Sptr player2 = scene->FindObjectByName("Player 2");
 
@@ -1234,7 +1717,7 @@ int main() {
 			instanceData.u_NormalMatrix = glm::mat3(glm::transpose(glm::inverse(object->GetTransform())));
 			instanceUniforms->Update();
 
-			/*
+			//Comment this out!
 			if (object->Name == "Boi Base")
 			{
 				VertexArrayObject::Sptr boiObject = renderable->GetMesh();
@@ -1254,21 +1737,25 @@ int main() {
 
 				renderable->GetMaterial()->Set("t", t);
 			}
-			*/
+			//Comment this out!
 
 			// Draw the object
 			renderable->GetMesh()->Draw();
 			});
 		};
 
-		// Draw object GUIs
-		if (isDebugWindowOpen) {
-			scene->DrawAllGameObjectGUIs();
-		}
+		
 
 		// Use our cubemap to draw our skybox
 		scene->DrawSkybox(scene->MainCamera2);
+		*/
+		//To here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// Draw object GUIs
 
+
+		if (isDebugWindowOpen) {
+			scene->DrawAllGameObjectGUIs();
+		}
 		// Disable culling
 		glDisable(GL_CULL_FACE);
 		// Disable depth testing, we're going to use order-dependant layering

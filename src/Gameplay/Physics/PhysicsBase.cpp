@@ -47,6 +47,26 @@ int PhysicsBase::_editorSelectedColliderType = 0;
 			collider->_isDirty |= LABEL_LEFT(ImGui::DragFloat3, "Position", &collider->_position.x, 0.01f);
 			collider->_isDirty |= LABEL_LEFT(ImGui::DragFloat3, "Rotation", &collider->_rotation.x, 1.0f);
 			collider->_isDirty |= LABEL_LEFT(ImGui::DragFloat3, "Scale   ", &collider->_scale.x, 0.01f);
+
+			if (ImGui::Button("Print Collider")) {
+				std::cout << "Collider Co-oridnates: \n" <<
+					"BoxCollider::Sptr collider_ = BoxCollider::Create(glm::vec3 (" << collider->_scale.x << ", " << collider->_scale.y << ", " << collider->_scale.z << " ));\n"
+					<< "collider->SetPosition(glm::vec3(" << collider->_position.x << "," << collider->_position.y << "," << collider->_position.z << ")); \n"
+					<< "collider->SetRotation(glm::vec3(" << collider->_rotation.x << ", " << collider->_rotation.y << ", " << collider->_rotation.z << ")); ";
+			}
+
+
+			/*
+			
+			"BoxCollider::Sptr collider__ = BoxCollider::Create(glm::vec3(110.0f, 110.0f, 1.0f));
+			collider->SetPosition({ 0,0,-1 });
+			collider->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+			*/
+			/*
+			std::cout << "BoxCollider::Sptr collider_ = BoxCollider::Create(glm::vec3 (" << collider->_scale.x << ", " << collider->_scale.y << ", " << collider->_scale.z << " ));\n"
+				<< "collider->SetPosition(glm::vec3(" << collider->_position.x << "," << collider->_position.y << "," << collider->_position.z << ")); \n"
+				<< "collider->SetRotation(glm::vec3(" << &collider->_rotation.x << ", " << &collider->_rotation.y << ", " << &collider->_rotation.z << ")); "
+				*/
 			// Draw collider's editor
 			collider->DrawImGui();
 
