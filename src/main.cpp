@@ -118,6 +118,7 @@ glm::ivec2 windowSize = glm::ivec2(1920, 1080);
 // The title of our GLFW window
 std::string windowTitle = "Boomerangers";
 
+bool debug = true;
 
 // using namespace should generally be avoided, and if used, make sure it's ONLY in cpp files
 using namespace Gameplay;
@@ -313,54 +314,91 @@ void CreateScene() {
 				{ ShaderPartType::Fragment, "shaders/fragment_shaders/toon_shading.glsl" }
 			});
 
-		// Load in the meshes
-		MeshResource::Sptr monkeyMesh = ResourceManager::CreateAsset<MeshResource>("Monkey.obj");
-		MeshResource::Sptr cubeMesh = ResourceManager::CreateAsset<MeshResource>("cube.obj");
-		MeshResource::Sptr boiMesh = ResourceManager::CreateAsset<MeshResource>("boi-tpose.obj");
-		MeshResource::Sptr catcusMesh = ResourceManager::CreateAsset<MeshResource>("CatcusAnims/Catcus_Idle_001.obj");
-		MeshResource::Sptr mainCharMesh = ResourceManager::CreateAsset<MeshResource>("mainChar.obj");
-		MeshResource::Sptr mainCharMesh2 = ResourceManager::CreateAsset<MeshResource>("mainChar.obj");
+			// Load in the meshes
+			MeshResource::Sptr monkeyMesh = ResourceManager::CreateAsset<MeshResource>("Monkey.obj");
+			MeshResource::Sptr cubeMesh = ResourceManager::CreateAsset<MeshResource>("cube.obj");
+			MeshResource::Sptr boiMesh = ResourceManager::CreateAsset<MeshResource>("boi-tpose.obj");
+			MeshResource::Sptr catcusMesh = ResourceManager::CreateAsset<MeshResource>("CatcusAnims/Catcus_Idle_001.obj");
+			MeshResource::Sptr mainCharMesh = ResourceManager::CreateAsset<MeshResource>("mainChar.obj");
+			MeshResource::Sptr mainCharMesh2 = ResourceManager::CreateAsset<MeshResource>("mainChar.obj");
 			//Stage Meshes
 				//Floors
-		MeshResource::Sptr stageCenterFloorMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_center_floor.obj");
-		MeshResource::Sptr stageSideFloorMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_side_floors.obj");
-				//Walls
-		MeshResource::Sptr stageCenterWallsMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_center_walls.obj");
-		MeshResource::Sptr stageSideWallsMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_side_walls.obj");
-				//Bridge
-		MeshResource::Sptr stageBridgeMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_bridge.obj");
-		MeshResource::Sptr stagePillarMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_pillar.obj");
-		MeshResource::Sptr stagePillar2Mesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_pillar2.obj");
+			MeshResource::Sptr stageCenterFloorMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_center_floor.obj");
+			MeshResource::Sptr stageSideFloorMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_side_floors.obj");
+			//Walls
+			MeshResource::Sptr stageCenterWallsMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_center_walls.obj");
+			MeshResource::Sptr stageSideWallsMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_side_walls.obj");
+			//Bridge
+			MeshResource::Sptr stageBridgeMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_bridge.obj");
+			MeshResource::Sptr stagePillarMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_pillar.obj");
+			MeshResource::Sptr stagePillar2Mesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_pillar2.obj");
 
-		// Load in some textures
-		Texture2D::Sptr    boxTexture = ResourceManager::CreateAsset<Texture2D>("textures/box-diffuse.png");
-		Texture2D::Sptr    boxSpec    = ResourceManager::CreateAsset<Texture2D>("textures/box-specular.png");
-		Texture2D::Sptr    monkeyTex  = ResourceManager::CreateAsset<Texture2D>("textures/monkey-uvMap.png");
-		Texture2D::Sptr    leafTex    = ResourceManager::CreateAsset<Texture2D>("textures/leaves.png");
-		Texture2D::Sptr	   catcusTex = ResourceManager::CreateAsset<Texture2D>("textures/cattusGood.png");
-		Texture2D::Sptr	   mainCharTex = ResourceManager::CreateAsset<Texture2D>("textures/Char.png");
+			//Assets
+
+			MeshResource::Sptr barrelMesh = ResourceManager::CreateAsset<MeshResource>("barrel.obj");
+			
+			MeshResource::Sptr cactusMesh = ResourceManager::CreateAsset<MeshResource>("cactus_straight.obj");
+			MeshResource::Sptr roundCactusMesh = ResourceManager::CreateAsset<MeshResource>("cactus_round.obj");
+			MeshResource::Sptr grassMesh = ResourceManager::CreateAsset<MeshResource>("grass.obj");
+			
+			
+			//MeshResource::Sptr wiltedTreeMesh = ResourceManager::CreateAsset<MeshResource>("tree_straight.obj");
+			
+			//MeshResource::Sptr wiltedTree2Mesh = ResourceManager::CreateAsset<MeshResource>("tree_slanted.obj");
+
+			
+			MeshResource::Sptr tumbleweedMesh = ResourceManager::CreateAsset<MeshResource>("tumbleweed2.obj");
+			MeshResource::Sptr smallRocksMesh = ResourceManager::CreateAsset<MeshResource>("small_rocks.obj");
+			
+			MeshResource::Sptr floatingRockMesh = ResourceManager::CreateAsset<MeshResource>("floating_rock.obj");
+			MeshResource::Sptr bigRocksMesh = ResourceManager::CreateAsset<MeshResource>("big_rocks.obj");
+
+			// Load in some textures
+			Texture2D::Sptr    boxTexture = ResourceManager::CreateAsset<Texture2D>("textures/box-diffuse.png");
+			Texture2D::Sptr    boxSpec = ResourceManager::CreateAsset<Texture2D>("textures/box-specular.png");
+			Texture2D::Sptr    monkeyTex = ResourceManager::CreateAsset<Texture2D>("textures/monkey-uvMap.png");
+			Texture2D::Sptr    leafTex = ResourceManager::CreateAsset<Texture2D>("textures/leaves.png");
+			Texture2D::Sptr	   catcusTex = ResourceManager::CreateAsset<Texture2D>("textures/cattusGood.png");
+			Texture2D::Sptr	   mainCharTex = ResourceManager::CreateAsset<Texture2D>("textures/Char.png");
 			//Stage Textures
-		Texture2D::Sptr    sandTexture = ResourceManager::CreateAsset<Texture2D>("textures/sandFloor.png");
-		Texture2D::Sptr    rockFloorTexture = ResourceManager::CreateAsset<Texture2D>("textures/rockyFloor.png");
-		Texture2D::Sptr    rockFormationTexture = ResourceManager::CreateAsset<Texture2D>("textures/bigRock.png");
-		Texture2D::Sptr    bridgeTexture = ResourceManager::CreateAsset<Texture2D>("textures/woodBridge.png");
-		Texture2D::Sptr    rockWallsTexture = ResourceManager::CreateAsset<Texture2D>("textures/walls.png");
+			Texture2D::Sptr    sandTexture = ResourceManager::CreateAsset<Texture2D>("textures/sandFloor.png");
+			Texture2D::Sptr    rockFloorTexture = ResourceManager::CreateAsset<Texture2D>("textures/rockyFloor.png");
+			Texture2D::Sptr    rockFormationTexture = ResourceManager::CreateAsset<Texture2D>("textures/bigRock.png");
+			Texture2D::Sptr    bridgeTexture = ResourceManager::CreateAsset<Texture2D>("textures/woodBridge.png");
+			Texture2D::Sptr    rockWallsTexture = ResourceManager::CreateAsset<Texture2D>("textures/walls.png");
 
-		leafTex->SetMinFilter(MinFilter::Nearest);
-		leafTex->SetMagFilter(MagFilter::Nearest);
+			//asset textures
+
+			Texture2D::Sptr    barrelTex = ResourceManager::CreateAsset<Texture2D>("textures/barrelTex.png");
+			
+			Texture2D::Sptr    cactusTex = ResourceManager::CreateAsset<Texture2D>("textures/cactusTex.png");
+			Texture2D::Sptr    grassTex = ResourceManager::CreateAsset<Texture2D>("textures/grassTex.png");
+		
+			Texture2D::Sptr    greyTreeTex = ResourceManager::CreateAsset<Texture2D>("textures/greyTreeTex.png");
+			Texture2D::Sptr    beigeTreeTex = ResourceManager::CreateAsset<Texture2D>("textures/beigeTreeTex.png");
+
+			Texture2D::Sptr    rockTex = ResourceManager::CreateAsset<Texture2D>("textures/rockTex.png");
+			Texture2D::Sptr    tumbleweedTex = ResourceManager::CreateAsset<Texture2D>("textures/tumbleweedTex.png");
 
 
-		sandTexture->SetMinFilter(MinFilter::Nearest);
-		sandTexture->SetMagFilter(MagFilter::Nearest);
+			leafTex->SetMinFilter(MinFilter::Nearest);
+			leafTex->SetMagFilter(MagFilter::Nearest);
 
-		rockFloorTexture->SetMinFilter(MinFilter::Nearest);
-		rockFloorTexture->SetMagFilter(MagFilter::Nearest);
 
-		rockFormationTexture->SetMinFilter(MinFilter::Nearest);
-		rockFormationTexture->SetMagFilter(MagFilter::Nearest);
+			sandTexture->SetMinFilter(MinFilter::Nearest);
+			sandTexture->SetMagFilter(MagFilter::Nearest);
 
-		rockWallsTexture->SetMinFilter(MinFilter::Nearest);
-		rockWallsTexture->SetMagFilter(MagFilter::Nearest);
+			rockFloorTexture->SetMinFilter(MinFilter::Nearest);
+			rockFloorTexture->SetMagFilter(MagFilter::Nearest);
+
+			rockFormationTexture->SetMinFilter(MinFilter::Nearest);
+			rockFormationTexture->SetMagFilter(MagFilter::Nearest);
+
+			rockWallsTexture->SetMinFilter(MinFilter::Nearest);
+			rockWallsTexture->SetMagFilter(MagFilter::Nearest);
+
+			barrelTex->SetMinFilter(MinFilter::Nearest);
+			barrelTex->SetMagFilter(MagFilter::Nearest);
 
 		//////////////Loading animation frames////////////////////////
 		std::vector<MeshResource::Sptr> boiFrames;
@@ -435,7 +473,7 @@ void CreateScene() {
 			mainCharMaterial->Set("u_Material.Diffuse", mainCharTex);
 			mainCharMaterial->Set("u_Material.Shininess", 0.1f);
 		}
-		
+
 		Material::Sptr mainCharMaterial2 = ResourceManager::CreateAsset<Material>(animShader);
 		{
 			mainCharMaterial2->Name = "MainCharacter2";
@@ -468,9 +506,9 @@ void CreateScene() {
 			foliageMaterial->Set("u_Material.Threshold", 0.1f);
 
 			foliageMaterial->Set("u_WindDirection", glm::vec3(1.0f, 1.0f, 0.0f));
-			foliageMaterial->Set("u_WindStrength",  0.5f);
+			foliageMaterial->Set("u_WindStrength", 0.5f);
 			foliageMaterial->Set("u_VerticalScale", 1.0f);
-			foliageMaterial->Set("u_WindSpeed",     1.0f);
+			foliageMaterial->Set("u_WindSpeed", 1.0f);
 		}
 
 		// Our toon shader material
@@ -523,18 +561,81 @@ void CreateScene() {
 			bridgeMaterial->Set("u_Material.Shininess", 0.1f);
 		}
 
+		/*
+		Okay, I pull up, hop out at the after party
+		You and all your friends, yeah, they love to get naughty
+		Sippin' on that Henn', I know you love that Bacardi (Sonny Digital)
+1		942, I take you back in that 'Rari
+		*/
+
+
+		Material::Sptr barrelMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		{
+			barrelMaterial->Name = "Barrel";
+			barrelMaterial->Set("u_Material.Diffuse", barrelTex);
+			barrelMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+		
+		Material::Sptr cactusMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		{
+			cactusMaterial->Name = "Cactus";
+			cactusMaterial->Set("u_Material.Diffuse", cactusTex);
+			cactusMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+	
+		Material::Sptr grassMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		{
+			grassMaterial->Name = "Grass";
+			grassMaterial->Set("u_Material.Diffuse", grassTex);
+			grassMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+		
+		Material::Sptr greyTreeMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		{
+			greyTreeMaterial->Name = "Tree Grey";
+			greyTreeMaterial->Set("u_Material.Diffuse", greyTreeTex);
+			greyTreeMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		Material::Sptr beigeTreeMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		{
+			beigeTreeMaterial->Name = "Tree beige";
+			beigeTreeMaterial->Set("u_Material.Diffuse", beigeTreeTex);
+			beigeTreeMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		Material::Sptr rockMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		{
+			rockMaterial->Name = "Rock";
+			rockMaterial->Set("u_Material.Diffuse", rockTex);
+			rockMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+		
+		Material::Sptr tumbleweedMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		{
+			tumbleweedMaterial->Name = "Tumbleweed";
+			tumbleweedMaterial->Set("u_Material.Diffuse", tumbleweedTex);
+			tumbleweedMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+		
+
 
 		// Create some lights for our scene
 		scene->Lights.resize(3);
-		scene->Lights[0].Position = glm::vec3(0.0f, 1.0f, 3.0f);
+		scene->Lights[0].Position = glm::vec3(9.0f, 1.0f, 50.0f);
 		scene->Lights[0].Color = glm::vec3(1.0f, 1.0f, 1.0f);
-		scene->Lights[0].Range = 100.0f;
+		scene->Lights[0].Range = 1000.0f;
 
 		scene->Lights[1].Position = glm::vec3(1.0f, 0.0f, 3.0f);
 		scene->Lights[1].Color = glm::vec3(0.2f, 0.8f, 0.1f);
 
+		scene->Lights[2].Position = glm::vec3(9.0f, 1.0f, 50.0f);
+		scene->Lights[2].Color = glm::vec3(1.0f, 0.57f, 0.1f);
+		scene->Lights[2].Range = 200.0f;
+		/*
 		scene->Lights[2].Position = glm::vec3(0.0f, 1.0f, 3.0f);
 		scene->Lights[2].Color = glm::vec3(1.0f, 0.2f, 0.1f);
+		*/
 
 		// We'll create a mesh that is a simple plane that we can resize later
 		MeshResource::Sptr planeMesh = ResourceManager::CreateAsset<MeshResource>();
@@ -1246,25 +1347,247 @@ void CreateScene() {
 			pillar->Add<TriggerVolumeEnterBehaviour>();
 			*/
 		}
+		/*
+		barrelMesh // 
+		cactusMesh///
+		roundCactusMesh//
+		grassMesh//
+		wiltedTreeMesh
+		wiltedTree2Mesh
+		tumbleweedMesh
+		smallRocksMesh//
+		floatingRockMesh//
+		rock2Mesh//
+		*/
 
+		GameObject::Sptr barrel1 = scene->CreateGameObject("Barrel 1");
+		{
+			// Set position in the scene
+			barrel1->SetPosition(glm::vec3(-19.82f, 0.0f, 1.0f));
+			barrel1->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			barrel1->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = barrel1->Add<RenderComponent>();
+			renderer->SetMesh(barrelMesh);
+			renderer->SetMaterial(barrelMaterial);
+
+			BoxCollider::Sptr collider = BoxCollider::Create();
+			collider->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			//collider->SetPosition(barrel1->GetPosition());
+
+			RigidBody::Sptr physics = barrel1->Add<RigidBody>(RigidBodyType::Dynamic);
+			physics->AddCollider(collider);
+
+		}
+
+		GameObject::Sptr grass = scene->CreateGameObject("Grass 1");
+		{
+			// Set position in the scene
+			grass->SetPosition(glm::vec3(-16.75, -17.85, -1));
+			grass->SetScale(glm::vec3(30.0f, 30.0f, 30.0f));
+			grass->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = grass->Add<RenderComponent>();
+			renderer->SetMesh(grassMesh);
+			renderer->SetMaterial(grassMaterial);
+		}
+
+		GameObject::Sptr grass2 = scene->CreateGameObject("Grass 2");
+		{
+			// Set position in the scene
+			grass2->SetPosition(glm::vec3(-7.08, 12, -1));
+			grass2->SetScale(glm::vec3(30.0f, 30.0f, 30.0f));
+			grass2->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = grass2->Add<RenderComponent>();
+			renderer->SetMesh(grassMesh);
+			renderer->SetMaterial(grassMaterial);
+		}//
+
+		GameObject::Sptr grass3 = scene->CreateGameObject("Grass 3");
+		{
+			// Set position in the scene
+			grass3->SetPosition(glm::vec3(-0.26, 4, -1));
+			grass3->SetScale(glm::vec3(30.0f, 30.0f, 30.0f));
+			grass3->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = grass3->Add<RenderComponent>();
+			renderer->SetMesh(grassMesh);
+			renderer->SetMaterial(grassMaterial);
+		}
+
+		GameObject::Sptr grass4 = scene->CreateGameObject("Grass 4");
+		{
+			// Set position in the scene
+			grass4->SetPosition(glm::vec3(21.71, 8, -1));
+			grass4->SetScale(glm::vec3(30.0f, 30.0f, 30.0f));
+			grass4->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = grass4->Add<RenderComponent>();
+			renderer->SetMesh(grassMesh);
+			renderer->SetMaterial(grassMaterial);
+		}
+
+		GameObject::Sptr grass5 = scene->CreateGameObject("Grass 5");
+		{
+			// Set position in the scene
+			grass5->SetPosition(glm::vec3(51.5, 10, -1));
+			grass5->SetScale(glm::vec3(30.0f, 30.0f, 30.0f));
+			grass5->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = grass5->Add<RenderComponent>();
+			renderer->SetMesh(grassMesh);
+			renderer->SetMaterial(grassMaterial);
+		}
+
+
+		
+		GameObject::Sptr cactus = scene->CreateGameObject("Cactus");
+		{
+			// Set position in the scene
+			cactus->SetPosition(glm::vec3(-17.73, -13.07, -1));
+			cactus->SetScale(glm::vec3(30.0f, 30.0f, 30.0f));
+			cactus->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = cactus->Add<RenderComponent>();
+			renderer->SetMesh(cactusMesh);
+			renderer->SetMaterial(cactusMaterial);
+
+			BoxCollider::Sptr collider = BoxCollider::Create();
+			collider->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			//collider->SetPosition(barrel1->GetPosition());
+			RigidBody::Sptr physics = cactus->Add<RigidBody>(/*static by default*/);
+			physics->AddCollider(collider);
+
+		}
+		//SetPosition(glm::vec3(52.82,1,10));
+
+		GameObject::Sptr roundCactus = scene->CreateGameObject("Cactus Round ");
+		{
+			// Set position in the scene
+			roundCactus->SetPosition(glm::vec3(52.82, 10, -1));
+			roundCactus->SetScale(glm::vec3(30.0f, 30.0f, 30.0f));
+			roundCactus->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = roundCactus->Add<RenderComponent>();
+			renderer->SetMesh(roundCactusMesh);
+			renderer->SetMaterial(cactusMaterial);
+
+			BoxCollider::Sptr collider = BoxCollider::Create();
+			collider->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			//collider->SetPosition(barrel1->GetPosition());
+			RigidBody::Sptr physics = roundCactus->Add<RigidBody>(/*static by default*/);
+			physics->AddCollider(collider);
+
+		}
+		/*
+		GameObject::Sptr tree = scene->CreateGameObject("Tree 1");
+		{
+			// Set position in the scene
+			tree->SetPosition(glm::vec3(0,-24.24, -1));
+			tree->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+			tree->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = tree->Add<RenderComponent>();
+			renderer->SetMesh(wiltedTree2Mesh);
+			renderer->SetMaterial(beigeTreeMaterial);
+		}
+
+		
+		GameObject::Sptr tree2 = scene->CreateGameObject("Tree 2");
+		{
+			// Set position in the scene
+			tree2->SetPosition(glm::vec3(21.71, 15, -1));
+			tree2->SetScale(glm::vec3(30.0f, 30.0f, 30.0f));
+			tree2->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = tree2->Add<RenderComponent>();
+			renderer->SetMesh(wiltedTree2Mesh);
+			renderer->SetMaterial(greyTreeMaterial);
+		}
+		*/
+		//collider->SetPosition(glm::vec3(15.14,1,-32.57));
+		//SetPosition(glm::vec3(39.99,1,0.15));
+
+		//collider->SetPosition(glm::vec3(13.57,1,22.73))
+		
+		GameObject::Sptr smallRocks = scene->CreateGameObject("Small Rocks");
+		{
+			// Set position in the scene
+			smallRocks->SetPosition(glm::vec3(14.14, -23.57, -1));
+			smallRocks->SetScale(glm::vec3(2.0f, 2.0f, 2.0f));
+			smallRocks->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = smallRocks->Add<RenderComponent>();
+			renderer->SetMesh(smallRocksMesh);
+			renderer->SetMaterial(rockMaterial);
+
+		}
+
+		GameObject::Sptr bigRocks = scene->CreateGameObject("Big Rocks");
+		{
+			// Set position in the scene
+			bigRocks->SetPosition(glm::vec3(39.99, 0.15, -1));
+			bigRocks->SetScale(glm::vec3(2.0f, 2.0f, 2.0f));
+			bigRocks->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = bigRocks->Add<RenderComponent>();
+			renderer->SetMesh(bigRocksMesh);
+			renderer->SetMaterial(rockMaterial);
+
+			BoxCollider::Sptr collider = BoxCollider::Create(glm::vec3(3, 2.84, 4.87));
+			collider->SetPosition(glm::vec3(-0.9, 3.31, -1));
+			collider->SetRotation(glm::vec3(0, 0, 0));
+
+			RigidBody::Sptr physics = bigRocks->Add<RigidBody>(/*static by default*/);
+			physics->AddCollider(collider);
+		}
+
+		GameObject::Sptr tumbleWeed = scene->CreateGameObject("TumbleWeed");
+		{
+			// Set position in the scene
+			tumbleWeed->SetPosition(glm::vec3(0, 0, -1));
+			tumbleWeed->SetScale(glm::vec3(5.0f, 5.0f, 5.0f));
+			tumbleWeed->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer
+			RenderComponent::Sptr renderer = tumbleWeed->Add<RenderComponent>();
+			renderer->SetMesh(tumbleweedMesh);
+			renderer->SetMaterial(tumbleweedMaterial);
+
+		}
 
 		// Set up all our sample objects
 		GameObject::Sptr movingPlat = scene->CreateGameObject("GroundMoving");
 		{
 			// Set position in the scene
 			movingPlat->SetPosition(glm::vec3(10.0f, 0.0f, 5.0f));
+
+			movingPlat->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
 			// Scale down the plane
 			movingPlat->SetScale(glm::vec3(1.0f, 1.0f, 0.5f));
 
 			// Create and attach a render component
 			RenderComponent::Sptr renderer = movingPlat->Add<RenderComponent>();
-			renderer->SetMesh(cubeMesh);
-			renderer->SetMaterial(boxMaterial);
+			renderer->SetMesh(floatingRockMesh);
+			renderer->SetMaterial(rockMaterial);
 
 			TriggerVolume::Sptr volume = movingPlat->Add<TriggerVolume>();
 
-			ConvexMeshCollider::Sptr collider = ConvexMeshCollider::Create();
-			collider->SetScale(glm::vec3(2.0f, 2.0f, 0.5f));
+			BoxCollider::Sptr collider = BoxCollider::Create();
+			collider->SetScale(glm::vec3(2.0f, 0.5f, 2.0f));
 
 			RigidBody::Sptr physics = movingPlat->Add<RigidBody>(RigidBodyType::Kinematic);
 			physics->AddCollider(collider);
@@ -1785,7 +2108,16 @@ int main() {
 		//////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////Camera 1 Rendering 
-		glViewport(0, 0, windowSize.x, windowSize.y / 2);
+		if (debug)
+		{
+			glViewport(0, 0, windowSize.x, windowSize.y);
+
+		}
+
+		else
+		{
+			glViewport(0, 0, windowSize.x, windowSize.y / 2);
+		}
 
 		{;
 		// Grab shorthands to the camera and shader from the scene 
@@ -1902,124 +2234,135 @@ int main() {
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 
-
+		if (!debug)
+		{
 		//split the screen 
 		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y / 2);
 
 		/////////////////////////////////////////////////////////////////////////////////Camera 2 Rendering 
-		{;
+		
 
-		glm::mat4 viewProj2 = scene->MainCamera->GetViewProjection();
-		// Grab shorthands to the camera and shader from the scene 
-		Camera::Sptr camera = scene->MainCamera2;
+			{;
 
-		// Cache the camera's viewprojection 
-		glm::mat4 viewProj = camera->GetViewProjection();
-		DebugDrawer::Get().SetViewProjection(viewProj);
+			glm::mat4 viewProj2 = scene->MainCamera->GetViewProjection();
+			// Grab shorthands to the camera and shader from the scene 
+			Camera::Sptr camera = scene->MainCamera2;
 
-		// The current material that is bound for rendering 
-		Material::Sptr currentMat = nullptr;
-		Shader::Sptr shader = nullptr;
+			// Cache the camera's viewprojection 
+			glm::mat4 viewProj = camera->GetViewProjection();
+			DebugDrawer::Get().SetViewProjection(viewProj);
 
-		// Bind the skybox texture to a reserved texture slot 
-		// See Material.h and Material.cpp for how we're reserving texture slots 
-		TextureCube::Sptr environment = scene->GetSkyboxTexture();
-		if (environment) environment->Bind(1);
+			// The current material that is bound for rendering 
+			Material::Sptr currentMat = nullptr;
+			Shader::Sptr shader = nullptr;
 
-		// Here we'll bind all the UBOs to their corresponding slots 
-		scene->PreRender();
-		frameUniforms->Bind(FRAME_UBO_BINDING);
-		instanceUniforms->Bind(INSTANCE_UBO_BINDING);
+			// Bind the skybox texture to a reserved texture slot 
+			// See Material.h and Material.cpp for how we're reserving texture slots 
+			TextureCube::Sptr environment = scene->GetSkyboxTexture();
+			if (environment) environment->Bind(1);
 
-		// Upload frame level uniforms 
-		auto& frameData = frameUniforms->GetData();
-		frameData.u_Projection = camera->GetProjection();
-		frameData.u_View = camera->GetView();
-		frameData.u_ViewProjection = camera->GetViewProjection();
-		frameData.u_CameraPos = glm::vec4(camera->GetGameObject()->GetPosition(), 1.0f);
-		frameData.u_Time = static_cast<float>(thisFrame);
-		frameUniforms->Update();
+			// Here we'll bind all the UBOs to their corresponding slots 
+			scene->PreRender();
+			frameUniforms->Bind(FRAME_UBO_BINDING);
+			instanceUniforms->Bind(INSTANCE_UBO_BINDING);
 
-		// Render all our objects 
-		ComponentManager::Each<RenderComponent>([&](const RenderComponent::Sptr& renderable) {
-			// Early bail if mesh not set 
-			if (renderable->GetMesh() == nullptr) {
-				return;
-			}
+			// Upload frame level uniforms 
+			auto& frameData = frameUniforms->GetData();
+			frameData.u_Projection = camera->GetProjection();
+			frameData.u_View = camera->GetView();
+			frameData.u_ViewProjection = camera->GetViewProjection();
+			frameData.u_CameraPos = glm::vec4(camera->GetGameObject()->GetPosition(), 1.0f);
+			frameData.u_Time = static_cast<float>(thisFrame);
+			frameUniforms->Update();
 
-			// If we don't have a material, try getting the scene's fallback material 
-			// If none exists, do not draw anything 
-			if (renderable->GetMaterial() == nullptr) {
-				if (scene->DefaultMaterial != nullptr) {
-					renderable->SetMaterial(scene->DefaultMaterial);
-				}
-				else {
+			// Render all our objects 
+			ComponentManager::Each<RenderComponent>([&](const RenderComponent::Sptr& renderable) {
+				// Early bail if mesh not set 
+				if (renderable->GetMesh() == nullptr) {
 					return;
 				}
+
+				// If we don't have a material, try getting the scene's fallback material 
+				// If none exists, do not draw anything 
+				if (renderable->GetMaterial() == nullptr) {
+					if (scene->DefaultMaterial != nullptr) {
+						renderable->SetMaterial(scene->DefaultMaterial);
+					}
+					else {
+						return;
+					}
+				}
+
+				// If the material has changed, we need to bind the new shader and set up our material and frame data 
+				// Note: This is a good reason why we should be sorting the render components in ComponentManager 
+				if (renderable->GetMaterial() != currentMat) {
+					currentMat = renderable->GetMaterial();
+					shader = currentMat->GetShader();
+
+					shader->Bind();
+					currentMat->Apply();
+				}
+
+				// Grab the game object so we can do some stuff with it 
+				GameObject* object = renderable->GetGameObject();
+
+				// Use our uniform buffer for our instance level uniforms 
+				auto& instanceData = instanceUniforms->GetData();
+				instanceData.u_Model = object->GetTransform();
+				instanceData.u_ModelViewProjection = viewProj * object->GetTransform();
+				instanceData.u_NormalMatrix = glm::mat3(glm::transpose(glm::inverse(object->GetTransform())));
+				instanceUniforms->Update();
+
+				// Draw the object 
+				renderable->GetMesh()->Draw();
+				});
+			};
+
+			// Draw object GUIs 
+			if (isDebugWindowOpen) {
+				scene->DrawAllGameObjectGUIs();
 			}
 
-			// If the material has changed, we need to bind the new shader and set up our material and frame data 
-			// Note: This is a good reason why we should be sorting the render components in ComponentManager 
-			if (renderable->GetMaterial() != currentMat) {
-				currentMat = renderable->GetMaterial();
-				shader = currentMat->GetShader();
+			// Use our cubemap to draw our skybox 
+			scene->DrawSkybox(scene->MainCamera2);
 
-				shader->Bind();
-				currentMat->Apply();
-			}
+			// Disable culling 
+			glDisable(GL_CULL_FACE);
+			// Disable depth testing, we're going to use order-dependant layering 
+			glDisable(GL_DEPTH_TEST);
+			// Disable depth writing 
+			glDepthMask(GL_FALSE);
 
-			// Grab the game object so we can do some stuff with it 
-			GameObject* object = renderable->GetGameObject();
+			// Enable alpha blending 
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-			// Use our uniform buffer for our instance level uniforms 
-			auto& instanceData = instanceUniforms->GetData();
-			instanceData.u_Model = object->GetTransform();
-			instanceData.u_ModelViewProjection = viewProj * object->GetTransform();
-			instanceData.u_NormalMatrix = glm::mat3(glm::transpose(glm::inverse(object->GetTransform())));
-			instanceUniforms->Update();
+			GuiBatcher::SetProjection(proj);
+			GuiBatcher::SetWindowSize({ windowSize.x, (float)windowSize.y / 2 });
 
-			// Draw the object 
-			renderable->GetMesh()->Draw();
-			});
-		};
+			// Iterate over and render all the GUI objects 
+			scene->RenderGUI(2);
 
-		// Draw object GUIs 
-		if (isDebugWindowOpen) {
-			scene->DrawAllGameObjectGUIs();
+			// Flush the Gui Batch renderer 
+			GuiBatcher::Flush();
+
+			// Disable alpha blending 
+			glDisable(GL_BLEND);
+			// Disable scissor testing 
+			glDisable(GL_SCISSOR_TEST);
+			// Re-enable depth writing 
+			glDepthMask(GL_TRUE);
+
 		}
-
-		// Use our cubemap to draw our skybox 
-		scene->DrawSkybox(scene->MainCamera2);
-
-		// Disable culling 
-		glDisable(GL_CULL_FACE);
-		// Disable depth testing, we're going to use order-dependant layering 
-		glDisable(GL_DEPTH_TEST);
-		// Disable depth writing 
-		glDepthMask(GL_FALSE);
-
-		// Enable alpha blending 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		GuiBatcher::SetProjection(proj);
-		GuiBatcher::SetWindowSize({ windowSize.x, (float)windowSize.y / 2 });
-
-		// Iterate over and render all the GUI objects 
-		scene->RenderGUI(2);
-
-		// Flush the Gui Batch renderer 
-		GuiBatcher::Flush();
-
-		// Disable alpha blending 
-		glDisable(GL_BLEND);
-		// Disable scissor testing 
-		glDisable(GL_SCISSOR_TEST);
-		// Re-enable depth writing 
-		glDepthMask(GL_TRUE);
-
 		////////////////////////////////////////////////////////////////////////// END RENDERING 
 		// End our ImGui window
+		// Draw object GUIs 
+		if (debug)
+		{
+			if (isDebugWindowOpen) {
+				scene->DrawAllGameObjectGUIs();
+			}
+		}
 		ImGui::End();
 
 		VertexArrayObject::Unbind();
