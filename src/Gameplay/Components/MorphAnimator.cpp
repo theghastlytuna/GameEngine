@@ -46,12 +46,13 @@ void MorphAnimator::Update(float deltaTime)
 		if (currentClip.currentFrame == currentClip.frames.size())
 		{
 			currentClip.currentFrame = 0;
-			reachedEnd = true;
+			
 		}
 
 		else if (currentClip.nextFrame == currentClip.frames.size())
 		{
 			currentClip.nextFrame = 0;
+			reachedEnd = true;
 		}
 	}
 

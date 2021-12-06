@@ -58,6 +58,7 @@
 #include "Gameplay/Components/PlayerControl.h"
 #include "Gameplay/Components/MorphAnimator.h"
 #include "Gameplay/Components/BoomerangBehavior.h"
+#include "Gameplay/Components/HealthManager.h"
 
 // Physics
 #include "Gameplay/Physics/RigidBody.h"
@@ -136,6 +137,10 @@ void GlfwWindowResizedCallback(GLFWwindow* window, int width, int height) {
 		scene->MainCamera2->ResizeWindow(width, height);
 	}
 	GuiBatcher::SetWindowSize({ width, height });
+
+	GameObject::Sptr crossHair = scene->FindObjectByName("Crosshairs");
+	crossHair->Get<RectTransform>()->SetMin({ windowSize.x / 2 - 50, windowSize.y / 4 - 50 });
+	crossHair->Get<RectTransform>()->SetMax({ windowSize.x / 2 + 50, windowSize.y / 4 + 50 });
 }
 
 /// <summary>
@@ -260,6 +265,12 @@ void DrawMaterialsWindow() {
 	ImGui::End();
 }
 
+void Respawn(GameObject::Sptr player, glm::vec3 position)
+{
+	player->SetPosition(position);
+	player->Get<HealthManager>()->ResetHealth();
+}
+
 /// <summary>
 /// handles creating or loading the scene
 /// </summary>
@@ -320,7 +331,12 @@ void CreateScene() {
 		MeshResource::Sptr catcusMesh = ResourceManager::CreateAsset<MeshResource>("CatcusAnims/Catcus_Idle_001.obj");
 		MeshResource::Sptr mainCharMesh = ResourceManager::CreateAsset<MeshResource>("mainChar.obj");
 		MeshResource::Sptr mainCharMesh2 = ResourceManager::CreateAsset<MeshResource>("mainChar.obj");
-			//Stage Meshes
+		MeshResource::Sptr boomerangMesh = ResourceManager::CreateAsset<MeshResource>("BoomerangAnims/Boomerang_Active_000.obj");
+		MeshResource::Sptr boomerangMesh2 = ResourceManager::CreateAsset<MeshResource>("BoomerangAnims/Boomerang_Active_000.obj");
+		MeshResource::Sptr movingPlatMesh = ResourceManager::CreateAsset<MeshResource>("FloatingRock.obj");
+		MeshResource::Sptr healthPackMesh = ResourceManager::CreateAsset<MeshResource>("HealthPackAnims/healthPack_idle_000.obj");
+			
+		//Stage Meshes
 				//Floors
 		MeshResource::Sptr stageCenterFloorMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_center_floor.obj");
 		MeshResource::Sptr stageSideFloorMesh = ResourceManager::CreateAsset<MeshResource>("stageObjs/stage_side_floors.obj");
@@ -339,7 +355,12 @@ void CreateScene() {
 		Texture2D::Sptr    leafTex    = ResourceManager::CreateAsset<Texture2D>("textures/leaves.png");
 		Texture2D::Sptr	   catcusTex = ResourceManager::CreateAsset<Texture2D>("textures/cattusGood.png");
 		Texture2D::Sptr	   mainCharTex = ResourceManager::CreateAsset<Texture2D>("textures/Char.png");
-			//Stage Textures
+		Texture2D::Sptr	   boomerangTex = ResourceManager::CreateAsset<Texture2D>("textures/boomerwang.png");
+		Texture2D::Sptr	   torchTex = ResourceManager::CreateAsset<Texture2D>("textures/Torch.png");
+		Texture2D::Sptr	   movingPlatTex = ResourceManager::CreateAsset<Texture2D>("textures/rockTex.png");
+		Texture2D::Sptr	   healthPackTex = ResourceManager::CreateAsset<Texture2D>("textures/vegemiteTex.png");
+			
+		//Stage Textures
 		Texture2D::Sptr    sandTexture = ResourceManager::CreateAsset<Texture2D>("textures/sandFloor.png");
 		Texture2D::Sptr    rockFloorTexture = ResourceManager::CreateAsset<Texture2D>("textures/rockyFloor.png");
 		Texture2D::Sptr    rockFormationTexture = ResourceManager::CreateAsset<Texture2D>("textures/bigRock.png");
@@ -363,13 +384,14 @@ void CreateScene() {
 		rockWallsTexture->SetMagFilter(MagFilter::Nearest);
 
 		//////////////Loading animation frames////////////////////////
+		/*
 		std::vector<MeshResource::Sptr> boiFrames;
 
 		for (int i = 0; i < 8; i++)
 		{
 			boiFrames.push_back(ResourceManager::CreateAsset<MeshResource>("boi-" + std::to_string(i) + ".obj"));
 		}
-
+		*/
 		std::vector<MeshResource::Sptr> catcusFrames;
 
 		for (int i = 1; i < 8; i++)
@@ -389,6 +411,12 @@ void CreateScene() {
 		std::vector<MeshResource::Sptr> mainDeath = LoadTargets(4, "MainCharacterAnims/Death/Char_Death_00");
 
 		std::vector<MeshResource::Sptr> mainAttack = LoadTargets(5, "MainCharacterAnims/Attack/Char_Throw_00");
+
+		std::vector<MeshResource::Sptr> boomerangSpin = LoadTargets(4, "BoomerangAnims/Boomerang_Active_00");
+
+		std::vector<MeshResource::Sptr> torchIdle = LoadTargets(6, "TorchAnims/Torch_Idle_00");
+
+		std::vector<MeshResource::Sptr> healthPackIdle = LoadTargets(7, "HealthPackAnims/healthPack_idle_00");
 
 		// Here we'll load in the cubemap, as well as a special shader to handle drawing the skybox
 		TextureCube::Sptr testCubemap = ResourceManager::CreateAsset<TextureCube>("cubemaps/ocean/ocean.jpg");
@@ -415,18 +443,34 @@ void CreateScene() {
 			boxMaterial->Set("u_Material.Shininess", 0.1f);
 		}
 
+		Material::Sptr movingPlatMaterial = ResourceManager::CreateAsset<Material>(basicShader);
+		{
+			movingPlatMaterial->Name = "MovingPlatform";
+			movingPlatMaterial->Set("u_Material.Diffuse", movingPlatTex);
+			movingPlatMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		/*
 		Material::Sptr boiMaterial = ResourceManager::CreateAsset<Material>(animShader);
 		{
 			boiMaterial->Name = "Boi";
 			boiMaterial->Set("u_Material.Diffuse", boxTexture);
 			boiMaterial->Set("u_Material.Shininess", 0.1f);
 		}
+		*/
 
 		Material::Sptr catcusMaterial = ResourceManager::CreateAsset<Material>(animShader);
 		{
 			catcusMaterial->Name = "Catcus";
 			catcusMaterial->Set("u_Material.Diffuse", catcusTex);
 			catcusMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		Material::Sptr healthPackMaterial = ResourceManager::CreateAsset<Material>(animShader);
+		{
+			healthPackMaterial->Name = "HealthPack";
+			healthPackMaterial->Set("u_Material.Diffuse", healthPackTex);
+			healthPackMaterial->Set("u_Material.Shininess", 0.1f);
 		}
 
 		Material::Sptr mainCharMaterial = ResourceManager::CreateAsset<Material>(animShader);
@@ -441,6 +485,20 @@ void CreateScene() {
 			mainCharMaterial2->Name = "MainCharacter2";
 			mainCharMaterial2->Set("u_Material.Diffuse", mainCharTex);
 			mainCharMaterial2->Set("u_Material.Shininess", 0.1f);
+		}
+
+		Material::Sptr boomerangMaterial = ResourceManager::CreateAsset<Material>(animShader);
+		{
+			boomerangMaterial->Name = "Boomerang1";
+			boomerangMaterial->Set("u_Material.Diffuse", boomerangTex);
+			boomerangMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		Material::Sptr boomerangMaterial2 = ResourceManager::CreateAsset<Material>(animShader);
+		{
+			boomerangMaterial2->Name = "Boomerang2";
+			boomerangMaterial2->Set("u_Material.Diffuse", boomerangTex);
+			boomerangMaterial2->Set("u_Material.Shininess", 0.1f);
 		}
 
 		// This will be the reflective material, we'll make the whole thing 90% reflective
@@ -525,16 +583,18 @@ void CreateScene() {
 
 
 		// Create some lights for our scene
-		scene->Lights.resize(3);
-		scene->Lights[0].Position = glm::vec3(0.0f, 1.0f, 3.0f);
+		scene->Lights.resize(1);
+		scene->Lights[0].Position = glm::vec3(0.0f, 0.0f, 100.0f);
 		scene->Lights[0].Color = glm::vec3(1.0f, 1.0f, 1.0f);
-		scene->Lights[0].Range = 100.0f;
-
+		scene->Lights[0].Range = 10000.0f;
+		
+		/*
 		scene->Lights[1].Position = glm::vec3(1.0f, 0.0f, 3.0f);
 		scene->Lights[1].Color = glm::vec3(0.2f, 0.8f, 0.1f);
 
 		scene->Lights[2].Position = glm::vec3(0.0f, 1.0f, 3.0f);
 		scene->Lights[2].Color = glm::vec3(1.0f, 0.2f, 0.1f);
+		*/
 
 		// We'll create a mesh that is a simple plane that we can resize later
 		MeshResource::Sptr planeMesh = ResourceManager::CreateAsset<MeshResource>();
@@ -615,12 +675,14 @@ void CreateScene() {
 			animator->AddClip(mainIdle, 0.8f, "Idle");
 			animator->AddClip(mainWalk, 0.4f, "Walk");
 			animator->AddClip(mainRun, 0.25f, "Run");
-			animator->AddClip(mainAttack, 1.0f, "Attack");
-			animator->AddClip(mainDeath, 1.0f, "Die");
+			animator->AddClip(mainAttack, 0.1f, "Attack");
+			animator->AddClip(mainDeath, 0.5f, "Die");
 			animator->AddClip(mainJump, 0.1f, "Jump");
 
 			//Make sure to always activate an animation at the time of creation (usually idle)
 			animator->ActivateAnim("Idle");
+
+			player1->Add<HealthManager>();
 		}
 
 		GameObject::Sptr detachedCam2 = scene->CreateGameObject("Detached Camera 2");
@@ -667,43 +729,15 @@ void CreateScene() {
 			animator->AddClip(mainIdle, 0.8f, "Idle");
 			animator->AddClip(mainWalk, 0.4f, "Walk");
 			animator->AddClip(mainRun, 0.25f, "Run");
-			animator->AddClip(mainAttack, 1.0f, "Attack");
-			animator->AddClip(mainDeath, 1.0f, "Die");
+			animator->AddClip(mainAttack, 0.1f, "Attack");
+			animator->AddClip(mainDeath, 0.5f, "Die");
 			animator->AddClip(mainJump, 0.1f, "Jump");
 
 			//Make sure to always activate an animation at the time of creation (usually idle)
 			animator->ActivateAnim("Idle");
+
+			player2->Add<HealthManager>();
 		}
-
-		// Set up all our sample objects
-
-		/*
-		GameObject::Sptr plane = scene->CreateGameObject("Ground");
-		{
-			// Make a big tiled mesh
-			MeshResource::Sptr tiledMesh = ResourceManager::CreateAsset<MeshResource>();
-			tiledMesh->AddParam(MeshBuilderParam::CreatePlane(ZERO, UNIT_Z, UNIT_X, glm::vec2(100.0f), glm::vec2(20.0f)));
-			tiledMesh->GenerateMesh();
-
-			// Create and attach a RenderComponent to the object to draw our mesh
-			RenderComponent::Sptr renderer = plane->Add<RenderComponent>();
-			renderer->SetMesh(tiledMesh);
-			renderer->SetMaterial(boxMaterial);
-
-			BoxCollider::Sptr collider = BoxCollider::Create(glm::vec3(50.0f, 50.0f, 1.0f));
-			collider->SetPosition({ 0,0,-1 });
-
-			// Attach a plane collider that extends infinitely along the X/Y axis
-			RigidBody::Sptr physics = plane->Add<RigidBody>(/*static by default*//*);
-			physics->AddCollider(collider);
-
-			TriggerVolume::Sptr volume = plane->Add<TriggerVolume>();
-			volume->AddCollider(BoxCollider::Create(glm::vec3(50.0f, 50.0f, 1.0f)))->SetPosition({ 0,0,-1});
-
-			plane->Add<TriggerVolumeEnterBehaviour>();
-		}
-		*/
-
 
 		//Stage Mesh - center floor
 		GameObject::Sptr centerGround = scene->CreateGameObject("Center Ground");
@@ -916,8 +950,8 @@ void CreateScene() {
 
 
 			BoxCollider::Sptr collider12 = BoxCollider::Create(glm::vec3(3.64, 2.67, 5.17));
-			collider12->SetPosition(glm::vec3(-20.83, 4.46, 21.86));
-			collider12->SetRotation(glm::vec3(6, 36, 10));
+			collider12->SetPosition(glm::vec3(-21.420, 3.56, 24.51));
+			collider12->SetRotation(glm::vec3(0, -15, 1));
 
 
 			BoxCollider::Sptr collider13 = BoxCollider::Create(glm::vec3(3.76, 10, 1));
@@ -1020,8 +1054,8 @@ void CreateScene() {
 
 
 			BoxCollider::Sptr collider31 = BoxCollider::Create(glm::vec3(3.64, 2.67, 5.17));
-			collider31->SetPosition(glm::vec3((-20.83 - d) * -1, 4.46, -21.86));
-			collider31->SetRotation(glm::vec3(-6, 36, -10));//// Here!
+			collider31->SetPosition(glm::vec3((-21.420 - d) * -1, 3.56, -24.51));
+			collider31->SetRotation(glm::vec3(0, -15, -1));//// Here!
 
 
 			BoxCollider::Sptr collider32 = BoxCollider::Create(glm::vec3(3.76, 10, 1));
@@ -1055,6 +1089,14 @@ void CreateScene() {
 			collider37->SetPosition(glm::vec3((-19.01 - d) * -1, 5, -25.99));
 			collider37->SetRotation(glm::vec3(0, 34, 0));//
 
+			BoxCollider::Sptr collider38 = BoxCollider::Create(glm::vec3(3.64, 2.67, 5.17));
+			collider38->SetPosition(glm::vec3(-20.830, 4.1, 23.51));
+			collider38->SetRotation(glm::vec3(0, -15, 1));
+
+			BoxCollider::Sptr collider39 = BoxCollider::Create(glm::vec3(3.64, 2.67, 5.17));
+			collider39->SetPosition(glm::vec3((-20.830 - d) * -1, 4.1, -23.51));
+			collider39->SetRotation(glm::vec3(0, -15, 1));
+
 			/// <summary>
 			/// 
 			/// </summary>
@@ -1079,6 +1121,7 @@ void CreateScene() {
 			physics->AddCollider(collider16);
 			physics->AddCollider(collider17);
 			physics->AddCollider(collider18);
+			physics->AddCollider(collider38);
 			
 			//The other side lul
 
@@ -1101,43 +1144,7 @@ void CreateScene() {
 			physics->AddCollider(collider35);
 			physics->AddCollider(collider36);
 			physics->AddCollider(collider37);
-
-
-			/*
-			BoxCollider::Sptr collider10 = BoxCollider::Create(glm::vec3(5, 0.97, 7.82));
-			collider10->SetPosition(glm::vec3(-37.86, 0.13, 19.41));
-			collider10->SetRotation(glm::vec3(-5, -20, 18));
-			///
-
-			BoxCollider::Sptr collider11 = BoxCollider::Create(glm::vec3(5, 1, 7.9));
-			collider11->SetPosition(glm::vec3(-28.9, 3.46, 22.6));
-			collider11->SetRotation(glm::vec3(-4, -14, 26));
-			///
-
-
-			BoxCollider::Sptr collider12 = BoxCollider::Create(glm::vec3(3.64, 2.67, 5.17));
-			collider12->SetPosition(glm::vec3(-20.83, 4.46, 21.86));
-			collider12->SetRotation(glm::vec3(6, 36, 10));
-			///
-
-
-			BoxCollider::Sptr collider29 = BoxCollider::Create(glm::vec3(5, 0.97, 7.82));
-			collider29->SetPosition(glm::vec3((-37.86 - d) * -1, 0.13, -19.41));
-			collider29->SetRotation(glm::vec3(5, -20, -18));//// Here!  
-			///
-
-			BoxCollider::Sptr collider30 = BoxCollider::Create(glm::vec3(5, 1, 7.9));
-			collider30->SetPosition(glm::vec3((-28.9 - d) * -1, 3.46, -22.6));
-			collider30->SetRotation(glm::vec3(4, -14, -26));//// Here!
-			///
-
-
-			BoxCollider::Sptr collider31 = BoxCollider::Create(glm::vec3(3.64, 2.67, 5.17));
-			collider31->SetPosition(glm::vec3((-20.83 - d) * -1, 4.46, -21.86));
-			collider31->SetRotation(glm::vec3(-6, 36, -10));//// Here!
-
-			*/
-
+			//physics->AddCollider(collider39);
 
 			TriggerVolume::Sptr volume = sideWalls->Add<TriggerVolume>();
 			volume->AddCollider(BoxCollider::Create(glm::vec3(5, 0.97, 7.82)))->SetPosition({ -37.86, 0.13, 19.41 })->SetRotation(glm::vec3(-5, -20, 18));//
@@ -1248,7 +1255,7 @@ void CreateScene() {
 		}
 
 
-		// Set up all our sample objects
+		//LERP platform
 		GameObject::Sptr movingPlat = scene->CreateGameObject("GroundMoving");
 		{
 			// Set position in the scene
@@ -1258,12 +1265,12 @@ void CreateScene() {
 
 			// Create and attach a render component
 			RenderComponent::Sptr renderer = movingPlat->Add<RenderComponent>();
-			renderer->SetMesh(cubeMesh);
-			renderer->SetMaterial(boxMaterial);
+			renderer->SetMesh(movingPlatMesh);
+			renderer->SetMaterial(movingPlatMaterial);
 
 			TriggerVolume::Sptr volume = movingPlat->Add<TriggerVolume>();
 
-			ConvexMeshCollider::Sptr collider = ConvexMeshCollider::Create();
+			BoxCollider::Sptr collider = BoxCollider::Create();
 			collider->SetScale(glm::vec3(2.0f, 2.0f, 0.5f));
 
 			RigidBody::Sptr physics = movingPlat->Add<RigidBody>(RigidBodyType::Kinematic);
@@ -1281,58 +1288,134 @@ void CreateScene() {
 			
 		}
 
+		//Bezier platform
+		GameObject::Sptr movingPlat2 = scene->CreateGameObject("GroundMoving2");
+		{
+			// Set position in the scene
+			movingPlat2->SetPosition(glm::vec3(-8.5f, -7.0f, 5.0f));
+			movingPlat2->SetRotation(glm::vec3(0.0f, 0.0f, 40.0f));
+			// Scale down the plane
+			movingPlat2->SetScale(glm::vec3(1.0f, 1.0f, 0.5f));
+
+			// Create and attach a render component
+			RenderComponent::Sptr renderer = movingPlat2->Add<RenderComponent>();
+			renderer->SetMesh(movingPlatMesh);
+			renderer->SetMaterial(movingPlatMaterial);
+
+			TriggerVolume::Sptr volume = movingPlat2->Add<TriggerVolume>();
+
+			BoxCollider::Sptr collider = BoxCollider::Create();
+			collider->SetScale(glm::vec3(2.0f, 2.0f, 0.5f));
+
+			RigidBody::Sptr physics = movingPlat2->Add<RigidBody>(RigidBodyType::Kinematic);
+			physics->AddCollider(collider);
+			volume->AddCollider(collider);
+
+			movingPlat2->Add<TriggerVolumeEnterBehaviour>();
+
+			movingPlat2->Add<MovingPlatform>();
+
+			std::vector<glm::vec3> nodes = { glm::vec3(-8.5f, -3.0f, -50.0f), glm::vec3(-8.5f, -7.0f, 5.0f), glm::vec3(-4.5f, -20.0f, 5.0f), glm::vec3(-4.5, -24.0f, -50.0f) };
+
+			movingPlat2->Get<MovingPlatform>()->SetMode(MovingPlatform::MovementMode::BEZIER);
+			movingPlat2->Get<MovingPlatform>()->SetNodes(nodes, 6.0f);
+		}
+
+		//Catmull-Rom platform
+		GameObject::Sptr movingPlat3 = scene->CreateGameObject("GroundMoving3");
+		{
+			// Set position in the scene
+			movingPlat3->SetPosition(glm::vec3(50.0f, -10.0f, 1.5f));
+			movingPlat3->SetRotation(glm::vec3(0.0f, 0.0f, -85.0f));
+			// Scale down the plane
+			movingPlat3->SetScale(glm::vec3(1.0f, 1.0f, 0.5f));
+
+			// Create and attach a render component
+			RenderComponent::Sptr renderer = movingPlat3->Add<RenderComponent>();
+			renderer->SetMesh(movingPlatMesh);
+			renderer->SetMaterial(movingPlatMaterial);
+
+			TriggerVolume::Sptr volume = movingPlat3->Add<TriggerVolume>();
+
+			BoxCollider::Sptr collider = BoxCollider::Create();
+			collider->SetScale(glm::vec3(2.0f, 2.0f, 0.5f));
+
+			RigidBody::Sptr physics = movingPlat3->Add<RigidBody>(RigidBodyType::Kinematic);
+			physics->AddCollider(collider);
+			volume->AddCollider(collider);
+
+			movingPlat3->Add<TriggerVolumeEnterBehaviour>();
+
+			movingPlat3->Add<MovingPlatform>();
+
+			std::vector<glm::vec3> nodes = { glm::vec3(50.0f, -10.0f, 1.5f), glm::vec3(50.0f, -1.5f, 6.0f), glm::vec3(50.0f, 7.0f, 12.0f), glm::vec3(47.0f, 15.0f, 7.5f) };
+
+			movingPlat3->Get<MovingPlatform>()->SetMode(MovingPlatform::MovementMode::CATMULL);
+			movingPlat3->Get<MovingPlatform>()->SetNodes(nodes, 5.0f);
+		}
+
 		GameObject::Sptr boomerang = scene->CreateGameObject("Boomerang 1");
 		{
 			// Set position in the scene
 			boomerang->SetPosition(glm::vec3(0.0f, 0.0f, -100.0f));
-			boomerang->SetScale(glm::vec3(0.5f, 0.25f, 0.5f));
+			boomerang->SetScale(glm::vec3(0.25f, 0.25f, 0.25f));
 
 			// Create and attach a renderer for the monkey
 			RenderComponent::Sptr renderer = boomerang->Add<RenderComponent>();
-			renderer->SetMesh(cubeMesh);
-			renderer->SetMaterial(boxMaterial);
+			renderer->SetMesh(boomerangMesh);
+			renderer->SetMaterial(boomerangMaterial);
+
+			BoxCollider::Sptr collider = BoxCollider::Create();
+			collider->SetScale(glm::vec3(0.3f, 0.3f, 0.1f));
+			//collider->SetExtents(glm::vec3(0.8f, 0.8f, 0.8f));
+
+			BoxCollider::Sptr colliderTrigger = BoxCollider::Create();
+			colliderTrigger->SetScale(glm::vec3(0.4f, 0.4f, 0.2f));
+
+			TriggerVolume::Sptr volume = boomerang->Add<TriggerVolume>();
+			boomerang->Add<TriggerVolumeEnterBehaviour>();
+			volume->AddCollider(colliderTrigger);
 
 			RigidBody::Sptr physics = boomerang->Add<RigidBody>(RigidBodyType::Dynamic);
-			physics->AddCollider(ConvexMeshCollider::Create());
+			physics->AddCollider(collider);
 			boomerang->Add<BoomerangBehavior>();
+
+			boomerang->Add<MorphAnimator>();
+			boomerang->Get<MorphAnimator>()->AddClip(boomerangSpin, 0.1, "Spin");
+
+			boomerang->Get<MorphAnimator>()->ActivateAnim("spin");
+
 		}
 
 		GameObject::Sptr boomerang2 = scene->CreateGameObject("Boomerang 2");
 		{
 			// Set position in the scene
 			boomerang2->SetPosition(glm::vec3(0.0f, 0.0f, -100.0f));
-			boomerang2->SetScale(glm::vec3(0.5f, 0.25f, 0.5f));
+			boomerang2->SetScale(glm::vec3(0.25f, 0.25f, 0.25f));
 
 			// Create and attach a renderer for the monkey
 			RenderComponent::Sptr renderer = boomerang2->Add<RenderComponent>();
-			renderer->SetMesh(cubeMesh);
-			renderer->SetMaterial(boxMaterial);
+			renderer->SetMesh(boomerangMesh2);
+			renderer->SetMaterial(boomerangMaterial2);
+
+			BoxCollider::Sptr collider = BoxCollider::Create();
+			collider->SetScale(glm::vec3(0.3f, 0.3f, 0.1f));
+
+			BoxCollider::Sptr colliderTrigger = BoxCollider::Create();
+			colliderTrigger->SetScale(glm::vec3(0.4f, 0.4f, 0.2f));
+
+			TriggerVolume::Sptr volume = boomerang2->Add<TriggerVolume>();
+			boomerang2->Add<TriggerVolumeEnterBehaviour>();
+			volume->AddCollider(colliderTrigger);
 
 			RigidBody::Sptr physics = boomerang2->Add<RigidBody>(RigidBodyType::Dynamic);
-			physics->AddCollider(ConvexMeshCollider::Create());
+			physics->AddCollider(collider);
 			boomerang2->Add<BoomerangBehavior>();
-		}
-		
-		GameObject::Sptr boiBase = scene->CreateGameObject("Boi Base");
-		{
-			// Set position in the scene
-			boiBase->SetPosition(glm::vec3(-10.0f, 0.0f, 0.0f));
-			boiBase->SetScale(glm::vec3(0.05f, 0.05f, 0.05f));
-			boiBase->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
 
-			// Create and attach a renderer for the monkey
-			RenderComponent::Sptr renderer = boiBase->Add<RenderComponent>();
-			renderer->SetMesh(boiMesh);
-			renderer->SetMaterial(boiMaterial);
+			boomerang2->Add<MorphAnimator>();
+			boomerang2->Get<MorphAnimator>()->AddClip(boomerangSpin, 0.1, "Spin");
 
-			//Only add an animator when you have a clip to add.
-			MorphAnimator::Sptr animator = boiBase->Add<MorphAnimator>();
-
-			//Add the walking clip
-			animator->AddClip(boiFrames, 1.0f, "Walk");
-
-			//Make sure to always activate an animation at the time of creation (usually idle)
-			animator->ActivateAnim("walk");
+			boomerang2->Get<MorphAnimator>()->ActivateAnim("spin");
 		}
 		
 		GameObject::Sptr catcus = scene->CreateGameObject("Catcus Base");
@@ -1356,38 +1439,106 @@ void CreateScene() {
 
 			//Make sure to always activate an animation at the time of creation (usually idle)
 			animator->ActivateAnim("Idle");
-			
+		}
+
+		GameObject::Sptr healthPack = scene->CreateGameObject("Health Pack");
+		{
+			// Set position in the scene
+			healthPack->SetPosition(glm::vec3(0.0f, -8.5f, 7.5f));
+			healthPack->SetScale(glm::vec3(0.15f, 0.15f, 0.15f));
+			healthPack->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer for the monkey
+			RenderComponent::Sptr renderer = healthPack->Add<RenderComponent>();
+			renderer->SetMesh(healthPackMesh);
+			renderer->SetMaterial(healthPackMaterial);
+
+
+			//Only add an animator when you have a clip to add.
+			MorphAnimator::Sptr animator = healthPack->Add<MorphAnimator>();
+
+			//Add the walking clip
+			animator->AddClip(healthPackIdle, 0.5f, "Idle");
+
+			//Make sure to always activate an animation at the time of creation (usually idle)
+			animator->ActivateAnim("Idle");
 		}
 		
 		/////////////////////////// UI //////////////////////////////
-		GameObject::Sptr canvas = scene->CreateGameObject("UI Canvas");
+		GameObject::Sptr healthbar1 = scene->CreateGameObject("HealthBackPanel1");
 		{
-			RectTransform::Sptr transform = canvas->Add<RectTransform>();
+			healthbar1->SetRenderFlag(1);
+
+			RectTransform::Sptr transform = healthbar1->Add<RectTransform>();
 			transform->SetMin({ 0, 0 });
-			transform->SetMax({ 256, 256 });
+			transform->SetMax({ 200, 50 });
 
-			GuiPanel::Sptr canPanel = canvas->Add<GuiPanel>();
-			
-			GameObject::Sptr subPanel = scene->CreateGameObject("Sub Item");
+			GuiPanel::Sptr canPanel = healthbar1->Add<GuiPanel>();
+			canPanel->SetColor(glm::vec4(0.467f, 0.498f, 0.549f, 1.0f));
+
+			GameObject::Sptr subPanel1 = scene->CreateGameObject("Player1Health");
 			{
-				RectTransform::Sptr transform = subPanel->Add<RectTransform>();
-				transform->SetMin({ 0, 0 });
-				transform->SetMax({ 64, 64 });
+				subPanel1->SetRenderFlag(1);
+				RectTransform::Sptr transform = subPanel1->Add<RectTransform>();
+				transform->SetMin({ 5, 5 });
+				transform->SetMax({ 195, 45 });
 
-				GuiPanel::Sptr panel = subPanel->Add<GuiPanel>();
-				panel->SetColor(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-
-				Font::Sptr font = ResourceManager::CreateAsset<Font>("fonts/Roboto-Medium.ttf", 16.0f);
-				font->Bake();
-
-				GuiText::Sptr text = subPanel->Add<GuiText>();
-				text->SetText("Hello world!");
-				text->SetFont(font);
+				GuiPanel::Sptr panel = subPanel1->Add<GuiPanel>();
+				panel->SetColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 			}
 
-			canvas->AddChild(subPanel);
+			healthbar1->AddChild(subPanel1);
+		}
+		
+		GameObject::Sptr healthbar2 = scene->CreateGameObject("HealthBackPanel2");
+		{
+			healthbar2->SetRenderFlag(2);
+
+			RectTransform::Sptr transform = healthbar2->Add<RectTransform>();
+			transform->SetMin({ 0, 0 });
+			transform->SetMax({ 200, 50 });
+
+			GuiPanel::Sptr canPanel = healthbar2->Add<GuiPanel>();
+			canPanel->SetColor(glm::vec4(0.467f, 0.498f, 0.549f, 1.0f));
+
+			GameObject::Sptr subPanel2 = scene->CreateGameObject("Player2Health");
+			{
+				subPanel2->SetRenderFlag(2);
+				RectTransform::Sptr transform = subPanel2->Add<RectTransform>();
+				transform->SetMin({ 5, 5 });
+				transform->SetMax({ 195, 45 });
+
+				GuiPanel::Sptr panel = subPanel2->Add<GuiPanel>();
+				panel->SetColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+			}
+
+			healthbar2->AddChild(subPanel2);
 		}
 
+		GameObject::Sptr damageFlash1 = scene->CreateGameObject("DamageFlash1");
+		{
+			damageFlash1->SetRenderFlag(1);
+
+			RectTransform::Sptr transform = damageFlash1->Add<RectTransform>();
+			transform->SetMin({ -10, -10 });
+			transform->SetMax({ 10000, 10000 });
+
+			GuiPanel::Sptr canPanel = damageFlash1->Add<GuiPanel>();
+			canPanel->SetColor(glm::vec4(1.f, 1.f, 1.f, 0.f));
+		}
+
+		GameObject::Sptr damageFlash2 = scene->CreateGameObject("DamageFlash2");
+		{
+			damageFlash2->SetRenderFlag(2);
+
+			RectTransform::Sptr transform = damageFlash2->Add<RectTransform>();
+			transform->SetMin({ -10, -10 });
+			transform->SetMax({ 10000, 10000 });
+
+			GuiPanel::Sptr canPanel = damageFlash2->Add<GuiPanel>();
+			canPanel->SetColor(glm::vec4(1.f, 1.f, 1.f, 0.f));
+		}
+		
 		GameObject::Sptr crosshairs = scene->CreateGameObject("Crosshairs");
 		{
 			//crosshairs->SetRenderFlag(1);//this is how you would set this ui object to ONLY render for player 1
@@ -1490,6 +1641,7 @@ int main() {
 	ComponentManager::RegisterType<PlayerControl>();
 	ComponentManager::RegisterType<MorphAnimator>();
 	ComponentManager::RegisterType<BoomerangBehavior>();
+	ComponentManager::RegisterType<HealthManager>();
 
 	ComponentManager::RegisterType<RectTransform>();
 	ComponentManager::RegisterType<GuiPanel>();
@@ -1560,9 +1712,15 @@ int main() {
 
 	GameObject::Sptr player1 = scene->FindObjectByName("Player 1");
 	GameObject::Sptr player2 = scene->FindObjectByName("Player 2");
+	GameObject::Sptr boomerang1 = scene->FindObjectByName("Boomerang 1");
+	GameObject::Sptr boomerang2 = scene->FindObjectByName("Boomerang 2");
 
 	bool arriving = false;
+	bool p1Dying = false;
+	bool p2Dying = false;
 
+	float p1HitTimer = 0.0f;
+	float p2HitTimer = 0.0f;
 
 	///// Game loop /////
 	while (!glfwWindowShouldClose(window)) {
@@ -1669,20 +1827,7 @@ int main() {
 		}
 
 		dt *= playbackSpeed;
-		/*
-		if (glfwGetKey(window, GLFW_KEY_Q))
-		{
-			//boomerang->SetPosition(player1->GetPosition() + glm::vec3(0.0f, 0.0f, 1.0f));
-			//boomerang->Get<RigidBody>()->SetLinearVelocity(glm::vec3(
-				scene->PlayerCamera->GetView()[0][2],
-				scene->PlayerCamera->GetView()[1][2],
-				scene->PlayerCamera->GetView()[2][2]) * -10.0f);
-			arriving = true;
-		}
-		*/
-
 		
-
 		// Perform updates for all components
 		scene->Update(dt);
 
@@ -1704,82 +1849,170 @@ int main() {
 		GameObject::Sptr detachedCam = scene->FindObjectByName("Detached Camera");
 		GameObject::Sptr player1 = scene->FindObjectByName("Player 1");
 
+		////////////////////Handle some UI stuff/////////////////////////////////
+		
+		GameObject::Sptr p1Health = scene->FindObjectByName("Player1Health");
+		GameObject::Sptr p2Health = scene->FindObjectByName("Player2Health");
 
+		GameObject::Sptr p1DamageScreen = scene->FindObjectByName("DamageFlash1");
+		GameObject::Sptr p2DamageScreen = scene->FindObjectByName("DamageFlash2");
+
+		//Find the current health of the player, divide it by the maximum health, lerp between the minimum and maximum health bar values using this as the interp. parameter
+		p1Health->Get<RectTransform>()->SetMax({glm::lerp(5.0f, 195.0f, 
+			player1->Get<HealthManager>()->GetHealth() / player1->Get<HealthManager>()->GetMaxHealth()), 45 });
+
+		p1Health->Get<GuiPanel>()->SetColor(glm::lerp(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), 
+			player1->Get<HealthManager>()->GetHealth() / player1->Get<HealthManager>()->GetMaxHealth()));
+
+		p1DamageScreen->Get<GuiPanel>()->SetColor(glm::vec4(
+			p1DamageScreen->Get<GuiPanel>()->GetColor().x,
+			p1DamageScreen->Get<GuiPanel>()->GetColor().y,
+			p1DamageScreen->Get<GuiPanel>()->GetColor().x,
+			player1->Get<HealthManager>()->GetDamageOpacity()));
+
+		p2Health->Get<RectTransform>()->SetMax({ glm::lerp(5.0f, 195.0f,
+			player2->Get<HealthManager>()->GetHealth() / player2->Get<HealthManager>()->GetMaxHealth()), 45 });
+
+		p2Health->Get<GuiPanel>()->SetColor(glm::lerp(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+			player2->Get<HealthManager>()->GetHealth() / player2->Get<HealthManager>()->GetMaxHealth()));
+
+		p2DamageScreen->Get<GuiPanel>()->SetColor(glm::vec4(
+			p2DamageScreen->Get<GuiPanel>()->GetColor().x,
+			p2DamageScreen->Get<GuiPanel>()->GetColor().y,
+			p2DamageScreen->Get<GuiPanel>()->GetColor().x,
+			player2->Get<HealthManager>()->GetDamageOpacity()));
+		
+		/////////////////////////////////////////////////////////////////////////
+
+		
 		///////////////Handle some animation stuff////////////////
 		//Note: this code sucks real bad, I need to make this better at some point
 
 		if (player1->Get<MorphAnimator>() != nullptr)
 		{
-			//If the player has just jumped, activate the jump anim
-			if (player1->Get<JumpBehaviour>()->IsStartingJump())
+			if (player1->Get<HealthManager>()->IsDead() && !p1Dying)
 			{
-				player1->Get<MorphAnimator>()->ActivateAnim("Jump");
+				player1->Get<MorphAnimator>()->ActivateAnim("Die");
+				p1Dying = true;
 			}
 
-			//Else if the player is in the air and the jump anim has finished
-			else if (player1->Get<MorphAnimator>()->GetActiveAnim() == "jump" && player1->Get<MorphAnimator>()->IsEndOfClip())
-			{
-				//If the player is moving, then run in the air
-				if (player1->Get<PlayerControl>()->IsMoving())
-					player1->Get<MorphAnimator>()->ActivateAnim("Walk");
 
-				//Else, idle in the air
-				else
+			else if (p1Dying && player1->Get<MorphAnimator>()->IsEndOfClip())
+			{
+				Respawn(player1, glm::vec3(0.0f, 0.0f, 3.0f));
+				p1Dying = false;
+			}
+			else if (!p1Dying)
+			{
+				//If the player is pressing the throw button and is in a the appropriate state, activate the throw anim
+				if (player1->Get<PlayerControl>()->GetJustThrew())
+				{
+					player1->Get<MorphAnimator>()->ActivateAnim("Attack");
+				}
+
+				//If the player has just jumped, activate the jump anim
+				else if (player1->Get<JumpBehaviour>()->IsStartingJump())
+				{
+					player1->Get<MorphAnimator>()->ActivateAnim("Jump");
+				}
+
+				//Else if the player is in the air and the jump anim has finished
+				else if (player1->Get<MorphAnimator>()->GetActiveAnim() == "jump" && player1->Get<MorphAnimator>()->IsEndOfClip())
+				{
+					//If the player is moving, then run in the air
+					if (player1->Get<PlayerControl>()->IsMoving())
+						player1->Get<MorphAnimator>()->ActivateAnim("Walk");
+
+					//Else, idle in the air
+					else
+						player1->Get<MorphAnimator>()->ActivateAnim("Idle");
+				}
+
+				//Else if the player is moving and isn't in the middle of jumping
+				else if (player1->Get<PlayerControl>()->IsMoving() && player1->Get<MorphAnimator>()->GetActiveAnim() != "jump"
+					&& (player1->Get<MorphAnimator>()->GetActiveAnim() != "attack" || player1->Get<MorphAnimator>()->IsEndOfClip()))
+				{
+					//If the player is pressing sprint and isn't already in the running animation
+					if (player1->Get<MorphAnimator>()->GetActiveAnim() != "run" && player1->Get<PlayerControl>()->IsSprinting())
+						player1->Get<MorphAnimator>()->ActivateAnim("Run");
+
+					//If the player isn't pressing sprint and isn't already in the walking animation
+					else if (player1->Get<MorphAnimator>()->GetActiveAnim() != "walk" && !player1->Get<PlayerControl>()->IsSprinting())
+						player1->Get<MorphAnimator>()->ActivateAnim("Walk");
+				}
+
+				//Else if the player isn't moving and isn't jumping and isn't already idling
+				else if (!player1->Get<PlayerControl>()->IsMoving() && player1->Get<MorphAnimator>()->GetActiveAnim() != "jump" &&
+					(player1->Get<MorphAnimator>()->GetActiveAnim() != "attack" || player1->Get<MorphAnimator>()->IsEndOfClip())
+					&& player1->Get<MorphAnimator>()->GetActiveAnim() != "idle")
+				{
 					player1->Get<MorphAnimator>()->ActivateAnim("Idle");
+				}
+			}
+		}
+
+		if (player2->Get<MorphAnimator>() != nullptr)
+		{
+
+			if (player2->Get<HealthManager>()->IsDead() && !p2Dying)
+			{
+				player2->Get<MorphAnimator>()->ActivateAnim("Die");
+				p2Dying = true;
 			}
 
-			//Else if the player is moving and isn't in the middle of jumping
-			else if (player1->Get<PlayerControl>()->IsMoving() && player1->Get<MorphAnimator>()->GetActiveAnim() != "jump")
-			{
-				//If the player is pressing sprint and isn't already in the running animation
-				if (player1->Get<MorphAnimator>()->GetActiveAnim() != "run" && player1->Get<PlayerControl>()->IsSprinting())
-					player1->Get<MorphAnimator>()->ActivateAnim("Run");
 
-				//If the player isn't pressing sprint and isn't already in the walking animation
-				else if (player1->Get<MorphAnimator>()->GetActiveAnim() != "walk" && !player1->Get<PlayerControl>()->IsSprinting())
-					player1->Get<MorphAnimator>()->ActivateAnim("Walk");
+			else if (p2Dying && player2->Get<MorphAnimator>()->IsEndOfClip())
+			{
+				Respawn(player2, glm::vec3(0.0f, 0.0f, 3.0f));
+				p2Dying = false;
 			}
 
-			//Else if the player isn't moving and isn't jumping and isn't already idling
-			else if (!player1->Get<PlayerControl>()->IsMoving() && player1->Get<MorphAnimator>()->GetActiveAnim() != "jump" && player1->Get<MorphAnimator>()->GetActiveAnim() != "Idle")
+			else if (!p2Dying)
 			{
-				player1->Get<MorphAnimator>()->ActivateAnim("Idle");
-			}
+				//If the player is pressing the throw button and is in a the appropriate state, activate the throw anim
+				if (player2->Get<PlayerControl>()->GetJustThrew())
+				{
+					player2->Get<MorphAnimator>()->ActivateAnim("Attack");
+				}
 
-			//If the player has just jumped, activate the jump anim
-			if (player2->Get<JumpBehaviour>()->IsStartingJump())
-			{
-				player2->Get<MorphAnimator>()->ActivateAnim("Jump");
-			}
+				//If the player has just jumped, activate the jump anim
+				else if (player2->Get<JumpBehaviour>()->IsStartingJump())
+				{
+					player2->Get<MorphAnimator>()->ActivateAnim("Jump");
+				}
 
-			//Else if the player is in the air and the jump anim has finished
-			else if (player2->Get<MorphAnimator>()->GetActiveAnim() == "jump" && player2->Get<MorphAnimator>()->IsEndOfClip())
-			{
-				//If the player is moving, then run in the air
-				if (player2->Get<PlayerControl>()->IsMoving())
-					player2->Get<MorphAnimator>()->ActivateAnim("Walk");
+				//Else if the player is in the air and the jump anim has finished
+				else if (player2->Get<MorphAnimator>()->GetActiveAnim() == "jump" && player2->Get<MorphAnimator>()->IsEndOfClip())
+				{
+					//If the player is moving, then run in the air
+					if (player2->Get<PlayerControl>()->IsMoving())
+						player2->Get<MorphAnimator>()->ActivateAnim("Walk");
 
-				//Else, idle in the air
-				else
+					//Else, idle in the air
+					else
+						player2->Get<MorphAnimator>()->ActivateAnim("Idle");
+				}
+
+				//Else if the player is moving and isn't in the middle of jumping
+				else if (player2->Get<PlayerControl>()->IsMoving() && player2->Get<MorphAnimator>()->GetActiveAnim() != "jump" &&
+					(player2->Get<MorphAnimator>()->GetActiveAnim() != "attack" || player2->Get<MorphAnimator>()->IsEndOfClip()))
+				{
+					//If the player is pressing sprint and isn't already in the running animation
+					if (player2->Get<MorphAnimator>()->GetActiveAnim() != "run" && player2->Get<PlayerControl>()->IsSprinting())
+						player2->Get<MorphAnimator>()->ActivateAnim("Run");
+
+					//If the player isn't pressing sprint and isn't already in the walking animation
+					else if (player2->Get<MorphAnimator>()->GetActiveAnim() != "walk" && !player2->Get<PlayerControl>()->IsSprinting())
+						player2->Get<MorphAnimator>()->ActivateAnim("Walk");
+				}
+
+				//Else if the player isn't moving and isn't jumping and isn't already idling
+				else if (!player2->Get<PlayerControl>()->IsMoving() && player2->Get<MorphAnimator>()->GetActiveAnim() != "jump" &&
+					(player2->Get<MorphAnimator>()->GetActiveAnim() != "attack" || player2->Get<MorphAnimator>()->IsEndOfClip()) &&
+					player2->Get<MorphAnimator>()->GetActiveAnim() != "idle")
+				{
 					player2->Get<MorphAnimator>()->ActivateAnim("Idle");
-			}
-
-			//Else if the player is moving and isn't in the middle of jumping
-			else if (player2->Get<PlayerControl>()->IsMoving() && player2->Get<MorphAnimator>()->GetActiveAnim() != "jump")
-			{
-				//If the player is pressing sprint and isn't already in the running animation
-				if (player2->Get<MorphAnimator>()->GetActiveAnim() != "run" && player2->Get<PlayerControl>()->IsSprinting())
-					player2->Get<MorphAnimator>()->ActivateAnim("Run");
-
-				//If the player isn't pressing sprint and isn't already in the walking animation
-				else if (player2->Get<MorphAnimator>()->GetActiveAnim() != "walk" && !player2->Get<PlayerControl>()->IsSprinting())
-					player2->Get<MorphAnimator>()->ActivateAnim("Walk");
-			}
-
-			//Else if the player isn't moving and isn't jumping and isn't already idling
-			else if (!player2->Get<PlayerControl>()->IsMoving() && player2->Get<MorphAnimator>()->GetActiveAnim() != "jump" && player2->Get<MorphAnimator>()->GetActiveAnim() != "Idle")
-			{
-				player2->Get<MorphAnimator>()->ActivateAnim("Idle");
+				}
 			}
 		}
 		//////////////////////////////////////////////////////////

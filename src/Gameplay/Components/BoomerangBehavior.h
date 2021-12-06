@@ -41,7 +41,6 @@ private:
     void Seek(float deltaTime);
 
     void defyGravity();
-    void returnBoomerang();
 
 
 public:
@@ -50,6 +49,7 @@ public:
     virtual void Awake() override;
     virtual void Update(float deltaTime) override;
     virtual void RenderImGui() override;
+
     void OnCollisionEnter();
     float _boomerangLaunchForce = 1.f;
 
@@ -58,6 +58,8 @@ public:
     BoomerangBehavior();
     virtual ~BoomerangBehavior();
     
+    void returnBoomerang();
+
     void makeBoomerangInactive();
     /// <summary>
     /// Used when the player is initially throwing out the boomerang.
