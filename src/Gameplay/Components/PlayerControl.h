@@ -21,6 +21,7 @@ public:
 
 	bool IsMoving();
 	bool IsSprinting();
+	bool GetJustThrew();
 
 public:
 	virtual void RenderImGui() override;
@@ -44,6 +45,7 @@ protected:
 	bool _isMousePressed = false;
 	bool _isMoving = false;
 	bool _isSprinting = false;
+	bool _justThrew = false;
 	float _spintVal = 5.0f;
 	GLFWwindow* _window;
 

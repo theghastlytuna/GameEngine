@@ -1,6 +1,7 @@
 #include "BoomerangBehavior.h"
 #include "Gameplay/GameObject.h"
 #include "Utils/ImGuiHelper.h"
+#include "HealthManager.h"
 
 BoomerangBehavior::BoomerangBehavior()
 {
@@ -85,7 +86,7 @@ void BoomerangBehavior::throwWang(glm::vec3 playerPosition, int playerNumber)
 		camera = _scene->PlayerCamera2;
 	}
 	cameraLocalForward = glm::vec3(camera->GetView()[0][2], camera->GetView()[1][2], camera->GetView()[2][2]) * -1.0f;
-	_boomerangEntity->SetPosition(playerPosition + cameraLocalForward * _projectileSpacing);
+	_boomerangEntity->SetPosition(playerPosition + glm::vec3(0.0f, 0.0f, 1.5f) + cameraLocalForward * _projectileSpacing);
 	_rigidBody->SetLinearVelocity(glm::vec3(0));
 	_rigidBody->SetLinearVelocity(cameraLocalForward * _boomerangLaunchForce);
 }

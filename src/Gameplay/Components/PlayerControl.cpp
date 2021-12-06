@@ -59,6 +59,9 @@ void PlayerControl::Update(float deltaTime)
 	//If there is a valid controller connected, then use it to find input
 	if (_controller->IsValid())
 	{
+		_isMoving = false;
+		_justThrew = false;
+
 		bool Wang = _controller->GetButtonDown(GLFW_GAMEPAD_BUTTON_X);
 		bool Point = _controller->GetButtonDown(GLFW_GAMEPAD_BUTTON_Y);
 		bool Target = _controller->GetButtonDown(GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER);
@@ -120,6 +123,7 @@ void PlayerControl::Update(float deltaTime)
 		if (Wang) {
 			if (_boomerangBehavior->getReadyToThrow()) {
 				_boomerangBehavior->throwWang(GetGameObject()->GetPosition(), playerID);
+				_justThrew = true;
 			}
 			else if (Point){
 				_boomerangBehavior->UpdateTarget(glm::vec3(20, 30, 10));
@@ -207,6 +211,11 @@ bool PlayerControl::IsMoving()
 bool PlayerControl::IsSprinting()
 {
 	return _isSprinting;
+}
+
+bool PlayerControl::GetJustThrew()
+{
+	return _justThrew;
 }
 
 void PlayerControl::RenderImGui()
