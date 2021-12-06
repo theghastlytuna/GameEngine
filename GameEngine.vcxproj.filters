@@ -27,6 +27,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Gameplay\Components\BoomerangBehavior.h">
+      <Filter>Gameplay\Components</Filter>
+    </ClInclude>
     <ClInclude Include="src\Gameplay\Components\Camera.h">
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
@@ -222,9 +225,11 @@
     <ClInclude Include="src\Utils\TypeHelpers.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\Gameplay\Components\BoomerangBehavior.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Gameplay\Components\BoomerangBehavior.cpp">
+      <Filter>Gameplay\Components</Filter>
+    </ClCompile>
     <ClCompile Include="src\Gameplay\Components\Camera.cpp">
       <Filter>Gameplay\Components</Filter>
     </ClCompile>
@@ -385,6 +390,5 @@
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Gameplay\Components\BoomerangBehavior.cpp" />
   </ItemGroup>
 </Project>
