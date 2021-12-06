@@ -51,6 +51,9 @@
     <ClInclude Include="src\Gameplay\Components\GUI\RectTransform.h">
       <Filter>Gameplay\Components\GUI</Filter>
     </ClInclude>
+    <ClInclude Include="src\Gameplay\Components\HealthManager.h">
+      <Filter>Gameplay\Components</Filter>
+    </ClInclude>
     <ClInclude Include="src\Gameplay\Components\IComponent.h">
       <Filter>Gameplay\Components</Filter>
     </ClInclude>
@@ -247,6 +250,9 @@
     </ClCompile>
     <ClCompile Include="src\Gameplay\Components\GUI\RectTransform.cpp">
       <Filter>Gameplay\Components\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gameplay\Components\HealthManager.cpp">
+      <Filter>Gameplay\Components</Filter>
     </ClCompile>
     <ClCompile Include="src\Gameplay\Components\IComponent.cpp">
       <Filter>Gameplay\Components</Filter>

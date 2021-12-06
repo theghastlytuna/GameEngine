@@ -117,6 +117,7 @@
     <ClInclude Include="src\Gameplay\Components\GUI\GuiPanel.h" />
     <ClInclude Include="src\Gameplay\Components\GUI\GuiText.h" />
     <ClInclude Include="src\Gameplay\Components\GUI\RectTransform.h" />
+    <ClInclude Include="src\Gameplay\Components\HealthManager.h" />
     <ClInclude Include="src\Gameplay\Components\IComponent.h" />
     <ClInclude Include="src\Gameplay\Components\JumpBehaviour.h" />
     <ClInclude Include="src\Gameplay\Components\MaterialSwapBehaviour.h" />
@@ -184,6 +185,7 @@
     <ClCompile Include="src\Gameplay\Components\GUI\GuiPanel.cpp" />
     <ClCompile Include="src\Gameplay\Components\GUI\GuiText.cpp" />
     <ClCompile Include="src\Gameplay\Components\GUI\RectTransform.cpp" />
+    <ClCompile Include="src\Gameplay\Components\HealthManager.cpp" />
     <ClCompile Include="src\Gameplay\Components\IComponent.cpp" />
     <ClCompile Include="src\Gameplay\Components\JumpBehaviour.cpp" />
     <ClCompile Include="src\Gameplay\Components\MaterialSwapBehaviour.cpp" />
@@ -262,4 +264,4 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-</Project> 
+</Project>
