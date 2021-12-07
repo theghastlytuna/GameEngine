@@ -334,8 +334,9 @@ void CreateScene() {
 		MeshResource::Sptr mainCharMesh2 = ResourceManager::CreateAsset<MeshResource>("mainChar.obj");
 		MeshResource::Sptr boomerangMesh = ResourceManager::CreateAsset<MeshResource>("BoomerangAnims/Boomerang_Active_000.obj");
 		MeshResource::Sptr boomerangMesh2 = ResourceManager::CreateAsset<MeshResource>("BoomerangAnims/Boomerang_Active_000.obj");
-		MeshResource::Sptr movingPlatMesh = ResourceManager::CreateAsset<MeshResource>("FloatingRock.obj");
+		MeshResource::Sptr movingPlatMesh = ResourceManager::CreateAsset<MeshResource>("floating_rock.obj");
 		MeshResource::Sptr healthPackMesh = ResourceManager::CreateAsset<MeshResource>("HealthPackAnims/healthPack_idle_000.obj");
+		MeshResource::Sptr torchMesh = ResourceManager::CreateAsset<MeshResource>("TorchAnims/Torch_Idle_000.obj");
 			
 			//Stage Meshes
 				//Floors
@@ -483,6 +484,13 @@ void CreateScene() {
 			movingPlatMaterial->Name = "MovingPlatform";
 			movingPlatMaterial->Set("u_Material.Diffuse", rockTex);
 			movingPlatMaterial->Set("u_Material.Shininess", 0.1f);
+		}
+
+		Material::Sptr torchMaterial = ResourceManager::CreateAsset<Material>(animShader);
+		{
+			torchMaterial->Name = "Torch";
+			torchMaterial->Set("u_Material.Diffuse", torchTex);
+			torchMaterial->Set("u_Material.Shininess", 0.1f);
 		}
 
 		/*
@@ -676,7 +684,7 @@ void CreateScene() {
 
 
 		// Create some lights for our scene
-		scene->Lights.resize(3);
+		scene->Lights.resize(4);
 		scene->Lights[0].Position = glm::vec3(9.0f, 1.0f, 50.0f);
 		scene->Lights[0].Color = glm::vec3(1.0f, 1.0f, 1.0f);
 		scene->Lights[0].Range = 1000.0f;
@@ -687,10 +695,11 @@ void CreateScene() {
 		scene->Lights[2].Position = glm::vec3(9.0f, 1.0f, 50.0f);
 		scene->Lights[2].Color = glm::vec3(1.0f, 0.57f, 0.1f);
 		scene->Lights[2].Range = 200.0f;
-		/*
-		scene->Lights[2].Position = glm::vec3(0.0f, 1.0f, 3.0f);
-		scene->Lights[2].Color = glm::vec3(1.0f, 0.2f, 0.1f);
-		*/
+		
+		scene->Lights[3].Position = glm::vec3(-67.73f, 15.73f, 3.5f);
+		scene->Lights[3].Color = glm::vec3(0.81f, 0.62f, 0.61f);
+		scene->Lights[3].Range = 200.0f;
+		
 
 		// We'll create a mesh that is a simple plane that we can resize later
 		MeshResource::Sptr planeMesh = ResourceManager::CreateAsset<MeshResource>();
@@ -1376,7 +1385,7 @@ void CreateScene() {
 
 			BoxCollider::Sptr collider = BoxCollider::Create();
 			collider->SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
-			//collider->SetPosition(barrel1->GetPosition());
+			collider->SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));
 
 			RigidBody::Sptr physics = barrel1->Add<RigidBody>(RigidBodyType::Dynamic);
 			physics->AddCollider(collider);
@@ -1754,6 +1763,29 @@ void CreateScene() {
 
 			//Add the walking clip
 			animator->AddClip(catcusFrames, 0.7f, "Idle");
+
+			//Make sure to always activate an animation at the time of creation (usually idle)
+			animator->ActivateAnim("Idle");
+		}
+
+		GameObject::Sptr torch = scene->CreateGameObject("Torch");
+		{
+			// Set position in the scene
+			torch->SetPosition(glm::vec3(-68.29f, 14.35f, 2.09f));
+			torch->SetScale(glm::vec3(0.5f, 0.5f, 0.5f));
+			torch->SetRotation(glm::vec3(90.0f, 0.0f, 0.0f));
+
+			// Create and attach a renderer for the monkey
+			RenderComponent::Sptr renderer = torch->Add<RenderComponent>();
+			renderer->SetMesh(torchMesh);
+			renderer->SetMaterial(torchMaterial);
+
+
+			//Only add an animator when you have a clip to add.
+			MorphAnimator::Sptr animator = torch->Add<MorphAnimator>();
+
+			//Add the walking clip
+			animator->AddClip(torchIdle, 0.5f, "Idle");
 
 			//Make sure to always activate an animation at the time of creation (usually idle)
 			animator->ActivateAnim("Idle");
@@ -2468,7 +2500,8 @@ int main() {
 		glViewport(0, windowSize.y / 2, windowSize.x, windowSize.y / 2);
 
 		/////////////////////////////////////////////////////////////////////////////////Camera 2 Rendering 
-		
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 			{;
 
