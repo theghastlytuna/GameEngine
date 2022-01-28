@@ -52,6 +52,13 @@ void PlayerControl::Awake()
 	else {
 		std::cout << "Ayo the pizza here" << std::endl;
 	}
+
+	if (playerID == 1) {
+		_camera = GetGameObject()->GetScene()->PlayerCamera;
+	}
+	else {
+		_camera = GetGameObject()->GetScene()->PlayerCamera2;
+	}
 }
 
 void PlayerControl::Update(float deltaTime)
@@ -126,7 +133,16 @@ void PlayerControl::Update(float deltaTime)
 				_justThrew = true;
 			}
 			else if (Point){
-				_boomerangBehavior->UpdateTarget(glm::vec3(20, 30, 10));
+				glm::vec3 cameraLocalForward = glm::vec3(_camera->GetView()[0][2], _camera->GetView()[1][2], _camera->GetView()[2][2]) * -1.0f;
+				btVector3 btCamLocF = btVector3(cameraLocalForward.x, cameraLocalForward.y, cameraLocalForward.z);
+				glm::vec3 playerPosition = GetGameObject()->GetPosition();
+				btVector3 btPlayerPosition = btVector3(playerPosition.x, playerPosition.y, playerPosition.z);
+				btCollisionWorld::ClosestRayResultCallback result(btPlayerPosition, btPlayerPosition * btCamLocF * 100);
+				GetGameObject()->GetScene()->GetPhysicsWorld()->rayTest(btPlayerPosition, btPlayerPosition * btCamLocF * 100, result);
+				if (result.hasHit()) {
+					glm::vec3 point = glm::vec3(result.m_hitPointWorld.x(), result.m_hitPointWorld.y(), result.m_hitPointWorld.z());
+					_boomerangBehavior->UpdateTarget(point);
+				}
 			}
 			else if (Target) {
 				if (playerID == 1) {

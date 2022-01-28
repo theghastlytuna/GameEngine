@@ -38,6 +38,7 @@ protected:
 	bool boomerangThrown = false;
 	Gameplay::GameObject::Sptr _boomerang;
 	BoomerangBehavior::Sptr _boomerangBehavior;
+	Gameplay::Camera::Sptr _camera;
 
 	unsigned int playerID;
 
